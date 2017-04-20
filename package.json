@@ -25,8 +25,8 @@
     "site",
     "subscriptions"
   ],
-  "main": "lib/el.js-controls.js",
-  "module": "lib/el.js-controls.mjs",
+  "main": "lib/controls.js",
+  "module": "lib/controls.mjs",
   "files": [
     "lib/",
     "src/"

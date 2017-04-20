@@ -4,7 +4,7 @@ import './utils/patches'
 import countriesData from  './data/countries'
 import statesData from './data/states'
 
-import { luhnCheck, cardFromNumber, cartType, restrictNumeric } from './utils/card'
+import { luhnCheck, cardFromNumber, cardType, restrictNumeric } from './utils/card'
 
 export * from './controls'
 export * from './events'
