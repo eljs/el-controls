@@ -26,7 +26,8 @@ task 'build:min', 'build js for production', ['build'], ->
     browser:   false
     compilers:
       coffee: version: 1
-  yield exec 'uglifyjs controls.js -o controls.min.js'
+  yield exec 'mv -f elcontrols.js el-controls.js'
+  yield exec 'uglifyjs el-controls.js -o el-controls.min.js'
 
 task 'build:static', 'build static assets', ->
   exec '''

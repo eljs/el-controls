@@ -1,10 +1,10 @@
 {
-  "name": "el.js-controls",
+  "name": "el-controls",
   "version": "1.0.0",
   "description": "Some basic controls for el.js.",
-  "homepage": "http://github.com/hanzo-io/el.js-controls",
-  "repository": "github:hanzo-io/el.js-controls",
-  "bugs": "http://github.com/hanzo-io/el.js-controls/issues",
+  "homepage": "http://github.com/hanzo-io/el-controls",
+  "repository": "github:hanzo-io/el-controls",
+  "bugs": "http://github.com/hanzo-io/el-controls/issues",
   "author": "Hanzo, Inc <hi@hanzo.io>",
   "license": "BSD-3-Clause",
   "keywords": [
@@ -25,8 +25,8 @@
     "site",
     "subscriptions"
   ],
-  "main": "lib/controls.js",
-  "module": "lib/controls.mjs",
+  "main": "lib/el-controls.js",
+  "module": "lib/el-controls.mjs",
   "files": [
     "lib/",
     "src/"
