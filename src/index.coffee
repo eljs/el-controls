@@ -6,8 +6,42 @@ import statesData from './data/states'
 
 import { luhnCheck, cardFromNumber, cardType, restrictNumeric } from './utils/card'
 
-export * from './controls'
-export * from './events'
+export {
+  Control
+  Text
+  TextArea
+  Checkbox
+  Select
+  QuantitySelect
+  CountrySelect
+  StateSelect
+  UserEmail
+  UserName
+  UserCurrentPassword
+  UserPassword
+  UserPasswordConfirm
+  ShippingAddressName
+  ShippingAddressLine1
+  ShippingAddressLine2
+  ShippingAddressCity
+  ShippingAddressPostalCode
+  ShippingAddressState
+  ShippingAddressCountry
+  CardName
+  CardNumber
+  CardExpiry
+  CardCVC
+  Terms
+  GiftToggle
+  GiftType
+  GiftEmail
+  GiftMessage
+  PromoCode
+} from './controls'
+
+import Events from './events'
+
+export { Events }
 
 export data = {
   countries: countriesData

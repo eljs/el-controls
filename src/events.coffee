@@ -1,4 +1,4 @@
-export default events =
+export default Events =
   Change:
     'change'
   ChangeSuccess:
