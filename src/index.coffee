@@ -1,6 +1,5 @@
 import './utils/patches'
 
-
 import countriesData from  './data/countries'
 import statesData from './data/states'
 
