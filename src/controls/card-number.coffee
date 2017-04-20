@@ -65,4 +65,6 @@ class CardNumber extends Text
 
       @first = true
 
+CardNumber.register()
+
 export default CardNumber

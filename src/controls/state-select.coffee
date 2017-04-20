@@ -39,3 +39,5 @@ export default class StateSelect extends Select
       value = @input.ref.get(@input.name)
       @input.ref.set(@input.name, value.toUpperCase()) if value
     super
+
+StateSelect.register()

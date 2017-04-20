@@ -34,4 +34,6 @@ class CardExpiry extends Text
 
       @first = true
 
+CardExpiry.register()
+
 export default CardExpiry

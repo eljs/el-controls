@@ -102,3 +102,6 @@ export default class Select extends Text
 
     # @on 'unmount', ()=>
     #   $select = $(@root).find('select')
+
+Select.register()
+

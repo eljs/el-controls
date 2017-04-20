@@ -4,3 +4,4 @@ export default class UserName extends Text
   tag:  'user-name'
   lookup: 'user.name'
 
+UserName.register()

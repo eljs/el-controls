@@ -20,3 +20,5 @@ export default class CountrySelect extends Select
             if v.toLowerCase() == country
               @input.ref.set 'order.shippingAddress.country', k
               return
+
+CountrySelect.register()

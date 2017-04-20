@@ -4,3 +4,5 @@ export default class ShippingAddressLine1 extends Text
   tag:  'shippingaddress-line1'
   lookup: 'order.shippingAddress.line1'
 
+ShippingAddressLine1.register()
+

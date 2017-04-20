@@ -8,3 +8,6 @@ export default class UserPasswordConfirm extends Text
 
   init: ()->
     super
+
+UserPasswordConfirm.register()
+

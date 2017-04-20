@@ -4,3 +4,5 @@ export default class Terms extends Checkbox
   tag:  'terms'
   lookup: 'terms'
 
+Terms.register()
+

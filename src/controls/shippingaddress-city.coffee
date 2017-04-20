@@ -4,3 +4,5 @@ export default class ShippingAddressCity extends Text
   tag:  'shippingaddress-city'
   lookup: 'order.shippingAddress.city'
 
+ShippingAddressCity.register()
+

@@ -5,3 +5,6 @@ class GiftEmail extends Text
   lookup: 'order.giftEmail'
 
 export default GiftEmail
+
+GiftEmail.register()
+

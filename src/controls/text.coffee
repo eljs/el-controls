@@ -17,3 +17,5 @@ export default class Text extends Control
 
       if @type != 'password'
         placeholder el
+
+Text.register()

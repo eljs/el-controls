@@ -7,3 +7,6 @@ export default class Checkbox extends Control
   html: html
   getValue: (event)->
     return event.target.checked
+
+Checkbox.register()
+

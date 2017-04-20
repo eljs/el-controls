@@ -31,3 +31,6 @@ export default class QuantitySelect extends Select
 
     #unset and reset using cart to get correct analytics/side effects
     @cart.set @data.get('productId'), newValue
+
+QuantitySelect.register()
+

@@ -27,4 +27,6 @@ class CardCVC extends Text
 
       @first = true
 
+CardCVC.register()
+
 export default CardCVC

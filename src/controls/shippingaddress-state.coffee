@@ -4,3 +4,5 @@ export default class ShippingAddressState extends StateSelect
   tag:  'shippingaddress-state'
   lookup: 'order.shippingAddress.state'
 
+ShippingAddressState.register()
+

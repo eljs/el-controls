@@ -9,3 +9,5 @@ export default class UserCurrentPassword extends Text
   init: ()->
     super
 
+UserCurrentPassword.register()
+

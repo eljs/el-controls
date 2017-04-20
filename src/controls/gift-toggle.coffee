@@ -4,3 +4,4 @@ export default class GiftToggle extends Checkbox
   tag:  'gift-toggle'
   lookup: 'order.gift'
 
+GiftToggle.register()

@@ -6,4 +6,6 @@ class TextArea extends Text
   html:         html
   formElement: 'textarea'
 
+TextArea.register()
+
 export default TextArea
