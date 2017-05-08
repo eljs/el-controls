@@ -1329,7 +1329,7 @@ var styleManager = {
 
 /**
  * The riot template engine
- * @version v3.0.3
+ * @version v3.0.4
  */
 /**
  * riot.util.brackets
@@ -1553,7 +1553,12 @@ var tmpl = (function () {
   function _tmpl (str, data) {
     if (!str) return str
 
-    return (_cache[str] || (_cache[str] = _create(str))).call(data, _logErr)
+    return (_cache[str] || (_cache[str] = _create(str))).call(
+      data, _logErr.bind({
+        data: data,
+        tmpl: str
+      })
+    )
   }
 
   _tmpl.hasExpr = brackets.hasExpr;
@@ -1577,10 +1582,9 @@ var tmpl = (function () {
       typeof console !== 'undefined' &&
       typeof console.error === 'function'
     ) {
-      if (err.riotData.tagName) {
-        console.error('Riot template error thrown in the <%s> tag', err.riotData.tagName);
-      }
-      console.error(err);
+      console.error(err.message);
+      console.log('<%s> %s', err.riotData.tagName || 'Unknown tag', this.tmpl); // eslint-disable-line
+      console.log(this.data); // eslint-disable-line
     }
   }
 
@@ -1749,7 +1753,7 @@ var tmpl = (function () {
     return expr
   }
 
-  _tmpl.version = brackets.version = 'v3.0.3';
+  _tmpl.version = brackets.version = 'v3.0.4';
 
   return _tmpl
 
@@ -3773,7 +3777,7 @@ var isObject$2 = isObject$1 = function(value) {
   return toString(value) === '[object Object]';
 };
 
-// node_modules/el.js/node_modules/referential/lib/referential.mjs
+// node_modules/referential/lib/referential.mjs
 // src/ref.coffee
 var Ref;
 var nextId;
@@ -4646,7 +4650,7 @@ if (document.createElement("input").placeholder == null) {
 var placeholder = exports$1;
 
 // templates/controls/text.pug
-var html = "\n<input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" placeholder=\"{ placeholder }\" autocomplete=\"{ autoComplete }\">\n<yield></yield>";
+var html = "\n<input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autoComplete }\">\n<div class=\"placeholder { small: input.ref.get(input.name) }\">{ placeholder }</div>\n<yield></yield>";
 
 // src/controls/text.coffee
 var Text;
@@ -4690,7 +4694,7 @@ var Text$1 = Text = (function(superClass) {
 Text.register();
 
 // templates/controls/textarea.pug
-var html$1 = "\n<textarea class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" rows=\"{ rows }\" cols=\"{ cols }\" type=\"text\" onchange=\"{ change }\" onblur=\"{ change }\" placeholder=\"{ placeholder }\">{ input.ref.get(input.name) }</textarea>\n<yield></yield>";
+var html$1 = "\n<textarea class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" rows=\"{ rows }\" cols=\"{ cols }\" type=\"text\" onchange=\"{ change }\" onblur=\"{ change }\" placeholder=\"{ placeholder }\">{ input.ref.get(input.name) }</textarea>\n<div class=\"placeholder { small: input.ref.get(input.name) }\">{ placeholder }</div>\n<yield></yield>";
 
 // src/controls/textarea.coffee
 var TextArea;
@@ -8250,7 +8254,7 @@ function selectize($select, optsUser) {
 }
 
 // templates/controls/select.pug
-var html$3 = "\n<select class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" style=\"display: none;\" name=\"{ name || input.name }\" onchange=\"{ change }\" onblur=\"{ change }\" placeholder=\"{ placeholder }\"></select>\n<yield></yield>";
+var html$3 = "\n<select class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" style=\"display: none;\" name=\"{ name || input.name }\" onchange=\"{ change }\" onblur=\"{ change }\" placeholder=\"{ instructions || placeholder }\"></select>\n<div class=\"placeholder small\">{ placeholder }</div>\n<yield></yield>";
 
 // src/controls/select.coffee
 var Select;
@@ -8495,7 +8499,7 @@ var CountrySelect$1 = CountrySelect = (function(superClass) {
 CountrySelect.register();
 
 // templates/controls/state-select.pug
-var html$4 = "\n<input class=\"{invalid: errorMessage, valid: valid}\" if=\"{ input.ref.get(countryField) !== &quot;us&quot; }\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"text\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" placeholder=\"{ placeholder }\">\n<select class=\"{invalid: errorMessage, valid: valid}\" if=\"{ input.ref.get(countryField) == &quot;us&quot; }\" id=\"{ input.name }\" name=\"{ name || input.name }\" style=\"display: none;\" onchange=\"{ change }\" onblur=\"{ change }\" data-placeholder=\"{ placeholder }\"></select>\n<yield></yield>";
+var html$4 = "\n<input class=\"{invalid: errorMessage, valid: valid}\" if=\"{ input.ref.get(countryField) !== &quot;us&quot; }\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"text\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\">\n<select class=\"{invalid: errorMessage, valid: valid}\" if=\"{ input.ref.get(countryField) == &quot;us&quot; }\" id=\"{ input.name }\" name=\"{ name || input.name }\" style=\"display: none;\" onchange=\"{ change }\" onblur=\"{ change }\" data-placeholder=\"{ instructions || placeholder }\"></select>\n<div class=\"placeholder { small: input.ref.get(countryField) == &quot;us&quot; || input.ref.get(input.name) }\">{ placeholder }</div>\n<yield></yield>";
 
 // src/controls/state-select.coffee
 var StateSelect;
