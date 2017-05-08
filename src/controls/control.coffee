@@ -33,7 +33,7 @@ export default class Control extends El.Input
 
     super
 
-    if !scrolling
+    if !scrolling && $(@root).offset().top <= $(window).scrollTop()
       scrolling = true
       $('html, body').animate
         scrollTop: $(@root).offset().top - $(window).height()/2
