@@ -9210,6 +9210,9 @@ var giftMessage = GiftMessage = (function(superClass) {
 
 GiftMessage.register();
 
+// templates/controls/text-normal-placeholder.pug
+var html$5 = "\n<input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autoComplete }\" placeholder=\"{ placeholder }\">\n<yield></yield>";
+
 // src/controls/promocode.coffee
 var PromoCode;
 var extend$32 = function(child, parent) { for (var key in parent) { if (hasProp$30.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -9225,6 +9228,8 @@ var promocode = PromoCode = (function(superClass) {
   PromoCode.prototype.tag = 'promocode';
 
   PromoCode.prototype.lookup = 'order.promoCode';
+
+  PromoCode.prototype.html = html$5;
 
   return PromoCode;
 
