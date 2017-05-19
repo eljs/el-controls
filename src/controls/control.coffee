@@ -46,7 +46,6 @@ export default class Control extends El.Input
   change: ->
     super
     @mediator.trigger Events.Change, @input.name, @input.ref.get @input.name
-    return true
 
   changed: (value) ->
     @mediator.trigger Events.ChangeSuccess, @input.name, value
