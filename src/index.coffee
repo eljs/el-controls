@@ -8,7 +8,7 @@ import { luhnCheck, cardFromNumber, cardType, restrictNumeric } from './utils/ca
 export {
   Control
   Text
-  TextArea
+  TextBox
   Checkbox
   Select
   QuantitySelect
