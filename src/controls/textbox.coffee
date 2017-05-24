@@ -1,11 +1,11 @@
 import Text from './text'
 import html from '../../templates/controls/textarea'
 
-class TextArea extends Text
-  tag:         'textarea-control'
+class TextBox extends Text
+  tag:         'textbox'
   html:         html
   formElement: 'textarea'
 
-TextArea.register()
+TextBox.register()
 
-export default TextArea
+export default TextBox

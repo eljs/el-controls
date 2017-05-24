@@ -1,6 +1,6 @@
 import Control from './control'
 import Text from './text'
-import TextArea from './textarea'
+import TextBox from './textbox'
 import Checkbox from './checkbox'
 import Select from './select'
 import QuantitySelect from './quantity-select'
@@ -32,7 +32,7 @@ import PromoCode from './promocode'
 export {
   Control
   Text
-  TextArea
+  TextBox
   Checkbox
   Select
   QuantitySelect

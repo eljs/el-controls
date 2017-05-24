@@ -1,6 +1,6 @@
-import TextArea from './textarea'
+import TextBox from './textbox'
 
-export default class GiftMessage extends TextArea
+export default class GiftMessage extends TextBox
   tag:  'gift-message'
   lookup: 'order.giftMessage'
 
