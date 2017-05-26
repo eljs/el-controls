@@ -4696,31 +4696,31 @@ Text.register();
 // templates/controls/textarea.pug
 var html$1 = "\n<textarea class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" rows=\"{ rows }\" cols=\"{ cols }\" type=\"text\" onchange=\"{ change }\" onblur=\"{ change }\" placeholder=\"{ placeholder }\">{ input.ref.get(input.name) }</textarea>\n<div class=\"placeholder { small: input.ref.get(input.name) }\">{ placeholder }</div>\n<yield></yield>";
 
-// src/controls/textarea.coffee
-var TextArea;
+// src/controls/textbox.coffee
+var TextBox;
 var extend$4 = function(child, parent) { for (var key in parent) { if (hasProp$3.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 var hasProp$3 = {}.hasOwnProperty;
 
-TextArea = (function(superClass) {
-  extend$4(TextArea, superClass);
+TextBox = (function(superClass) {
+  extend$4(TextBox, superClass);
 
-  function TextArea() {
-    return TextArea.__super__.constructor.apply(this, arguments);
+  function TextBox() {
+    return TextBox.__super__.constructor.apply(this, arguments);
   }
 
-  TextArea.prototype.tag = 'textarea-control';
+  TextBox.prototype.tag = 'textbox';
 
-  TextArea.prototype.html = html$1;
+  TextBox.prototype.html = html$1;
 
-  TextArea.prototype.formElement = 'textarea';
+  TextBox.prototype.formElement = 'textarea';
 
-  return TextArea;
+  return TextBox;
 
 })(Text$1);
 
-TextArea.register();
+TextBox.register();
 
-var TextArea$1 = TextArea;
+var TextBox$1 = TextBox;
 
 // templates/controls/checkbox.pug
 var html$2 = "\n<input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"checkbox\" onchange=\"{ change }\" onblur=\"{ change }\" checked=\"{ input.ref.get(input.name) }\">\n<yield></yield>";
@@ -4737,7 +4737,7 @@ var Checkbox$1 = Checkbox = (function(superClass) {
     return Checkbox.__super__.constructor.apply(this, arguments);
   }
 
-  Checkbox.prototype.tag = 'checkbox-control';
+  Checkbox.prototype.tag = 'checkbox';
 
   Checkbox.prototype.html = html$2;
 
@@ -9206,7 +9206,7 @@ var giftMessage = GiftMessage = (function(superClass) {
 
   return GiftMessage;
 
-})(TextArea$1);
+})(TextBox$1);
 
 GiftMessage.register();
 
@@ -9259,7 +9259,7 @@ exports.data = data;
 exports.utils = utils;
 exports.Control = Control$1;
 exports.Text = Text$1;
-exports.TextArea = TextArea$1;
+exports.TextBox = TextBox$1;
 exports.Checkbox = Checkbox$1;
 exports.Select = Select$1;
 exports.QuantitySelect = quantitySelect;

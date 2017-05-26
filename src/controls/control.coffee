@@ -6,22 +6,7 @@ scrolling = false
 export default class Control extends El.Input
   errorHtml: '<div class="error" if="{ errorMessage }">{ errorMessage }</div>'
   init: ->
-    if !@input? && !@lookup?
-      throw new Error 'No input or lookup provided'
-
-    if !@input? && @inputs?
-      @input = @inputs[@lookup]
-
-    if !@input?
-      @input =
-        name:       @lookup
-        ref:        @data.ref @lookup
-        validate:   (ref, name)->
-          return Promise.resolve [ref, name]
-
-    # prevent weird yield bug
-    if @inputs?
-      super
+    super
 
   getValue: (event) ->
     return $(event.target).val()?.trim()
