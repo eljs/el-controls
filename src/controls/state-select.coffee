@@ -37,7 +37,7 @@ export default class StateSelect extends Select
     else
       $(@root).find('.selectize-control').hide()
       value = @input.ref.get(@input.name)
-      @input.ref.set(@input.name, value.toUpperCase()) if value
+      @input.ref.set(@input.name, value) if value
     super
 
 StateSelect.register()
