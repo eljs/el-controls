@@ -10,6 +10,12 @@ export default class StateSelect extends Select
     return states.data
   countryField: 'order.shippingAddress.country'
 
+  getValue: (event)->
+    if @input.ref.get(@countryField) == 'us'
+      return $(event.target).val()?.trim().toLowerCase()
+    else
+      return $(event.target).val()?.trim()
+
   init: ()->
     super
 
