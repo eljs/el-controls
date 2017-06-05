@@ -975,6 +975,7 @@ const T_OBJECT = 'object';
 const T_UNDEF  = 'undefined';
 const T_FUNCTION = 'function';
 const XLINK_NS = 'http://www.w3.org/1999/xlink';
+const SVG_NS = 'http://www.w3.org/2000/svg';
 const XLINK_REGEX = /^xlink:(\w+)/;
 const WIN = typeof window === T_UNDEF ? undefined : window;
 const RE_SPECIAL_TAGS = /^(?:t(?:body|head|foot|[rhd])|caption|col(?:group)?|opt(?:ion|group))$/;
@@ -1091,7 +1092,7 @@ var check = Object.freeze({
  * @returns { Object } dom nodes found
  */
 function $$(selector, ctx) {
-  return (ctx || document).querySelectorAll(selector)
+  return Array.prototype.slice.call((ctx || document).querySelectorAll(selector))
 }
 
 /**
@@ -1121,12 +1122,22 @@ function createDOMPlaceholder() {
 }
 
 /**
+ * Check if a DOM node is an svg tag
+ * @param   { HTMLElement }  el - node we want to test
+ * @returns {Boolean} true if it's an svg node
+ */
+function isSvg(el) {
+  return !!el.ownerSVGElement
+}
+
+/**
  * Create a generic DOM node
  * @param   { String } name - name of the DOM node we want to create
+ * @param   { Boolean } isSvg - true if we need to use an svg node
  * @returns { Object } DOM node just created
  */
 function mkEl(name) {
-  return document.createElement(name)
+  return name === 'svg' ? document.createElementNS(SVG_NS, name) : document.createElement(name)
 }
 
 /**
@@ -1254,6 +1265,7 @@ var dom = Object.freeze({
 	$: $$1,
 	createFrag: createFrag,
 	createDOMPlaceholder: createDOMPlaceholder,
+	isSvg: isSvg,
 	mkEl: mkEl,
 	setInnerHTML: setInnerHTML,
 	toggleVisibility: toggleVisibility,
@@ -1298,7 +1310,7 @@ if (WIN) {
  * Object that will be used to inject and manage the css of every tag instance
  */
 var styleManager = {
-  styleNode: styleNode,
+  styleNode,
   /**
    * Save a tag style to be later injected into DOM
    * @param { String } css - css string
@@ -1329,7 +1341,7 @@ var styleManager = {
 
 /**
  * The riot template engine
- * @version v3.0.4
+ * @version v3.0.5
  */
 /**
  * riot.util.brackets
@@ -1353,7 +1365,7 @@ var brackets = (function (UNDEF) {
 
     S_QBLOCKS = R_STRINGS.source + '|' +
       /(?:\breturn\s+|(?:[$\w\)\]]|\+\+|--)\s*(\/)(?![*\/]))/.source + '|' +
-      /\/(?=[^*\/])[^[\/\\]*(?:(?:\[(?:\\.|[^\]\\]*)*\]|\\.)[^[\/\\]*)*?(\/)[gim]*/.source,
+      /\/(?=[^*\/])[^[\/\\]*(?:(?:\[(?:\\.|[^\]\\]*)*\]|\\.)[^[\/\\]*)*?([^<]\/)[gim]*/.source,
 
     UNSUPPORTED = RegExp('[\\' + 'x00-\\x1F<>a-zA-Z0-9\'",;\\\\]'),
 
@@ -1753,7 +1765,7 @@ var tmpl = (function () {
     return expr
   }
 
-  _tmpl.version = brackets.version = 'v3.0.4';
+  _tmpl.version = brackets.version = 'v3.0.5';
 
   return _tmpl
 
@@ -2032,6 +2044,10 @@ function setEventHandler(name, handler, dom, tag) {
   var eventName,
     cb = handleEvent.bind(tag, dom, handler);
 
+  // avoid to bind twice the same event
+  // possible fix for #2332
+  dom[name] = null;
+
   // normalize event name
   eventName = name.replace(RE_EVENTS_PREFIX, '');
 
@@ -2062,7 +2078,6 @@ function updateDataIs(expr, parent, tagName) {
   isVirtual = expr.dom.tagName === 'VIRTUAL';
   // sync _parent to accommodate changing tagnames
   if (expr.tag) {
-
     // need placeholder before unmount
     if(isVirtual) {
       head = expr.tag.__.head;
@@ -2072,6 +2087,8 @@ function updateDataIs(expr, parent, tagName) {
 
     expr.tag.unmount(true);
   }
+
+  if (!isString(tagName)) return
 
   expr.impl = __TAG_IMPL[tagName];
   conf = {root: expr.dom, parent: parent, hasImpl: true, tagName: tagName};
@@ -2123,6 +2140,7 @@ function updateExpression(expr) {
     // detect the style attributes
     isStyleAttr = attrName === 'style',
     isClassAttr = attrName === 'class',
+    hasValue,
     isObj,
     value;
 
@@ -2143,7 +2161,8 @@ function updateExpression(expr) {
   if (expr.update) return expr.update()
 
   // ...it seems to be a simple expression so we try to calculat its value
-  value = tmpl(expr.expr, this);
+  value = tmpl(expr.expr, isToggle ? extend$2({}, Object.create(this.parent), this) : this);
+  hasValue = !isBlank(value);
   isObj = isObject(value);
 
   // convert the style/class objects to strings
@@ -2154,6 +2173,12 @@ function updateExpression(expr) {
     } else if (isStyleAttr) {
       value = styleObjectToString(value);
     }
+  }
+
+  // remove original attribute
+  if (expr.attr && (!expr.isAttrRemoved || !hasValue || value === false)) {
+    remAttr(dom, expr.attr);
+    expr.isAttrRemoved = true;
   }
 
   // for the boolean attributes we don't need the value
@@ -2190,11 +2215,6 @@ function updateExpression(expr) {
     return
   }
 
-  // remove original attribute
-  if (!expr.isAttrRemoved || !value) {
-    remAttr(dom, expr.attr);
-    expr.isAttrRemoved = true;
-  }
 
   // event handler
   if (isFunction$2(value)) {
@@ -2212,7 +2232,7 @@ function updateExpression(expr) {
       dom.value = value;
     }
 
-    if (!isBlank(value) && value !== false) {
+    if (hasValue && value !== false) {
       setAttr(dom, attrName, value);
     }
 
@@ -2269,9 +2289,6 @@ var IfExpr = {
   },
   unmount() {
     unmountAll(this.expressions || []);
-    delete this.pristine;
-    delete this.parentNode;
-    delete this.stub;
   }
 };
 
@@ -2289,17 +2306,13 @@ var RefExpr = {
     const old = this.value;
     const customParent = this.parent && getImmediateCustomParentTag(this.parent);
     // if the referenced element is a custom tag, then we set the tag itself, rather than DOM
-    const tagOrDom = this.tag || this.dom;
+    const tagOrDom = this.dom.__ref || this.tag || this.dom;
 
     this.value = this.hasExp ? tmpl(this.rawValue, this.parent) : this.rawValue;
 
     // the name changed, so we need to remove it from the old key (if present)
     if (!isBlank(old) && customParent) arrayishRemove(customParent.refs, old, tagOrDom);
-
-    if (isBlank(this.value)) {
-      // if the value is blank, we remove it
-      remAttr(this.dom, this.attr);
-    } else {
+    if (!isBlank(this.value) && isString(this.value)) {
       // add it to the refs of parent tag (this behavior was changed >=3.0)
       if (customParent) arrayishAdd(
         customParent.refs,
@@ -2309,17 +2322,23 @@ var RefExpr = {
         null,
         this.parent.__.index
       );
-      // set the actual DOM attr
-      setAttr(this.dom, this.attr, this.value);
+
+      if (this.value !== old) {
+        setAttr(this.dom, this.attr, this.value);
+      }
+    } else {
+      remAttr(this.dom, this.attr);
     }
+
+    // cache the ref bound to this dom node
+    // to reuse it in future (see also #2329)
+    if (!this.dom.__ref) this.dom.__ref = tagOrDom;
   },
   unmount() {
-    var tagOrDom = this.tag || this.dom;
-    var customParent = this.parent && getImmediateCustomParentTag(this.parent);
+    const tagOrDom = this.tag || this.dom;
+    const customParent = this.parent && getImmediateCustomParentTag(this.parent);
     if (!isBlank(this.value) && customParent)
       arrayishRemove(customParent.refs, this.value, tagOrDom);
-    delete this.dom;
-    delete this.parent;
   }
 };
 
@@ -2469,6 +2488,10 @@ function _each(dom, parent, expr) {
       isObject$$1 = !isArray(items) && !isString(items),
       root = placeholder.parentNode;
 
+    // if this DOM was removed the update here is useless
+    // this condition fixes also a weird async issue on IE in our unit test
+    if (!root) return
+
     // object loop. any changes cause full redraw
     if (isObject$$1) {
       hasKeys = items || false;
@@ -2560,6 +2583,7 @@ function _each(dom, parent, expr) {
     // clone the items array
     oldItems = items.slice();
 
+    // this condition is weird u
     root.insertBefore(frag, placeholder);
   };
 
@@ -2663,12 +2687,14 @@ function parseExpressions(root, expressions, mustIncludeRoot) {
  */
 function parseAttributes(dom, attrs, fn) {
   each(attrs, (attr) => {
+    if (!attr) return false
+
     var name = attr.name, bool = isBoolAttr(name), expr;
 
     if (contains(REF_DIRECTIVES, name)) {
       expr =  Object.create(RefExpr).init(dom, this, name, attr.value);
     } else if (tmpl.hasExpr(attr.value)) {
-      expr = {dom: dom, expr: attr.value, attr: name, bool: bool};
+      expr = {dom: dom, expr: attr.value, attr: name, bool};
     }
 
     fn(attr, expr);
@@ -2689,6 +2715,7 @@ const reYieldDest = /<yield\s+from=['"]?([-\w]+)['"]?\s*(?:\/>|>([\S\s]*?)<\/yie
 const rootEls = { tr: 'tbody', th: 'tr', td: 'tr', col: 'colgroup' };
 const tblTags = IE_VERSION && IE_VERSION < 10 ? RE_SPECIAL_TAGS : RE_SPECIAL_TAGS_NO_OPTION;
 const GENERIC = 'div';
+const SVG = 'svg';
 
 
 /*
@@ -2751,12 +2778,13 @@ function replaceYield(tmpl, html) {
  * @param   { String } tmpl  - The template coming from the custom tag definition
  * @param   { String } html - HTML content that comes from the DOM element where you
  *           will mount the tag, mostly the original tag in the page
+ * @param   { Boolean } isSvg - true if the root node is an svg
  * @returns { HTMLElement } DOM element with _tmpl_ merged through `YIELD` with the _html_.
  */
-function mkdom(tmpl, html) {
+function mkdom(tmpl, html, isSvg$$1) {
   var match   = tmpl && tmpl.match(/^\s*<([-\w]+)/),
     tagName = match && match[1].toLowerCase(),
-    el = mkEl(GENERIC);
+    el = mkEl(isSvg$$1 ? SVG : GENERIC);
 
   // replace all the yield tags with the tag inner html
   tmpl = replaceYield(tmpl, html);
@@ -2853,11 +2881,12 @@ function tag2$1(name, tmpl, css, attrs, fn) {
  * @returns { Array } new tags instances
  */
 function mount$1(selector, tagName, opts) {
-  var tags = [];
+  const tags = [];
+  let elem, allTags;
 
   function pushTagsTo(root) {
     if (root.tagName) {
-      var riotTag = getAttr(root, IS_DIRECTIVE);
+      let riotTag = getAttr(root, IS_DIRECTIVE), tag;
 
       // have tagName? force riot-tag to be the same
       if (tagName && riotTag !== tagName) {
@@ -2865,7 +2894,7 @@ function mount$1(selector, tagName, opts) {
         setAttr(root, IS_DIRECTIVE, tagName);
       }
 
-      var tag = mountTo(root, riotTag || root.tagName.toLowerCase(), opts);
+      tag = mountTo(root, riotTag || root.tagName.toLowerCase(), opts);
 
       if (tag)
         tags.push(tag);
@@ -2880,9 +2909,6 @@ function mount$1(selector, tagName, opts) {
     opts = tagName;
     tagName = 0;
   }
-
-  var elem;
-  var allTags;
 
   // crawl the DOM to find the tag
   if (isString(selector)) {
@@ -2940,7 +2966,7 @@ let mixins_id = 0;
 function mixin$1(name, mix, g) {
   // Unnamed global
   if (isObject(name)) {
-    mixin$1(`__unnamed_${mixins_id++}`, name, true);
+    mixin$1(`__${mixins_id++}__`, name, true);
     return
   }
 
@@ -2949,7 +2975,7 @@ function mixin$1(name, mix, g) {
   // Getter
   if (!mix) {
     if (isUndefined(store[name]))
-      throw new Error('Unregistered mixin: ' + name)
+      throw new Error(`Unregistered mixin: ${ name }`)
 
     return store[name]
   }
@@ -2969,7 +2995,7 @@ function update$1() {
 }
 
 function unregister$1(name) {
-  delete __TAG_IMPL[name];
+  __TAG_IMPL[name] = null;
 }
 
 const version$1 = 'WIP';
@@ -3036,6 +3062,7 @@ function Tag$1(impl = {}, conf = {}, innerHTML) {
     root = conf.root,
     tagName = conf.tagName || getTagName(root),
     isVirtual = tagName === 'virtual',
+    isInline = !isVirtual && !impl.tmpl,
     propsInSyncWithParent = [],
     dom;
 
@@ -3054,6 +3081,7 @@ function Tag$1(impl = {}, conf = {}, innerHTML) {
     tagName,
     index,
     isLoop,
+    isInline,
     // tags having event listeners
     // it would be better to use weak maps here but we can not introduce breaking changes now
     listeners: [],
@@ -3075,7 +3103,12 @@ function Tag$1(impl = {}, conf = {}, innerHTML) {
   defineProperty(this, 'tags', {});
   defineProperty(this, 'refs', {});
 
-  dom = isLoop && isAnonymous ? root : mkdom(impl.tmpl, innerHTML, isLoop);
+  if (isInline || isLoop && isAnonymous) {
+    dom = root;
+  } else {
+    if (!isVirtual) root.innerHTML = '';
+    dom = mkdom(impl.tmpl, innerHTML, isSvg(root));
+  }
 
   /**
    * Update the tag expressions and options
@@ -3205,7 +3238,7 @@ function Tag$1(impl = {}, conf = {}, innerHTML) {
 
     this.update(item);
 
-    if (!isAnonymous) {
+    if (!isAnonymous && !isInline) {
       while (dom.firstChild) root.appendChild(dom.firstChild);
     }
 
@@ -3247,6 +3280,7 @@ function Tag$1(impl = {}, conf = {}, innerHTML) {
     walkAttrs(impl.attrs, (name) => {
       if (startsWith(name, ATTRS_PREFIX))
         name = name.slice(ATTRS_PREFIX.length);
+
       remAttr(root, name);
     });
 
@@ -3271,8 +3305,10 @@ function Tag$1(impl = {}, conf = {}, innerHTML) {
           });
         } else {
           arrayishRemove(ptag.tags, tagName, this);
-          if(parent !== ptag) // remove from _parent too
+          // remove from _parent too
+          if(parent !== ptag) {
             arrayishRemove(parent.tags, tagName, this);
+          }
         }
       } else {
         // remove the tag contents
@@ -3280,9 +3316,6 @@ function Tag$1(impl = {}, conf = {}, innerHTML) {
       }
 
       if (p && !mustKeepRoot) p.removeChild(el);
-
-      // the data-is attributes isn't needed anymore, remove it
-      remAttr(el, IS_DIRECTIVE);
     }
 
     if (this.__.virts) {
@@ -3520,9 +3553,6 @@ function mountTo(root, tagName, opts, ctx) {
     tag = ctx || (implClass ? Object.create(implClass.prototype) : {}),
     // cache the inner HTML to fix #855
     innerHTML = root._innerHTML = root._innerHTML || root.innerHTML;
-
-  // clear the inner html
-  root.innerHTML = '';
 
   var conf = extend$2({ root: root, opts: opts }, { parent: opts ? opts.parent : null });
 
@@ -3819,6 +3849,22 @@ var Ref$1 = Ref = (function() {
     return this;
   };
 
+  Ref.prototype.clear = function() {
+    var child, id, ref;
+    this._cache = {};
+    ref = this._children;
+    for (id in ref) {
+      child = ref[id];
+      child.clear();
+    }
+    this._children = {};
+    this._numChildren = 0;
+    this._value = void 0;
+    if (this.parent != null) {
+      return this.parent.set(this.key, void 0);
+    }
+  };
+
   Ref.prototype.destroy = function() {
     var child, id, ref;
     ref = this._children;
@@ -3880,9 +3926,13 @@ var Ref$1 = Ref = (function() {
     oldValue = this.get(key);
     this._mutate(key);
     if (value == null) {
-      this.value(index(this.value(), key));
+      if (isObject$2(key)) {
+        this.value(index(this.value(), key));
+      } else {
+        this.index(key, value, false);
+      }
     } else {
-      this.index(key, value);
+      this.index(key, value, false);
     }
     this._triggerSet(key, value, oldValue);
     this._triggerSetChildren(key, value, oldValue);
@@ -3954,19 +4004,22 @@ var Ref$1 = Ref = (function() {
     return new Ref(index({}, this.get(key)));
   };
 
-  Ref.prototype.index = function(key, value, obj, prev) {
+  Ref.prototype.index = function(key, value, get, obj) {
     var next, prop, props;
+    if (get == null) {
+      get = true;
+    }
     if (obj == null) {
       obj = this.value();
     }
     if (this.parent) {
-      return this.parent.index(this.key + '.' + key, value);
+      return this.parent.index(this.key + '.' + key, value, get);
     }
     if (isNumber$1(key)) {
       key = String(key);
     }
     props = key.split('.');
-    if (value == null) {
+    if (get) {
       while (prop = props.shift()) {
         if (!props.length) {
           return obj != null ? obj[prop] : void 0;
@@ -3974,6 +4027,12 @@ var Ref$1 = Ref = (function() {
         obj = obj != null ? obj[prop] : void 0;
       }
       return;
+    }
+    if (this._value == null) {
+      this._value = {};
+      if (obj == null) {
+        obj = this._value;
+      }
     }
     while (prop = props.shift()) {
       if (!props.length) {
@@ -4004,7 +4063,7 @@ var Ref$1 = Ref = (function() {
 var methods;
 var refer;
 
-methods = ['extend', 'get', 'index', 'ref', 'set', 'value', 'on', 'off', 'one', 'trigger'];
+methods = ['extend', 'get', 'index', 'ref', 'set', 'value', 'clear', 'destroy', 'on', 'off', 'one', 'trigger'];
 
 refer = function(state, ref) {
   var fn, i, len, method, wrapper;
@@ -4294,6 +4353,7 @@ inputify = function(data, configs) {
       config: config,
       validate: validate
     };
+    observable$1(input);
     return inputs[name] = input;
   };
   for (name in configs) {
@@ -4318,17 +4378,9 @@ Form = (function(superClass) {
   }
 
   Form.prototype.initInputs = function() {
-    var input, name, ref, results1;
     this.inputs = {};
     if (this.configs != null) {
-      this.inputs = inputify$1(this.data, this.configs);
-      ref = this.inputs;
-      results1 = [];
-      for (name in ref) {
-        input = ref[name];
-        results1.push(observable$1(input));
-      }
-      return results1;
+      return this.inputs = inputify$1(this.data, this.configs);
     }
   };
 
@@ -4337,7 +4389,7 @@ Form = (function(superClass) {
   };
 
   Form.prototype.submit = function(e) {
-    var input, name, pRef, ps, ref;
+    var input, name, p, pRef, ps, ref;
     ps = [];
     ref = this.inputs;
     for (name in ref) {
@@ -4348,7 +4400,7 @@ Form = (function(superClass) {
         ps.push(pRef.p);
       }
     }
-    Promise$2.settle(ps).then((function(_this) {
+    p = Promise$2.settle(ps).then((function(_this) {
       return function(results) {
         var i, len, result;
         for (i = 0, len = results.length; i < len; i++) {
@@ -4364,7 +4416,7 @@ Form = (function(superClass) {
       e.preventDefault();
       e.stopPropagation();
     }
-    return false;
+    return p;
   };
 
   Form.prototype._submit = function() {};
@@ -4400,6 +4452,23 @@ Input = (function(superClass) {
   };
 
   Input.prototype.init = function() {
+    var ref1, ref2;
+    if ((this.input == null) && (this.lookup == null) && (this.bind == null)) {
+      throw new Error('No input or bind provided');
+    }
+    if ((this.input == null) && (this.inputs != null)) {
+      this.input = this.inputs[(ref1 = this.lookup) != null ? ref1 : this.bind];
+    }
+    if (this.input == null) {
+      this.input = {
+        name: (ref2 = this.lookup) != null ? ref2 : this.bind,
+        ref: this.data,
+        validate: function(ref, name) {
+          return Promise.resolve([ref, name]);
+        }
+      };
+      observable$1(this.input);
+    }
     this.input.on('validate', (function(_this) {
       return function(pRef) {
         return _this.validate(pRef);
@@ -4537,29 +4606,12 @@ var Control$1 = Control = (function(superClass) {
   Control.prototype.errorHtml = '<div class="error" if="{ errorMessage }">{ errorMessage }</div>';
 
   Control.prototype.init = function() {
-    if ((this.input == null) && (this.lookup == null)) {
-      throw new Error('No input or lookup provided');
-    }
-    if ((this.input == null) && (this.inputs != null)) {
-      this.input = this.inputs[this.lookup];
-    }
-    if (this.input == null) {
-      this.input = {
-        name: this.lookup,
-        ref: this.data.ref(this.lookup),
-        validate: function(ref, name) {
-          return Promise.resolve([ref, name]);
-        }
-      };
-    }
-    if (this.inputs != null) {
-      return Control.__super__.init.apply(this, arguments);
-    }
+    return Control.__super__.init.apply(this, arguments);
   };
 
   Control.prototype.getValue = function(event) {
-    var ref1;
-    return (ref1 = $(event.target).val()) != null ? ref1.trim() : void 0;
+    var ref;
+    return (ref = $(event.target).val()) != null ? ref.trim() : void 0;
   };
 
   Control.prototype.error = function(err) {
