@@ -19,7 +19,7 @@
 
 // .valid + .placeholder
 //   color: $themeGoodColor
-.invalid + .placeholder
+.invalid ~ .placeholder
   color: $themeErrorColor
 
 .error
@@ -30,8 +30,8 @@
   font-size: .75em
   line-height: 1em
 
-input:focus + .placeholder
-input:hover + .placeholder
+input:focus ~ .placeholder
+input:hover ~ .placeholder
 .placeholder.small
   top: -6px
   font-size: .75em
