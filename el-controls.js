@@ -4716,6 +4716,10 @@ var Control$1 = Control = (function(superClass) {
 
   Control.prototype.errorHtml = '<div class="error" if="{ errorMessage }">{ errorMessage }</div>';
 
+  Control.prototype.beforeInit = function() {
+    return this.html += this.errorHtml;
+  };
+
   Control.prototype.init = function() {
     return Control.__super__.init.apply(this, arguments);
   };
