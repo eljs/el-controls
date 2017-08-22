@@ -28,6 +28,7 @@ task 'build:min', 'build js for production', ['build'], ->
       coffee: version: 1
   yield exec 'mv -f elcontrols.js el-controls.js'
   yield exec 'uglifyjs el-controls.js -o el-controls.min.js'
+  yield exec 'cp lib/theme.css theme.css'
 
 task 'build:static', 'build static assets', ->
   exec '''
