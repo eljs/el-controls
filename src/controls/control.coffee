@@ -5,6 +5,11 @@ scrolling = false
 
 export default class Control extends El.Input
   errorHtml: '<div class="error" if="{ errorMessage }">{ errorMessage }</div>'
+
+  beforeInit: ->
+    # Modify template before initialization
+    @html += @errorHtml
+
   init: ->
     super
 
