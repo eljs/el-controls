@@ -1,3 +1,4 @@
+import $    from '../$'
 import Select from './select'
 import states from '../data/states'
 

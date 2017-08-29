@@ -1,5 +1,7 @@
+import $    from '../$'
 import Text from './text'
 import keys from '../utils/keys'
+
 import {restrictNumeric} from '../utils/card'
 
 class CardCVC extends Text

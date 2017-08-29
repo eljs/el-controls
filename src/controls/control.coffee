@@ -1,5 +1,6 @@
-import El           from 'el.js'
-import Events       from  '../events'
+import $        from '../$'
+import El       from 'el.js'
+import Events   from  '../events'
 
 scrolling = false
 
