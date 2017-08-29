@@ -28,5 +28,4 @@ else
   # Use whichever $
   $ = window.$
 
-
 export default $
