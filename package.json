@@ -37,7 +37,7 @@
   "scripts": {
     "build": "sake build",
     "pretest": "sake build",
-    "prepublishOnly": "sake build",
+    "prepublishOnly": "sake build:min",
     "test": "sake test"
   },
   "dependencies": {
