@@ -1,3 +1,4 @@
+import $         from '../$'
 import selectize from 'es-selectize'
 import {raf}     from 'es-raf'
 
