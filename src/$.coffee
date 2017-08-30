@@ -1,6 +1,9 @@
 # Use zepto if there's no jquery involved so we can run without it.
 # Use jquery or something else if you need better compatibility.
-import zepto from 'zepto-modules/_default'
+import zepto from 'zepto-modules/zepto'
+import 'zepto-modules/event'
+import 'zepto-modules/ie'
+import 'zepto-modules/stack'
 import 'zepto-modules/selector'
 
 $ = zepto
@@ -29,3 +32,4 @@ else
   $ = window.$
 
 export default $
+
