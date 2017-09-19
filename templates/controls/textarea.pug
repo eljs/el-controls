@@ -1,6 +1,23 @@
-textarea(id='{ input.name }',name='{ name || input.name }',rows='{ rows }',cols='{ cols }',type='text',onchange='{ change }',onblur='{ change }',placeholder='{ placeholder }',class='{invalid: errorMessage, valid: valid}')
-  | { input.ref.get(input.name) }
-.placeholder(class='{ small: input.ref.get(input.name) }')
-  | { placeholder }
+#{ 'yield' }(from='input')
+  textarea(
+    id='{ input.name }',
+    name='{ name || input.name }',
+    onchange='{ change }',
+    onblur='{ change }',
+    class='{invalid: errorMessage, valid: valid}'
+    rows='{ rows }',
+    cols='{ cols }',
+    disabled='{disabled'
+    maxlength='{ maxlength }',
+    placeholder='{ instructions || placeholder }',
+    readonly='{ readonly }'
+    wrap='{ wrap }'
+  )
+    | { input.ref.get(input.name) }
+#{ 'yield' }(from='placeholder')
+  .placeholder.small
+    | { placeholder }
 #{ 'yield' }
-
+  #{ 'yield' }(from='error')
+    .error(if='{ errorMessage }')
+      | { errorMessage }

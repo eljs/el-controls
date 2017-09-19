@@ -11,13 +11,10 @@
     autofocus='{ autofocus }',
     disabled='{ disabled }',
     maxlength='{ maxlength }',
+    placeholder='{ placeholder }',
     readonly='{ readonly }'
   )
-#{ 'yield' }(from='placeholder')
-  .placeholder(class='{ small: input.ref.get(input.name) }')
-    | { placeholder }
 #{ 'yield' }
   #{ 'yield' }(from='error')
     .error(if='{ errorMessage }')
       | { errorMessage }
-

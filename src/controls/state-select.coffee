@@ -1,50 +1,34 @@
-import $    from '../$'
 import Select from './select'
-import states from '../data/states'
-
-import html from '../../templates/controls/state-select'
 
 export default class StateSelect extends Select
-  tag: 'state-select'
-  html: html
+  tag: 'state-selection'
+
   options: ->
-    return states.data
-  countryField: 'order.shippingAddress.country'
+    countries = @countries ? @data?.get('countries') ? @parent?.data?.get('countries') ? []
+    country = @getCountry()
 
-  getValue: (event)->
-    if @input.ref.get(@countryField) == 'us'
-      return $(event.target).val()?.trim().toLowerCase()
-    else
-      return $(event.target).val()?.trim()
+    @selectOptions = options = {}
 
-  init: ()->
-    super
+    code == getCountry()
 
-    @on 'update', ()=>
-      if !@input?
-        return
-
-      state = @input.ref.get 'order.shippingAddress.state'
-      if state
-        state = state.toLowerCase()
-        if state.length == 2
-          @input.ref.set 'order.shippingAddress.state', state
-        else
-          for k, v of states.data
-            if v.toLowerCase() == state
-              @input.ref.set 'order.shippingAddress.state', k
-              return
-
-  onUpdated: ()->
-    if !@input?
+    # code is a 2 character alpha code
+    if !code || code.length != 2
       return
 
-    if @input.ref.get(@countryField) == 'us'
-      $(@root).find('.selectize-control').show()
-    else
-      $(@root).find('.selectize-control').hide()
-      value = @input.ref.get(@input.name)
-      @input.ref.set(@input.name, value) if value
+    code = code.toUpperCase()
+
+    for country in countries
+      if country.code.toUpperCase() == code
+        for subdivision in country.subdivisions
+          options[subdivision.code] = subdivision.name
+        break
+
+    return options
+
+  getCountry: ->
+    return ''
+
+  init: ()->
     super
 
 StateSelect.register()

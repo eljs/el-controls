@@ -1,24 +1,37 @@
 import Select from './select'
-import countries from '../data/countries'
 
 export default class CountrySelect extends Select
-  tag: 'country-select'
+  tag: 'country-selection'
+
+  _countryCount: 0
+
+  # set up the countries in selectedOptions
+  # countries should be in the form of
+  # [{
+  #     code: 'XX',
+  #     name: 'Country Name',
+  #     subdivisions: [{
+  #         code: 'YY',
+  #         name: 'Subdivision Name',
+  #     }]
+  # }]
+  #
   options: ->
-    return countries.data
+    countries = @countries ? @data?.get('countries') ? @parent?.data?.get('countries') ? []
+
+    if @_countryCount == countries.length
+      return @selectOptions
+
+    _countryCount = countries.length
+
+    @selectOptions = options = {}
+
+    for country in countries
+      options[country.code] = country.name
+
+    return options
 
   init: ()->
     super
-
-    @on 'update', ()=>
-      country = @input.ref.get 'order.shippingAddress.country'
-      if country
-        country = country.toLowerCase()
-        if country.length == 2
-          @input.ref.set 'order.shippingAddress.country', country
-        else
-          for k, v of countries.data
-            if v.toLowerCase() == country
-              @input.ref.set 'order.shippingAddress.country', k
-              return
 
 CountrySelect.register()

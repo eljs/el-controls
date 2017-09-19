@@ -1,0 +1,9 @@
+#{ 'yield' }(from='input')
+  select(id='{ input.name }', style='display: none', name='{ name || input.name }', onchange='{ change }', onblur='{ change }', placeholder='{ instructions || placeholder }',class='{invalid: errorMessage, valid: valid}')
+#{ 'yield' }(from='placeholder')
+  .placeholder.small
+    | { placeholder }
+#{ 'yield' }
+  #{ 'yield' }(from='error')
+    .error(if='{ errorMessage }')
+      | { errorMessage }
