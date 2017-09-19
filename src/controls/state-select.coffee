@@ -5,11 +5,10 @@ export default class StateSelect extends Select
 
   options: ->
     countries = @countries ? @data?.get('countries') ? @parent?.data?.get('countries') ? []
-    country = @getCountry()
 
     @selectOptions = options = {}
 
-    code == getCountry()
+    code = @getCountry()
 
     # code is a 2 character alpha code
     if !code || code.length != 2

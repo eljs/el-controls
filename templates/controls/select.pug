@@ -11,7 +11,7 @@
     multiple='{ multiple }',
     size='{ size }'
   )
-    option(each='{ v, k in options() }', value='{ k }', selected='{ k == data.get("input.name") }') v
+    option(each='{ v, k in options() }', value='{ k }', selected='{ k == input.ref.get(input.name) }') v
 #{ 'yield' }(from='placeholder')
   .placeholder.small
     | { placeholder }
