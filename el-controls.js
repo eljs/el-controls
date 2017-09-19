@@ -5002,14 +5002,14 @@ class Lite {
 // node_modules/es6-tween/src/index.lite.js
 
 // src/controls/control.coffee
-var Control$1;
+var Control;
 var scrolling;
 var extend$1 = function(child, parent) { for (var key in parent) { if (hasProp$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 var hasProp$1 = {}.hasOwnProperty;
 
 scrolling = false;
 
-var Control$2 = Control$1 = (function(superClass) {
+var Control$1 = Control = (function(superClass) {
   extend$1(Control, superClass);
 
   function Control() {
@@ -5096,12 +5096,12 @@ var checkbox = CheckBox = (function(superClass) {
 
   return CheckBox;
 
-})(Control$2);
+})(Control$1);
 
 CheckBox.register();
 
 // templates/controls/select.pug
-var html$1 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" onchange=\"{ change }\" onblur=\"{ change }\" placeholder=\"{ instructions || placeholder }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" multiple=\"{ multiple }\" size=\"{ size }\">\n    <option each=\"{ v, k in options() }\" value=\"{ k }\" selected=\"{ k == data.get(&quot;input.name&quot;) }\">v</option>\n  </select>\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder small\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
+var html$1 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" onchange=\"{ change }\" onblur=\"{ change }\" placeholder=\"{ instructions || placeholder }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" multiple=\"{ multiple }\" size=\"{ size }\">\n    <option each=\"{ v, k in options() }\" value=\"{ k }\" selected=\"{ k == input.ref.get(input.name) }\">v</option>\n  </select>\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder small\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
 
 // src/controls/select.coffee
 var Select;
@@ -5149,7 +5149,7 @@ var Select$1 = Select = (function(superClass) {
 
   return Select;
 
-})(Control);
+})(Control$1);
 
 Select.register();
 
@@ -10116,7 +10116,7 @@ var Text$1 = Text = (function(superClass) {
 
   return Text;
 
-})(Control$2);
+})(Control$1);
 
 Text.register();
 
@@ -10275,9 +10275,8 @@ var stateSelect = StateSelect = (function(superClass) {
   StateSelect.prototype.options = function() {
     var code, countries, country, i, j, len, len1, options, ref, ref1, ref2, ref3, ref4, ref5, ref6, subdivision;
     countries = (ref = (ref1 = (ref2 = this.countries) != null ? ref2 : (ref3 = this.data) != null ? ref3.get('countries') : void 0) != null ? ref1 : (ref4 = this.parent) != null ? (ref5 = ref4.data) != null ? ref5.get('countries') : void 0 : void 0) != null ? ref : [];
-    country = this.getCountry();
     this.selectOptions = options = {};
-    code === getCountry();
+    code = this.getCountry();
     if (!code || code.length !== 2) {
       return;
     }
@@ -10359,7 +10358,7 @@ var TextBox$1 = TextBox;
 
 exports.Events = Events$1;
 exports.CheckBox = checkbox;
-exports.Control = Control$2;
+exports.Control = Control$1;
 exports.CountrySelect = countrySelect;
 exports.Dropdown = dropdown;
 exports.Select = Select$1;

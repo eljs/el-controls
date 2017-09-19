@@ -1,4 +1,5 @@
-import { raf }     from 'es-raf'
+import Control from './control'
+
 import html from '../../templates/controls/select'
 
 export default class Select extends Control
@@ -20,7 +21,7 @@ export default class Select extends Control
 
   getValue: (e)->
     el = e.target
-    return (el.options[el.selectedIndex].value ? '').trim()
+    return (el.options?[el.selectedIndex]?.value ? '').trim()
 
   init:(opts)->
     super
