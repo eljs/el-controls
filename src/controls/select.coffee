@@ -1,6 +1,4 @@
 import { raf }     from 'es-raf'
-
-class TextBox extends Text
 import html from '../../templates/controls/select'
 
 export default class Select extends Control
