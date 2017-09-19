@@ -5105,20 +5105,8 @@ var html$1 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage
 
 // src/controls/select.coffee
 var Select;
-var TextBox;
 var extend$5 = function(child, parent) { for (var key in parent) { if (hasProp$4.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 var hasProp$4 = {}.hasOwnProperty;
-
-TextBox = (function(superClass) {
-  extend$5(TextBox, superClass);
-
-  function TextBox() {
-    return TextBox.__super__.constructor.apply(this, arguments);
-  }
-
-  return TextBox;
-
-})(Text);
 
 var Select$1 = Select = (function(superClass) {
   extend$5(Select, superClass);
@@ -10084,11 +10072,11 @@ var placeholder = exports$1;
 var html$2 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\">\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder { small: input.ref.get(input.name) }\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
 
 // src/controls/text.coffee
-var Text$1;
+var Text;
 var extend$8 = function(child, parent) { for (var key in parent) { if (hasProp$6.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 var hasProp$6 = {}.hasOwnProperty;
 
-var Text$2 = Text$1 = (function(superClass) {
+var Text$1 = Text = (function(superClass) {
   extend$8(Text, superClass);
 
   function Text() {
@@ -10130,7 +10118,7 @@ var Text$2 = Text$1 = (function(superClass) {
 
 })(Control$2);
 
-Text$1.register();
+Text.register();
 
 // templates/controls/dropdown.pug
 var html$3 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" style=\"display: none;\" name=\"{ name || input.name }\" onchange=\"{ change }\" onblur=\"{ change }\" placeholder=\"{ instructions || placeholder }\"></select>\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder small\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
@@ -10266,7 +10254,7 @@ var dropdown = Select$2 = (function(superClass) {
 
   return Select;
 
-})(Text$2);
+})(Text$1);
 
 Select$2.register();
 
@@ -10326,11 +10314,11 @@ StateSelect.register();
 var html$4 = "\n<yield from=\"input\">\n  <textarea class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" onchange=\"{ change }\" onblur=\"{ change }\" rows=\"{ rows }\" cols=\"{ cols }\" disabled=\"{disabled\" maxlength=\"{ maxlength }\" placeholder=\"{ instructions || placeholder }\" readonly=\"{ readonly }\" wrap=\"{ wrap }\">{ input.ref.get(input.name) }</textarea>\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder small\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
 
 // src/controls/textbox.coffee
-var TextBox$1;
+var TextBox;
 var extend$10 = function(child, parent) { for (var key in parent) { if (hasProp$8.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 var hasProp$8 = {}.hasOwnProperty;
 
-TextBox$1 = (function(superClass) {
+TextBox = (function(superClass) {
   extend$10(TextBox, superClass);
 
   function TextBox() {
@@ -10359,11 +10347,11 @@ TextBox$1 = (function(superClass) {
 
   return TextBox;
 
-})(Text$2);
+})(Text$1);
 
-TextBox$1.register();
+TextBox.register();
 
-var TextBox$2 = TextBox$1;
+var TextBox$1 = TextBox;
 
 // src/controls/index.coffee
 
@@ -10376,7 +10364,7 @@ exports.CountrySelect = countrySelect;
 exports.Dropdown = dropdown;
 exports.Select = Select$1;
 exports.StateSelect = stateSelect;
-exports.Text = Text$2;
-exports.TextBox = TextBox$2;
+exports.Text = Text$1;
+exports.TextBox = TextBox$1;
 
 }((this.ElControls = this.ElControls || {})));
