@@ -1,21 +1,16 @@
-import $        from '../$'
 import El       from 'el.js'
 import Events   from  '../events'
+
+import { Tween, Easing, autoPlay } from 'es6-tween/src/index.lite'
 
 scrolling = false
 
 export default class Control extends El.Input
-  errorHtml: '<div class="error" if="{ errorMessage }">{ errorMessage }</div>'
-
-  beforeInit: ->
-    # Modify template before initialization
-    @html += @errorHtml
-
   init: ->
     super
 
   getValue: (event) ->
-    return $(event.target).val()?.trim()
+    return event.target.value?.trim()
 
   error: (err) ->
     if err instanceof DOMException
@@ -24,14 +19,23 @@ export default class Control extends El.Input
 
     super
 
-    if !scrolling && $(@root).offset().top <= $(window).scrollTop()
+    rect = @root.getBoundingClientRect()
+    elTop = rect.top
+    wTop = window.pageYOffset
+
+    if !scrolling && elTop <= wTop
       scrolling = true
-      $('html, body').animate
-        scrollTop: $(@root).offset().top - $(window).height()/2
-      ,
-        complete: ->
+
+      autoPlay true
+
+      t = new Tween { x: 0 }
+        .to { x: elTop }, 500, Easing.Cubic
+        .onUpdate (x)->
+          percent = x / elTop
+          window.scrollTo window.pageXOffset, wTop - x
+        .onComplete ->
           scrolling = false
-        duration: 500
+
     @mediator.trigger Events.ChangeFailed, @input.name, @input.ref.get @input.name
 
   change: ->

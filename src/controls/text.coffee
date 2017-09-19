@@ -8,11 +8,17 @@ export default class Text extends Control
   html:         html
   type:         'text'
   formElement:  'input'
-  autoComplete: 'on'
+
+  autocomplete: 'on'
+  autofocus:    false
+  disabled:     false
+  maxlength:    null
+  readonly:     false
+
   init: ()->
     super
 
-    @on 'updated', =>
+    @on 'mounted', =>
       el = @root.getElementsByTagName(@formElement)[0]
 
       if @type != 'password'
