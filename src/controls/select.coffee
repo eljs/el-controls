@@ -6,17 +6,28 @@ export default class Select extends Control
   tag: 'selection'
   html: html
 
-  instructions: ''
+  instructions: 'Select an Option'
 
   autofocus:    false
   disabled:     false
   multiple:     false
-  require:      false
-  size:         10
+  size:         null
 
+  # default to something that will be visible
+  _optionsHash: 'default'
   selectOptions: {}
 
+  hasOptions: ->
+    # call for side effects
+    @options
+    return @_optionsHash.length > 2
+
   options: ->
+    optionsHash = JSON.stringify @selectOptions
+
+    if @_optionsHash != optionsHash
+      @_optionsHash = optionsHash
+
     return @selectOptions
 
   getValue: (e)->

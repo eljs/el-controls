@@ -108,6 +108,7 @@
   border-width:1px;
   border-radius:0;
   transition:border-color 500ms ease-in-out, color 500ms ease-in-out;
+  padding:0 $inputHPadding;
 }
 .input textarea{
   outline:none;
@@ -120,6 +121,33 @@
 .input textarea{
   width:100%;
   font-size:1em;
+}
+.input select{
+  width:100%;
+  background:none;
+  border:0;
+  border-bottom:1px solid;
+  border-color:#000;
+  border-width:1px;
+  border-radius:0;
+  line-height:2rem;
+  font-size:1rem;
+  -webkit-appearance:none;
+     -moz-appearance:none;
+          appearance:none;
+}
+.input select::-ms-expand{
+  display:none;
+}
+.input select:after{
+  position:absolute;
+  top:1rem;
+  right:0.1rem;
+  font-size:0.5em;
+  -webkit-transform:translateY(-50%);
+          transform:translateY(-50%);
+  display:block;
+  content:'▼';
 }
 .input.input.input,
 .input .input.input{

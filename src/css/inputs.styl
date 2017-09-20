@@ -67,6 +67,7 @@ input[type=password]
   border-width: $themeInputBorderWidth
   border-radius: 0
   transition: border-color $themeTransitionTime ease-in-out, color $themeTransitionTime ease-in-out
+  padding: 0 $inputHPadding
 
 textarea
   outline: none
@@ -79,3 +80,27 @@ input[type=password]
 textarea
   width: 100%
   font-size: 1em
+
+select
+  width: 100%
+  background: none
+  border: 0
+  border-bottom: $themeInputBorderWidth solid
+  border-color: $themeBorderColor
+  border-width: $themeInputBorderWidth
+  border-radius: 0
+  line-height: $themeElementHeight
+  font-size: 1rem
+  appearance: none
+
+  &::-ms-expand
+    display: none /* hide the default arrow in ie10 and ie11 */
+
+  &:after
+    position: absolute
+    top: 1rem
+    right: .1rem
+    font-size: .5em
+    transform: translateY(-50%)
+    display: block
+    content: '▼'
