@@ -1,7 +1,7 @@
 import El       from 'el.js'
 import Events   from  '../events'
 
-import { Tween, Easing, autoPlay } from 'es6-tween/src/index.lite.'
+import { Tween, Easing, autoPlay } from 'es6-tween/src/index.lite'
 
 scrolling = false
 
@@ -20,7 +20,7 @@ export default class Control extends El.Input
     super
 
     rect = @root.getBoundingClientRect()
-    elTop = rect.top
+    elTop = rect.top - window.innerHeight / 2
     wTop = window.pageYOffset
 
     if !scrolling && elTop <= wTop
@@ -28,13 +28,14 @@ export default class Control extends El.Input
 
       autoPlay true
 
-      t = new Tween { x: 0 }
-        .to { x: elTop }, 500, Easing.Cubic
-        .onUpdate (x)->
-          percent = x / elTop
-          window.scrollTo window.pageXOffset, wTop - x
+      t = new Tween { x: wTop }
+        .to { x: wTop + elTop }, 500, Easing.Cubic
+        .onUpdate ({ x })->
+          window.scrollTo window.pageXOffset, x
         .onComplete ->
           scrolling = false
+          autoPlay false
+        .start()
 
     @mediator.trigger Events.ChangeFailed, @input.name, @input.ref.get @input.name
 

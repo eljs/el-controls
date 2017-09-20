@@ -5033,22 +5033,23 @@ var Control$1 = Control = (function(superClass) {
     }
     Control.__super__.error.apply(this, arguments);
     rect = this.root.getBoundingClientRect();
-    elTop = rect.top;
+    elTop = rect.top - window.innerHeight / 2;
     wTop = window.pageYOffset;
     if (!scrolling && elTop <= wTop) {
       scrolling = true;
       autoPlay(true);
       t = new Lite({
-        x: 0
+        x: wTop
       }).to({
-        x: elTop
-      }, 500, Easing.Cubic).onUpdate(function(x) {
-        var percent;
-        percent = x / elTop;
-        return window.scrollTo(window.pageXOffset, wTop - x);
+        x: wTop + elTop
+      }, 500, Easing.Cubic).onUpdate(function(arg) {
+        var x;
+        x = arg.x;
+        return window.scrollTo(window.pageXOffset, x);
       }).onComplete(function() {
-        return scrolling = false;
-      });
+        scrolling = false;
+        return autoPlay(false);
+      }).start();
     }
     return this.mediator.trigger(Events$1.ChangeFailed, this.input.name, this.input.ref.get(this.input.name));
   };
@@ -5101,7 +5102,7 @@ var checkbox = CheckBox = (function(superClass) {
 CheckBox.register();
 
 // templates/controls/select.pug
-var html$1 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" onchange=\"{ change }\" onblur=\"{ change }\" placeholder=\"{ instructions || placeholder }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" multiple=\"{ multiple }\" size=\"{ size }\">\n    <option each=\"{ v, k in options() }\" value=\"{ k }\" selected=\"{ k == input.ref.get(input.name) }\">v</option>\n  </select>\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder small\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
+var html$1 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" onchange=\"{ change }\" onblur=\"{ change }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" multiple=\"{ multiple }\" size=\"{ size }\" if=\"{ hasOptions() }\">\n    <option if=\"{ instructions || placeholder }\" value=\"\">{ instructions || placeholder }</option>\n    <option each=\"{ v, k in options() }\" value=\"{ k }\" selected=\"{ k == input.ref.get(input.name) }\">{ v }</option>\n  </select>\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder small\" if=\"{ hasOptions() }\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ hasOptions() &amp;&amp; errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
 
 // src/controls/select.coffee
 var Select;
@@ -5119,7 +5120,7 @@ var Select$1 = Select = (function(superClass) {
 
   Select.prototype.html = html$1;
 
-  Select.prototype.instructions = '';
+  Select.prototype.instructions = 'Select an Option';
 
   Select.prototype.autofocus = false;
 
@@ -5127,20 +5128,30 @@ var Select$1 = Select = (function(superClass) {
 
   Select.prototype.multiple = false;
 
-  Select.prototype.require = false;
+  Select.prototype.size = null;
 
-  Select.prototype.size = 10;
+  Select.prototype._optionsHash = 'default';
 
   Select.prototype.selectOptions = {};
 
+  Select.prototype.hasOptions = function() {
+    this.options;
+    return this._optionsHash.length > 2;
+  };
+
   Select.prototype.options = function() {
+    var optionsHash;
+    optionsHash = JSON.stringify(this.selectOptions);
+    if (this._optionsHash !== optionsHash) {
+      this._optionsHash = optionsHash;
+    }
     return this.selectOptions;
   };
 
   Select.prototype.getValue = function(e) {
-    var el, ref;
+    var el, ref, ref1, ref2;
     el = e.target;
-    return ((ref = el.options[el.selectedIndex].value) != null ? ref : '').trim();
+    return ((ref = (ref1 = el.options) != null ? (ref2 = ref1[el.selectedIndex]) != null ? ref2.value : void 0 : void 0) != null ? ref : '').trim();
   };
 
   Select.prototype.init = function(opts) {
@@ -5167,19 +5178,31 @@ var countrySelect = CountrySelect = (function(superClass) {
 
   CountrySelect.prototype.tag = 'country-selection';
 
-  CountrySelect.prototype._countryCount = 0;
-
   CountrySelect.prototype.options = function() {
-    var _countryCount, countries, country, i, len, options, ref, ref1, ref2, ref3, ref4, ref5;
+    var countries, country, i, len, options, optionsHash, ref, ref1, ref2, ref3, ref4, ref5;
     countries = (ref = (ref1 = (ref2 = this.countries) != null ? ref2 : (ref3 = this.data) != null ? ref3.get('countries') : void 0) != null ? ref1 : (ref4 = this.parent) != null ? (ref5 = ref4.data) != null ? ref5.get('countries') : void 0 : void 0) != null ? ref : [];
-    if (this._countryCount === countries.length) {
+    optionsHash = JSON.stringify(countries);
+    if (this._optionsHash === optionsHash) {
       return this.selectOptions;
     }
-    _countryCount = countries.length;
+    this._optionsHash = optionsHash;
     this.selectOptions = options = {};
+    this.input.ref.set(this.input.name, '');
+    countries.sort(function(a, b) {
+      var nameA, nameB;
+      nameA = a.name.toUpperCase();
+      nameB = b.name.toUpperCase();
+      if (nameA < nameB) {
+        return -1;
+      }
+      if (nameA > nameB) {
+        return 1;
+      }
+      return 0;
+    });
     for (i = 0, len = countries.length; i < len; i++) {
       country = countries[i];
-      options[country.code] = country.name;
+      options[country.code.toUpperCase()] = country.name;
     }
     return options;
   };
@@ -10273,24 +10296,44 @@ var stateSelect = StateSelect = (function(superClass) {
   StateSelect.prototype.tag = 'state-selection';
 
   StateSelect.prototype.options = function() {
-    var code, countries, country, i, j, len, len1, options, ref, ref1, ref2, ref3, ref4, ref5, ref6, subdivision;
+    var code, countries, country, i, j, len, len1, options, optionsHash, ref, ref1, ref2, ref3, ref4, ref5, subdivision, subdivisions;
     countries = (ref = (ref1 = (ref2 = this.countries) != null ? ref2 : (ref3 = this.data) != null ? ref3.get('countries') : void 0) != null ? ref1 : (ref4 = this.parent) != null ? (ref5 = ref4.data) != null ? ref5.get('countries') : void 0 : void 0) != null ? ref : [];
-    this.selectOptions = options = {};
     code = this.getCountry();
     if (!code || code.length !== 2) {
+      this._optionsHash = '';
       return;
     }
     code = code.toUpperCase();
     for (i = 0, len = countries.length; i < len; i++) {
       country = countries[i];
       if (country.code.toUpperCase() === code) {
-        ref6 = country.subdivisions;
-        for (j = 0, len1 = ref6.length; j < len1; j++) {
-          subdivision = ref6[j];
-          options[subdivision.code] = subdivision.name;
+        subdivisions = country.subdivisions;
+        optionsHash = JSON.stringify(subdivisions);
+        if (this._optionsHash === optionsHash) {
+          return this.selectOptions;
+        }
+        this._optionsHash = optionsHash;
+        this.selectOptions = options = {};
+        this.input.ref.set(this.input.name, '');
+        subdivisions.sort(function(a, b) {
+          var nameA, nameB;
+          nameA = a.name.toUpperCase();
+          nameB = b.name.toUpperCase();
+          if (nameA < nameB) {
+            return -1;
+          }
+          if (nameA > nameB) {
+            return 1;
+          }
+          return 0;
+        });
+        for (j = 0, len1 = subdivisions.length; j < len1; j++) {
+          subdivision = subdivisions[j];
+          options[subdivision.code.toUpperCase()] = subdivision.name;
         }
         break;
       }
+      this._optionsHash = '';
     }
     return options;
   };
