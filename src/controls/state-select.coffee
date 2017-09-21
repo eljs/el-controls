@@ -15,14 +15,19 @@ export default class StateSelect extends Select
 
     code = code.toUpperCase()
 
+    found = false
+
     for country in countries
       if country.code.toUpperCase() == code
+        found = true
         subdivisions = country.subdivisions
 
         optionsHash = JSON.stringify subdivisions
 
         if @_optionsHash == optionsHash
           return @selectOptions
+
+        subdivisions = subdivisions.slice 0
 
         @_optionsHash = optionsHash
 
@@ -40,6 +45,7 @@ export default class StateSelect extends Select
           options[subdivision.code.toUpperCase()] = subdivision.name
         break
 
+    if !found
       @_optionsHash = ''
 
     return options

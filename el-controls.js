@@ -5102,7 +5102,7 @@ var checkbox = CheckBox = (function(superClass) {
 CheckBox.register();
 
 // templates/controls/select.pug
-var html$1 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" onchange=\"{ change }\" onblur=\"{ change }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" multiple=\"{ multiple }\" size=\"{ size }\" if=\"{ hasOptions() }\">\n    <option if=\"{ instructions || placeholder }\" value=\"\">{ instructions || placeholder }</option>\n    <option each=\"{ v, k in options() }\" value=\"{ k }\" selected=\"{ k == input.ref.get(input.name) }\">{ v }</option>\n  </select>\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder small\" if=\"{ hasOptions() }\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ hasOptions() &amp;&amp; errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
+var html$1 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name }\" name=\"{ name || input.name }\" onchange=\"{ change }\" onblur=\"{ change }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" multiple=\"{ multiple }\" size=\"{ size }\" if=\"{ hasOptions() }\">\n    <option if=\"{ instructions || placeholder }\" value=\"\">{ instructions || placeholder }</option>\n    <option each=\"{ v, k in options() }\" value=\"{ k }\" selected=\"{ k == input.ref.get(input.name) }\">{ v }</option>\n  </select>\n  <div class=\"select-indicator\">▼</div>\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder small\" if=\"{ hasOptions() }\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ hasOptions() &amp;&amp; errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
 
 // src/controls/select.coffee
 var Select;
@@ -5185,6 +5185,7 @@ var countrySelect = CountrySelect = (function(superClass) {
     if (this._optionsHash === optionsHash) {
       return this.selectOptions;
     }
+    countries = countries.slice(0);
     this._optionsHash = optionsHash;
     this.selectOptions = options = {};
     this.input.ref.set(this.input.name, '');
@@ -10296,7 +10297,7 @@ var stateSelect = StateSelect = (function(superClass) {
   StateSelect.prototype.tag = 'state-selection';
 
   StateSelect.prototype.options = function() {
-    var code, countries, country, i, j, len, len1, options, optionsHash, ref, ref1, ref2, ref3, ref4, ref5, subdivision, subdivisions;
+    var code, countries, country, found, i, j, len, len1, options, optionsHash, ref, ref1, ref2, ref3, ref4, ref5, subdivision, subdivisions;
     countries = (ref = (ref1 = (ref2 = this.countries) != null ? ref2 : (ref3 = this.data) != null ? ref3.get('countries') : void 0) != null ? ref1 : (ref4 = this.parent) != null ? (ref5 = ref4.data) != null ? ref5.get('countries') : void 0 : void 0) != null ? ref : [];
     code = this.getCountry();
     if (!code || code.length !== 2) {
@@ -10304,14 +10305,17 @@ var stateSelect = StateSelect = (function(superClass) {
       return;
     }
     code = code.toUpperCase();
+    found = false;
     for (i = 0, len = countries.length; i < len; i++) {
       country = countries[i];
       if (country.code.toUpperCase() === code) {
+        found = true;
         subdivisions = country.subdivisions;
         optionsHash = JSON.stringify(subdivisions);
         if (this._optionsHash === optionsHash) {
           return this.selectOptions;
         }
+        subdivisions = subdivisions.slice(0);
         this._optionsHash = optionsHash;
         this.selectOptions = options = {};
         this.input.ref.set(this.input.name, '');
@@ -10333,6 +10337,8 @@ var stateSelect = StateSelect = (function(superClass) {
         }
         break;
       }
+    }
+    if (!found) {
       this._optionsHash = '';
     }
     return options;
