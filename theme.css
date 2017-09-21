@@ -122,6 +122,9 @@
   width:100%;
   font-size:1em;
 }
+.input .select-indicator{
+  display:none;
+}
 .input select{
   width:100%;
   background:none;
@@ -142,11 +145,13 @@
 }
 .input select ~ .select-indicator{
   position:absolute;
-  top:2rem/2;
+  top:1rem;
   right:0.1rem;
   font-size:0.5em;
   -webkit-transform:translateY(-50%);
           transform:translateY(-50%);
+  pointer-events:none;
+  display:block;
 }
 .input.input.input,
 .input .input.input{
