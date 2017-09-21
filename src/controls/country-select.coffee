@@ -22,6 +22,8 @@ export default class CountrySelect extends Select
     if @_optionsHash == optionsHash
       return @selectOptions
 
+    countries = countries.slice 0
+
     @_optionsHash = optionsHash
 
     @selectOptions = options = {}

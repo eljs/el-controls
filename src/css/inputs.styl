@@ -81,6 +81,9 @@ textarea
   width: 100%
   font-size: 1em
 
+.select-indicator
+  display: none
+
 select
   width: 100%
   background: none
@@ -92,15 +95,16 @@ select
   line-height: $themeElementHeight
   font-size: 1rem
   appearance: none
+  outline: none
 
   &::-ms-expand
     display: none /* hide the default arrow in ie10 and ie11 */
 
-  &:after
+  & ~ .select-indicator
     position: absolute
-    top: 1rem
+    top: $themeElementHeight * .5
     right: .1rem
     font-size: .5em
     transform: translateY(-50%)
+    pointer-events: none
     display: block
-    content: '▼'

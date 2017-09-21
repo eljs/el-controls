@@ -135,19 +135,18 @@
   -webkit-appearance:none;
      -moz-appearance:none;
           appearance:none;
+  outline:none;
 }
 .input select::-ms-expand{
   display:none;
 }
-.input select:after{
+.input select ~ .select-indicator{
   position:absolute;
-  top:1rem;
+  top:2rem/2;
   right:0.1rem;
   font-size:0.5em;
   -webkit-transform:translateY(-50%);
           transform:translateY(-50%);
-  display:block;
-  content:'▼';
 }
 .input.input.input,
 .input .input.input{
