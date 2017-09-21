@@ -6,10 +6,9 @@
     onblur='{ change }',
     class='{invalid: errorMessage, valid: valid}',
     autofocus='{ autofocus }',
-    disabled='{ disabled }',
+    disabled='{ disabled || !hasOptions() }',
     multiple='{ multiple }',
     size='{ size }',
-    if='{ hasOptions() }'
   )
     option(
       if='{ instructions || placeholder }',
@@ -24,9 +23,9 @@
       | { v }
   div.select-indicator ▼
 #{ 'yield' }(from='placeholder')
-  .placeholder.small(if='{ hasOptions() }')
+  .placeholder.small
     | { placeholder }
 #{ 'yield' }
   #{ 'yield' }(from='error')
-    .error(if='{ hasOptions() && errorMessage }')
+    .error(if='{ errorMessage }')
       | { errorMessage }
