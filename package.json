@@ -29,7 +29,8 @@
   "module": "lib/el-controls.mjs",
   "files": [
     "lib/",
-    "src/"
+    "src/",
+    "templates"
   ],
   "engines": {
     "node": ">=4.0.0"
