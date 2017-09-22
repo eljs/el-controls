@@ -1,8 +1,8 @@
 #{ 'yield' }(from='input')
   select(
-    id='{ input.name.replace(/\./g, "-") }'
+    id='{ input.name.replace(/\\./g, "-") }'
     style='display: none'
-    name='{ name || input.name.replace(/\./g, "-") }'
+    name='{ name || input.name.replace(/\\./g, "-") }'
     onchange='{ change }'
     onblur='{ change }'
     placeholder='{ instructions || placeholder }'
