@@ -1,23 +1,23 @@
 #{ 'yield' }(from='input')
   select(
-    id='{ input.name }',
-    name='{ name || input.name }',
-    onchange='{ change }',
-    onblur='{ change }',
-    class='{invalid: errorMessage, valid: valid}',
-    autofocus='{ autofocus }',
-    disabled='{ disabled || !hasOptions() }',
-    multiple='{ multiple }',
-    size='{ size }',
+    id='{ input.name.replace(/\./g, "-") }'
+    name='{ name || input.name.replace(/\./g, "-") }'
+    onchange='{ change }'
+    onblur='{ change }'
+    class='{invalid: errorMessage, valid: valid}'
+    autofocus='{ autofocus }'
+    disabled='{ disabled || !hasOptions() }'
+    multiple='{ multiple }'
+    size='{ size }'
   )
     option(
-      if='{ instructions || placeholder }',
-      value='',
+      if='{ instructions || placeholder }'
+      value=''
     )
       | { instructions || placeholder }
     option(
-      each='{ v, k in options() }',
-      value='{ k }',
+      each='{ v, k in options() }'
+      value='{ k }'
       selected='{ k == input.ref.get(input.name) }'
     )
       | { v }
