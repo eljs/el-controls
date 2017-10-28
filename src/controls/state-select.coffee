@@ -1,7 +1,7 @@
-import Select from './select'
+import Select from './selection'
 
 export default class StateSelect extends Select
-  tag: 'state-selection'
+  tag: 'state-select'
 
   options: ->
     countries = @countries ? @data?.get('countries') ? @parent?.data?.get('countries') ? []

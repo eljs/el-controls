@@ -6,34 +6,43 @@
 .input.input
   width: 100%
   display: table
-  margin-bottom: $themeElementPadding
+  margin-top: $themeElementPadding
 
-.placeholder
+  .labeled
+    margin-top: .75em
+
+.label
   left: 0
-  top: 10px
+  top: 1.25em
   position: absolute
   transition: all ($themeTransitionTime * 0.5) linear
   pointer-events: none
   line-height: 1em
   font-weight: normal
 
-// .valid + .placeholder
-//   color: $themeGoodColor
-.invalid ~ .placeholder
+.valid.valid
+  border-color: $themeGoodColor
+.invalid.invalid
+  border-color: $themeErrorColor
+
+.valid ~ .label
+  color: $themeGoodColor
+.invalid ~ .label
   color: $themeErrorColor
 
 .error
-  right: 0
-  top: -6px
-  position: absolute
-  color: $themeErrorColor
+.helper
+  margin-top: ($themeElementPadding * 0.5)
   font-size: .75em
   line-height: 1em
 
-input:focus ~ .placeholder
-input:hover ~ .placeholder
-.placeholder.small
-  top: -6px
+.error
+  color: $themeErrorColor
+
+input:focus ~ .label
+input:hover ~ .label
+.label.active
+  top: 0
   font-size: .75em
   line-height: 1em
 
@@ -67,13 +76,12 @@ input[type=password]
   border-width: $themeInputBorderWidth
   border-radius: 0
   transition: border-color $themeTransitionTime ease-in-out, color $themeTransitionTime ease-in-out
-  padding: 0 $inputHPadding
 
 textarea
   outline: none
   height: $themeElementHeight * 3
   border: $inputBorderWidth solid $borderColor1
-  padding: 0 $inputHPadding
+  border-radius: $themeBorderRadius
 
 input[type=text]
 input[type=password]
@@ -93,7 +101,7 @@ select
   border-width: $themeInputBorderWidth
   border-radius: 0
   line-height: $themeElementHeight
-  font-size: 1rem
+  font-size: 1em
   appearance: none
   outline: none
 
@@ -103,11 +111,22 @@ select
   & ~ .select-indicator
     position: absolute
     top: $themeElementHeight * .5
-    right: .1rem
-    font-size: .5em
+    right: .375em
+    font-size: .75em
     transform: translateY(-50%)
     pointer-events: none
     display: block
 
+  &.labeled ~ .select-indicator
+    top: $themeElementHeight * .75
+
   &:disabled ~ .select-indicator
     opacity: .5
+
+&.outlined
+  input[type=text]
+  input[type=password]
+  select
+    border: $themeInputBorderWidth solid
+    border-radius: $themeBorderRadius
+

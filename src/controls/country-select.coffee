@@ -1,7 +1,7 @@
-import Select from './select'
+import Select from './selection'
 
 export default class CountrySelect extends Select
-  tag: 'country-selection'
+  tag: 'country-select'
 
   # set up the countries in selectedOptions
   # countries should be in the form of

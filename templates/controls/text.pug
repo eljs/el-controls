@@ -6,18 +6,24 @@
     onchange='{ change }'
     onblur='{ change }'
     riot-value='{ input.ref.get(input.name) }'
-    class='{invalid: errorMessage, valid: valid}'
+    class='{invalid: errorMessage, valid: valid, labeled: label}'
     autocomplete='{ autocomplete }'
     autofocus='{ autofocus }'
     disabled='{ disabled }'
     maxlength='{ maxlength }'
     readonly='{ readonly }'
+    placeholder='{ placeholder }'
   )
-#{ 'yield' }(from='placeholder')
-  .placeholder(class='{ small: input.ref.get(input.name) }')
-    | { placeholder }
+#{ 'yield' }(from='label')
+  .label(
+    class='{ active: input.ref.get(input.name) || placeholder }'
+    if='{ label }'
+  )
+    | { label }
+#{ 'yield' }(from='error')
+  .error(if='{ errorMessage }')
+    | { errorMessage }
+#{ 'yield' }(from='instructions')
+  .helper(if='{ instructions && !errorMessage }')
+    | { instructions }
 #{ 'yield' }
-  #{ 'yield' }(from='error')
-    .error(if='{ errorMessage }')
-      | { errorMessage }
-

@@ -6,8 +6,6 @@ class TextBox extends Text
   html:         html
   formElement: 'textarea'
 
-  instructions: ''
-
   rows: null
   cols: null
   disabled: false
