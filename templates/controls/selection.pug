@@ -1,0 +1,35 @@
+#{ 'yield' }(from='input')
+  select(
+    id='{ input.name.replace(/\\./g, "-") }'
+    name='{ name || input.name.replace(/\\./g, "-") }'
+    onchange='{ change }'
+    onblur='{ change }'
+    class='{invalid: errorMessage, valid: valid, labeled: label}'
+    autofocus='{ autofocus }'
+    disabled='{ disabled || !hasOptions() }'
+    multiple='{ multiple }'
+    size='{ size }'
+  )
+    option(
+      if='{ placeholder }'
+      value=''
+    )
+      | { placeholder }
+    option(
+      each='{ v, k in options() }'
+      value='{ k }'
+      selected='{ k == input.ref.get(input.name) }'
+    )
+      | { v }
+  div.select-indicator ▼
+#{ 'yield' }(from='label')
+  .label.active(if='{ label }')
+    | { label }
+#{ 'yield' }(from='error')
+  .error(if='{ errorMessage }')
+    | { errorMessage }
+#{ 'yield' }(from='instructions')
+  .helper(if='{ instructions && !errorMessage }')
+    | { instructions }
+#{ 'yield' }
+
