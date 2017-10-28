@@ -4,20 +4,24 @@
     name='{ name || input.name.replace(/\\./g, "-") }'
     onchange='{ change }'
     onblur='{ change }'
-    class='{invalid: errorMessage, valid: valid}'
+    class='{invalid: errorMessage, valid: valid, labeled: label}'
     rows='{ rows }'
     cols='{ cols }'
     disabled='{disabled'
     maxlength='{ maxlength }'
-    placeholder='{ instructions || placeholder }'
+    placeholder='{ placeholder }'
     readonly='{ readonly }'
     wrap='{ wrap }'
   )
     | { input.ref.get(input.name) }
-#{ 'yield' }(from='placeholder')
-  .placeholder.small
-    | { placeholder }
+#{ 'yield' }(from='label')
+  .label.active(if='{ label }')
+    | { label }
+#{ 'yield' }(from='error')
+  .error(if='{ errorMessage }')
+    | { errorMessage }
+#{ 'yield' }(from='instructions')
+  .helper(if='{ instructions && !errorMessage }')
+    | { instructions }
 #{ 'yield' }
-  #{ 'yield' }(from='error')
-    .error(if='{ errorMessage }')
-      | { errorMessage }
+

@@ -14,6 +14,9 @@ export default class Text extends Control
   disabled:     false
   maxlength:    null
   readonly:     false
+  placeholder:  null
+  label:        ''
+  instructions: null
 
   init: ()->
     super
