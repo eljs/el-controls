@@ -1,4 +1,4 @@
-(function (exports) {
+var ElControls = (function (exports) {
 'use strict';
 
 // node_modules/broken/lib/broken.mjs
@@ -384,7 +384,6 @@ var browser = (function() {
   return now;
 })();
 
-var cancelAnimationFrame;
 var frameDuration;
 var id;
 var last;
@@ -430,16 +429,6 @@ var raf = requestAnimationFrame = function(callback) {
     cancelled: false
   });
   return id;
-};
-
-var caf = cancelAnimationFrame = function(handle) {
-  var i, len, x;
-  for (i = 0, len = queue.length; i < len; i++) {
-    x = queue[i];
-    if (x.handle === handle) {
-      x.cancelled = true;
-    }
-  }
 };
 
 // src/utils/patches.coffee
@@ -3399,7 +3388,6 @@ shouldUseNative = function() {
     }
     return true;
   } catch (error) {
-    err = error;
     return false;
   }
 };
@@ -5073,7 +5061,7 @@ var Control$1 = Control = (function(superClass) {
 })(El$1.Input);
 
 // templates/controls/checkbox.pug
-var html = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" type=\"checkbox\" onchange=\"{ change }\" onblur=\"{ change }\" checked=\"{ input.ref.get(input.name) }\">\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
+var html = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" type=\"checkbox\" onchange=\"{ change }\" onblur=\"{ change }\" checked=\"{ input.ref.get(input.name) }\">\n</yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
 // src/controls/checkbox.coffee
 var CheckBox;
@@ -5101,10 +5089,10 @@ var checkbox = CheckBox = (function(superClass) {
 
 CheckBox.register();
 
-// templates/controls/select.pug
-var html$1 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" onchange=\"{ change }\" onblur=\"{ change }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled || !hasOptions() }\" multiple=\"{ multiple }\" size=\"{ size }\">\n    <option if=\"{ instructions || placeholder }\" value=\"\">{ instructions || placeholder }</option>\n    <option each=\"{ v, k in options() }\" value=\"{ k }\" selected=\"{ k == input.ref.get(input.name) }\">{ v }</option>\n  </select>\n  <div class=\"select-indicator\">▼</div>\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder small\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
+// templates/controls/selection.pug
+var html$1 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" onchange=\"{ change }\" onblur=\"{ change }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled || !hasOptions() }\" multiple=\"{ multiple }\" size=\"{ size }\">\n    <option if=\"{ placeholder }\" value=\"\">{ placeholder }</option>\n    <option each=\"{ v, k in options() }\" value=\"{ k }\" selected=\"{ k == input.ref.get(input.name) }\">{ v }</option>\n  </select>\n  <div class=\"select-indicator\">▼</div>\n</yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
-// src/controls/select.coffee
+// src/controls/selection.coffee
 var Select;
 var extend$5 = function(child, parent) { for (var key in parent) { if (hasProp$4.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 var hasProp$4 = {}.hasOwnProperty;
@@ -5120,7 +5108,7 @@ var Select$1 = Select = (function(superClass) {
 
   Select.prototype.html = html$1;
 
-  Select.prototype.instructions = 'Select an Option';
+  Select.prototype.placeholder = 'Select an Option';
 
   Select.prototype.autofocus = false;
 
@@ -5176,7 +5164,7 @@ var countrySelect = CountrySelect = (function(superClass) {
     return CountrySelect.__super__.constructor.apply(this, arguments);
   }
 
-  CountrySelect.prototype.tag = 'country-selection';
+  CountrySelect.prototype.tag = 'country-select';
 
   CountrySelect.prototype.options = function() {
     var countries, country, i, len, options, optionsHash, ref, ref1, ref2, ref3, ref4, ref5;
@@ -6495,7 +6483,7 @@ var zepto = Zepto;
 
 
 (function($){
-  var zepto$$1 = $.zepto, oldQsa = zepto$$1.qsa, oldMatches = zepto$$1.matches;
+  var zepto$$2 = $.zepto, oldQsa = zepto$$2.qsa, oldMatches = zepto$$2.matches;
 
   function visible(elem){
     elem = $(elem);
@@ -6523,7 +6511,7 @@ var zepto = Zepto;
     last:     function(idx, nodes){ if (idx === nodes.length - 1) return this },
     eq:       function(idx, _, value){ if (idx === value) return this },
     contains: function(idx, _, text){ if ($(this).text().indexOf(text) > -1) return this },
-    has:      function(idx, _, sel){ if (zepto$$1.qsa(this, sel).length) return this }
+    has:      function(idx, _, sel){ if (zepto$$2.qsa(this, sel).length) return this }
   };
 
   var filterRe = new RegExp('(.*):(\\w+)(?:\\(([^)]+)\\))?$\\s*'),
@@ -6546,7 +6534,7 @@ var zepto = Zepto;
     return fn(sel, filter, arg)
   }
 
-  zepto$$1.qsa = function(node, selector) {
+  zepto$$2.qsa = function(node, selector) {
     return process(selector, function(sel, filter, arg){
       try {
         var taggedParent;
@@ -6564,11 +6552,11 @@ var zepto = Zepto;
         if (taggedParent) taggedParent.removeClass(classTag);
       }
       return !filter ? nodes :
-        zepto$$1.uniq($.map(nodes, function(n, i){ return filter.call(n, i, nodes, arg) }))
+        zepto$$2.uniq($.map(nodes, function(n, i){ return filter.call(n, i, nodes, arg) }))
     })
   };
 
-  zepto$$1.matches = function(node, selector){
+  zepto$$2.matches = function(node, selector){
     return process(selector, function(sel, filter, arg){
       return (!sel || oldMatches(node, sel)) &&
         (!filter || filter.call(node, null, arg) === node)
@@ -10093,7 +10081,7 @@ if (document.createElement("input").placeholder == null) {
 var placeholder = exports$1;
 
 // templates/controls/text.pug
-var html$2 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\">\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder { small: input.ref.get(input.name) }\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
+var html$2 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\" placeholder=\"{ placeholder }\">\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: input.ref.get(input.name) || placeholder }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
 // src/controls/text.coffee
 var Text;
@@ -10125,6 +10113,12 @@ var Text$1 = Text = (function(superClass) {
 
   Text.prototype.readonly = false;
 
+  Text.prototype.placeholder = null;
+
+  Text.prototype.label = '';
+
+  Text.prototype.instructions = null;
+
   Text.prototype.init = function() {
     Text.__super__.init.apply(this, arguments);
     return this.on('mounted', (function(_this) {
@@ -10145,7 +10139,7 @@ var Text$1 = Text = (function(superClass) {
 Text.register();
 
 // templates/controls/dropdown.pug
-var html$3 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" style=\"display: none;\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" onchange=\"{ change }\" onblur=\"{ change }\" placeholder=\"{ instructions || placeholder }\"></select>\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder small\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
+var html$3 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" style=\"display: none;\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" onchange=\"{ change }\" onblur=\"{ change }\" placeholder=\"{ placeholder }\"></select>\n</yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
 // src/controls/dropdown.coffee
 var Select$2;
@@ -10294,7 +10288,7 @@ var stateSelect = StateSelect = (function(superClass) {
     return StateSelect.__super__.constructor.apply(this, arguments);
   }
 
-  StateSelect.prototype.tag = 'state-selection';
+  StateSelect.prototype.tag = 'state-select';
 
   StateSelect.prototype.options = function() {
     var code, countries, country, found, i, j, len, len1, options, optionsHash, ref, ref1, ref2, ref3, ref4, ref5, subdivision, subdivisions;
@@ -10359,7 +10353,7 @@ var stateSelect = StateSelect = (function(superClass) {
 StateSelect.register();
 
 // templates/controls/textarea.pug
-var html$4 = "\n<yield from=\"input\">\n  <textarea class=\"{invalid: errorMessage, valid: valid}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" onchange=\"{ change }\" onblur=\"{ change }\" rows=\"{ rows }\" cols=\"{ cols }\" disabled=\"{disabled\" maxlength=\"{ maxlength }\" placeholder=\"{ instructions || placeholder }\" readonly=\"{ readonly }\" wrap=\"{ wrap }\">{ input.ref.get(input.name) }</textarea>\n</yield>\n<yield from=\"placeholder\">\n  <div class=\"placeholder small\">{ placeholder }</div>\n</yield>\n<yield>\n  <yield from=\"error\">\n    <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n  </yield>\n</yield>";
+var html$4 = "\n<yield from=\"input\">\n  <textarea class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" onchange=\"{ change }\" onblur=\"{ change }\" rows=\"{ rows }\" cols=\"{ cols }\" disabled=\"{disabled\" maxlength=\"{ maxlength }\" placeholder=\"{ placeholder }\" readonly=\"{ readonly }\" wrap=\"{ wrap }\">{ input.ref.get(input.name) }</textarea>\n</yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
 // src/controls/textbox.coffee
 var TextBox;
@@ -10378,8 +10372,6 @@ TextBox = (function(superClass) {
   TextBox.prototype.html = html$4;
 
   TextBox.prototype.formElement = 'textarea';
-
-  TextBox.prototype.instructions = '';
 
   TextBox.prototype.rows = null;
 
@@ -10415,4 +10407,6 @@ exports.StateSelect = stateSelect;
 exports.Text = Text$1;
 exports.TextBox = TextBox$1;
 
-}((this.ElControls = this.ElControls || {})));
+return exports;
+
+}({}));
