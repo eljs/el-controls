@@ -253,6 +253,9 @@
 .checkbox label:hover:before{
   border:1px solid #17bebb !important;
 }
+.checkbox .error{
+  color:#f22469;
+}
 
 .selectize-control.plugin-drag_drop.multi > .selectize-input > div.ui-sortable-placeholder{
   visibility:visible !important;
