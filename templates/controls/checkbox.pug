@@ -8,6 +8,7 @@
     checked='{ input.ref.get(input.name) }'
     class='{invalid: errorMessage, valid: valid, labeled: label}'
   )
+#{ 'yield' }
 #{ 'yield' }(from='label')
   .label.active(if='{ label }')
     | { label }
@@ -17,5 +18,3 @@
 #{ 'yield' }(from='instructions')
   .helper(if='{ instructions && !errorMessage }')
     | { instructions }
-#{ 'yield' }
-
