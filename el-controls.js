@@ -1548,7 +1548,7 @@ function startsWith(str, value) {
  * @returns { Object } - the initial object
  */
 function defineProperty(el, key, value, options) {
-  Object.defineProperty(el, key, extend$3({
+  Object.defineProperty(el, key, extend$2({
     value,
     enumerable: false,
     writable: false,
@@ -1567,7 +1567,7 @@ function defineProperty(el, key, value, options) {
  * console.log(obj) => {bar: 'bar', foo: 'bar'}
  *
  */
-function extend$3(src) {
+function extend$2(src) {
   let obj;
   const args = arguments;
   for (let i = 1; i < args.length; ++i) {
@@ -1588,11 +1588,11 @@ var misc = Object.freeze({
 	toCamel: toCamel,
 	startsWith: startsWith,
 	defineProperty: defineProperty,
-	extend: extend$3
+	extend: extend$2
 });
 
 // node_modules/riot/lib/settings.js
-var settings$1 = extend$3(Object.create(brackets.settings), {
+var settings$1 = extend$2(Object.create(brackets.settings), {
   skipAnonymousTags: true,
   // handle the auto updates on any DOM event
   autoUpdate: true
@@ -1779,7 +1779,7 @@ function updateExpression(expr) {
   if (expr.update) return expr.update()
 
   // ...it seems to be a simple expression so we try to calculat its value
-  value = tmpl(expr.expr, isToggle ? extend$3({}, Object.create(this.parent), this) : this);
+  value = tmpl(expr.expr, isToggle ? extend$2({}, Object.create(this.parent), this) : this);
   hasValue = !isBlank(value);
   isObj = isObject(value);
 
@@ -2123,7 +2123,7 @@ function _each(dom, parent, expr) {
         if (expr.key && !isObject$$1)
           return !!tmpl(ifExpr, mkitem(expr, item, i, parent))
 
-        return !!tmpl(ifExpr, extend$3(Object.create(parent), item))
+        return !!tmpl(ifExpr, extend$2(Object.create(parent), item))
       });
     }
 
@@ -2617,8 +2617,8 @@ function mixin$1(name, mix, g) {
 
   // Setter
   store[name] = isFunction$2(mix) ?
-    extend$3(mix.prototype, store[name] || {}) && mix :
-    extend$3(store[name] || {}, mix);
+    extend$2(mix.prototype, store[name] || {}) && mix :
+    extend$2(store[name] || {}, mix);
 }
 
 /**
@@ -2684,7 +2684,7 @@ function updateOpts(isLoop, parent, isAnonymous, opts, instAttrs) {
  * @param { String } innerHTML - html that eventually we need to inject in the tag
  */
 function Tag$1(impl = {}, conf = {}, innerHTML) {
-  var opts = extend$3({}, conf.opts),
+  var opts = extend$2({}, conf.opts),
     parent = conf.parent,
     isLoop = conf.isLoop,
     isAnonymous = !!conf.isAnonymous,
@@ -2732,7 +2732,7 @@ function Tag$1(impl = {}, conf = {}, innerHTML) {
   // it could be handy to use it also to improve the virtual dom rendering speed
   defineProperty(this, '_riot_id', ++uid); // base 1 allows test !t._riot_id
   defineProperty(this, 'root', root);
-  extend$3(this, { opts }, item);
+  extend$2(this, { opts }, item);
   // protect the "tags" and "refs" property from being overridden
   defineProperty(this, 'parent', parent || null);
   defineProperty(this, 'tags', {});
@@ -2754,7 +2754,7 @@ function Tag$1(impl = {}, conf = {}, innerHTML) {
     const nextOpts = {},
       canTrigger = this.isMounted && !skipAnonymous;
 
-    extend$3(this, data);
+    extend$2(this, data);
     updateOpts.apply(this, [isLoop, parent, isAnonymous, nextOpts, instAttrs]);
 
     if (
@@ -2767,7 +2767,7 @@ function Tag$1(impl = {}, conf = {}, innerHTML) {
 
     // inherit properties from the parent, but only for isAnonymous tags
     if (isLoop && isAnonymous) inheritFrom.apply(this, [this.parent, propsInSyncWithParent]);
-    extend$3(opts, nextOpts);
+    extend$2(opts, nextOpts);
     if (canTrigger) this.trigger('update', data);
     updateAllExpressions.call(this, expressions);
     if (canTrigger) this.trigger('updated');
@@ -3171,7 +3171,7 @@ function mountTo(root, tagName, opts, ctx) {
   const tag = ctx || (implClass ? Object.create(implClass.prototype) : {});
   // cache the inner HTML to fix #855
   const innerHTML = root._innerHTML = root._innerHTML || root.innerHTML;
-  const conf = extend$3({ root, opts }, { parent: opts ? opts.parent : null });
+  const conf = extend$2({ root, opts }, { parent: opts ? opts.parent : null });
 
   if (impl && root) Tag$1.apply(tag, [impl, conf, innerHTML]);
 
@@ -3317,7 +3317,7 @@ const util = {
 
 
 
-var riot$1 = extend$3({}, core, {
+var riot$1 = extend$2({}, core, {
   observable: observable$1,
   settings,
   util,
@@ -3713,8 +3713,7 @@ refer.Ref = Ref$1;
 
 var refer$1 = refer;
 
-// node_modules/el.js/lib/el.mjs
-// src/schedule.coffee
+// node_modules/el.js/src/schedule.coffee
 var id$1;
 var p;
 var rafId;
@@ -3774,7 +3773,7 @@ scheduleUpdate = function(tag$$1) {
   return p;
 };
 
-// src/views/view.coffee
+// node_modules/el.js/src/views/view.coffee
 var View;
 var collapsePrototype;
 var setPrototypeOf;
@@ -3914,7 +3913,7 @@ View = (function() {
 
 var View$1 = View;
 
-// src/views/inputify.coffee
+// node_modules/el.js/src/views/inputify.coffee
 var inputify;
 var isRef;
 
@@ -3983,13 +3982,13 @@ inputify = function(data, configs) {
 
 var inputify$1 = inputify;
 
-// src/views/form.coffee
+// node_modules/el.js/src/views/form.coffee
 var Form;
-var extend$2 = function(child, parent) { for (var key in parent) { if (hasProp$2.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var extend$3 = function(child, parent) { for (var key in parent) { if (hasProp$2.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 var hasProp$2 = {}.hasOwnProperty;
 
 Form = (function(superClass) {
-  extend$2(Form, superClass);
+  extend$3(Form, superClass);
 
   function Form() {
     return Form.__super__.constructor.apply(this, arguments);
@@ -4047,13 +4046,13 @@ Form = (function(superClass) {
 
 var Form$1 = Form;
 
-// src/views/input.coffee
+// node_modules/el.js/src/views/input.coffee
 var Input;
-var extend$1$1 = function(child, parent) { for (var key in parent) { if (hasProp$1$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$1$1 = {}.hasOwnProperty;
+var extend$4 = function(child, parent) { for (var key in parent) { if (hasProp$3.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$3 = {}.hasOwnProperty;
 
 Input = (function(superClass) {
-  extend$1$1(Input, superClass);
+  extend$4(Input, superClass);
 
   function Input() {
     return Input.__super__.constructor.apply(this, arguments);
@@ -4152,7 +4151,7 @@ Input = (function(superClass) {
 
 var Input$1 = Input;
 
-// src/views/index.coffee
+// node_modules/el.js/src/views/index.coffee
 var Views;
 
 var Views$1 = Views = {
@@ -4162,7 +4161,7 @@ var Views$1 = Views = {
   inputify: inputify$1
 };
 
-// src/index.coffee
+// node_modules/el.js/src/index.coffee
 var El;
 var fn;
 var k;
@@ -5061,7 +5060,7 @@ var Control$1 = Control = (function(superClass) {
 })(El$1.Input);
 
 // templates/controls/checkbox.pug
-var html = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" type=\"checkbox\" onchange=\"{ change }\" onblur=\"{ change }\" checked=\"{ input.ref.get(input.name) }\">\n</yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
+var html = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" type=\"checkbox\" onchange=\"{ change }\" onblur=\"{ change }\" checked=\"{ input.ref.get(input.name) }\">\n</yield>\n<yield></yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>";
 
 // src/controls/checkbox.coffee
 var CheckBox;
@@ -5094,11 +5093,11 @@ var html$1 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage
 
 // src/controls/selection.coffee
 var Select;
-var extend$5 = function(child, parent) { for (var key in parent) { if (hasProp$4.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$4 = {}.hasOwnProperty;
+var extend$6 = function(child, parent) { for (var key in parent) { if (hasProp$5.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$5 = {}.hasOwnProperty;
 
 var Select$1 = Select = (function(superClass) {
-  extend$5(Select, superClass);
+  extend$6(Select, superClass);
 
   function Select() {
     return Select.__super__.constructor.apply(this, arguments);
@@ -5154,11 +5153,11 @@ Select.register();
 
 // src/controls/country-select.coffee
 var CountrySelect;
-var extend$4 = function(child, parent) { for (var key in parent) { if (hasProp$3.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$3 = {}.hasOwnProperty;
+var extend$5 = function(child, parent) { for (var key in parent) { if (hasProp$4.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$4 = {}.hasOwnProperty;
 
 var countrySelect = CountrySelect = (function(superClass) {
-  extend$4(CountrySelect, superClass);
+  extend$5(CountrySelect, superClass);
 
   function CountrySelect() {
     return CountrySelect.__super__.constructor.apply(this, arguments);
@@ -6663,7 +6662,7 @@ function cmp(a, b) {
     return 0;
 }
 
-function extend$7(a, b) {
+function extend$8(a, b) {
     var i, n, k, object;
     for (i = 1, n = arguments.length; i < n; i++) {
         object = arguments[i];
@@ -7001,7 +7000,7 @@ Sifter.prototype.getSortFunction = function(search, options) {
 Sifter.prototype.prepareSearch = function(query, options) {
     if (typeof query === 'object') return query;
 
-    options = extend$7({}, options);
+    options = extend$8({}, options);
 
     var optionFields     = options.fields;
     var optionSort       = options.sort;
@@ -10085,11 +10084,11 @@ var html$2 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage,
 
 // src/controls/text.coffee
 var Text;
-var extend$8 = function(child, parent) { for (var key in parent) { if (hasProp$6.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$6 = {}.hasOwnProperty;
+var extend$9 = function(child, parent) { for (var key in parent) { if (hasProp$7.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$7 = {}.hasOwnProperty;
 
 var Text$1 = Text = (function(superClass) {
-  extend$8(Text, superClass);
+  extend$9(Text, superClass);
 
   function Text() {
     return Text.__super__.constructor.apply(this, arguments);
@@ -10145,15 +10144,15 @@ var html$3 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage
 var Select$2;
 var coolDown;
 var isABrokenBrowser;
-var extend$6 = function(child, parent) { for (var key in parent) { if (hasProp$5.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$5 = {}.hasOwnProperty;
+var extend$7 = function(child, parent) { for (var key in parent) { if (hasProp$6.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$6 = {}.hasOwnProperty;
 
 isABrokenBrowser = window.navigator.userAgent.indexOf('MSIE') > 0 || window.navigator.userAgent.indexOf('Trident') > 0;
 
 coolDown = -1;
 
 var dropdown = Select$2 = (function(superClass) {
-  extend$6(Select, superClass);
+  extend$7(Select, superClass);
 
   function Select() {
     return Select.__super__.constructor.apply(this, arguments);
@@ -10278,11 +10277,11 @@ Select$2.register();
 
 // src/controls/state-select.coffee
 var StateSelect;
-var extend$9 = function(child, parent) { for (var key in parent) { if (hasProp$7.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$7 = {}.hasOwnProperty;
+var extend$10 = function(child, parent) { for (var key in parent) { if (hasProp$8.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$8 = {}.hasOwnProperty;
 
 var stateSelect = StateSelect = (function(superClass) {
-  extend$9(StateSelect, superClass);
+  extend$10(StateSelect, superClass);
 
   function StateSelect() {
     return StateSelect.__super__.constructor.apply(this, arguments);
@@ -10357,11 +10356,11 @@ var html$4 = "\n<yield from=\"input\">\n  <textarea class=\"{invalid: errorMessa
 
 // src/controls/textbox.coffee
 var TextBox;
-var extend$10 = function(child, parent) { for (var key in parent) { if (hasProp$8.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$8 = {}.hasOwnProperty;
+var extend$11 = function(child, parent) { for (var key in parent) { if (hasProp$9.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$9 = {}.hasOwnProperty;
 
 TextBox = (function(superClass) {
-  extend$10(TextBox, superClass);
+  extend$11(TextBox, superClass);
 
   function TextBox() {
     return TextBox.__super__.constructor.apply(this, arguments);
