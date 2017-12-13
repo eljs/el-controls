@@ -1,7 +1,7 @@
 import El       from 'el.js/src'
 import Events   from  '../events'
 
-import { Tween, Easing, autoPlay } from 'es6-tween/src/index.lite'
+import { Tween, Easing, autoPlay } from 'es6-tween/src/index'
 
 scrolling = false
 
