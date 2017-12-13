@@ -4,6 +4,7 @@ export {
   CheckBox
   Control
   CountrySelect
+  Currency
   Dropdown
   Select
   StateSelect

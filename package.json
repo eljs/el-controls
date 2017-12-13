@@ -48,6 +48,7 @@
     "es-selectize": "0.12.10",
     "es-tween": "0.1.0",
     "es6-tween": "3.8.11",
+    "shop.js-util": "0.0.3",
     "uglify-es": "github:mishoo/UglifyJS2#harmony",
     "zepto-modules": "1.0.1"
   },
