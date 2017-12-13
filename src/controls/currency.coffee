@@ -30,7 +30,7 @@ export default class Currency extends Text
     return currency
 
   renderValue: ->
-    renderUICurrencyFromJSON @getCurrency(), @input.ref.get(input.name)
+    renderUICurrencyFromJSON @getCurrency(), @input.ref.get(@input.name)
 
   getValue: (e)->
     el = e.target
