@@ -5205,6 +5205,348 @@ var countrySelect = CountrySelect = (function(superClass) {
 
 CountrySelect.register();
 
+// src/utils/placeholder.coffee
+var exports$1;
+var hidePlaceholderOnFocus;
+var unfocusOnAnElement;
+
+hidePlaceholderOnFocus = function(event) {
+  var target;
+  target = event.currentTarget ? event.currentTarget : event.srcElement;
+  if (target.value === target.getAttribute('placeholder')) {
+    return target.value = '';
+  }
+};
+
+unfocusOnAnElement = function(event) {
+  var target;
+  target = event.currentTarget ? event.currentTarget : event.srcElement;
+  if (target.value === '') {
+    return target.value = target.getAttribute('placeholder');
+  }
+};
+
+exports$1 = function() {};
+
+if (document.createElement("input").placeholder == null) {
+  exports$1 = function(input) {
+    var ref;
+    input = (ref = input[0]) != null ? ref : input;
+    if (input._placeholdered != null) {
+      return;
+    }
+    Object.defineProperty(input, '_placeholdered', {
+      value: true,
+      writable: true
+    });
+    if (!input.value) {
+      input.value = input.getAttribute('placeholder');
+    }
+    if (input.addEventListener) {
+      input.addEventListener('click', hidePlaceholderOnFocus, false);
+      return input.addEventListener('blur', unfocusOnAnElement, false);
+    } else if (input.attachEvent) {
+      input.attachEvent('onclick', hidePlaceholderOnFocus);
+      return input.attachEvent('onblur', unfocusOnAnElement);
+    }
+  };
+}
+
+var placeholder = exports$1;
+
+// templates/controls/text.pug
+var html$2 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\" placeholder=\"{ placeholder }\">\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: input.ref.get(input.name) || placeholder }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
+
+// src/controls/text.coffee
+var Text$1;
+var extend$8 = function(child, parent) { for (var key in parent) { if (hasProp$7.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$7 = {}.hasOwnProperty;
+
+var Text$2 = Text$1 = (function(superClass) {
+  extend$8(Text, superClass);
+
+  function Text() {
+    return Text.__super__.constructor.apply(this, arguments);
+  }
+
+  Text.prototype.tag = 'text';
+
+  Text.prototype.html = html$2;
+
+  Text.prototype.type = 'text';
+
+  Text.prototype.formElement = 'input';
+
+  Text.prototype.autocomplete = 'on';
+
+  Text.prototype.autofocus = false;
+
+  Text.prototype.disabled = false;
+
+  Text.prototype.maxlength = null;
+
+  Text.prototype.readonly = false;
+
+  Text.prototype.placeholder = null;
+
+  Text.prototype.label = '';
+
+  Text.prototype.instructions = null;
+
+  Text.prototype.init = function() {
+    Text.__super__.init.apply(this, arguments);
+    return this.on('mounted', (function(_this) {
+      return function() {
+        var el;
+        el = _this.root.getElementsByTagName(_this.formElement)[0];
+        if (_this.type !== 'password') {
+          return placeholder(el);
+        }
+      };
+    })(this));
+  };
+
+  return Text;
+
+})(Control$1);
+
+Text$1.register();
+
+// templates/controls/currency.pug
+var html$3 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\" placeholder=\"{ placeholder }\">\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: input.ref.get(input.name) || placeholder }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
+
+// node_modules/shop.js-util/src/data/currencies.coffee
+var currencies = {
+  data: {
+    'aud': '$',
+    'cad': '$',
+    'eur': '€',
+    'gbp': '£',
+    'hkd': '$',
+    'jpy': '¥',
+    'nzd': '$',
+    'sgd': '$',
+    'usd': '$',
+    'ghc': '¢',
+    'ars': '$',
+    'bsd': '$',
+    'bbd': '$',
+    'bmd': '$',
+    'bnd': '$',
+    'kyd': '$',
+    'clp': '$',
+    'cop': '$',
+    'xcd': '$',
+    'svc': '$',
+    'fjd': '$',
+    'gyd': '$',
+    'lrd': '$',
+    'mxn': '$',
+    'nad': '$',
+    'sbd': '$',
+    'srd': '$',
+    'tvd': '$',
+    'bob': '$b',
+    'uyu': '$u',
+    'egp': '£',
+    'fkp': '£',
+    'gip': '£',
+    'ggp': '£',
+    'imp': '£',
+    'jep': '£',
+    'lbp': '£',
+    'shp': '£',
+    'syp': '£',
+    'cny': '¥',
+    'afn': '؋',
+    'thb': '฿',
+    'khr': '៛',
+    'crc': '₡',
+    'trl': '₤',
+    'ngn': '₦',
+    'kpw': '₩',
+    'krw': '₩',
+    'ils': '₪',
+    'vnd': '₫',
+    'lak': '₭',
+    'mnt': '₮',
+    'cup': '₱',
+    'php': '₱',
+    'uah': '₴',
+    'mur': '₨',
+    'npr': '₨',
+    'pkr': '₨',
+    'scr': '₨',
+    'lkr': '₨',
+    'irr': '﷼',
+    'omr': '﷼',
+    'qar': '﷼',
+    'sar': '﷼',
+    'yer': '﷼',
+    'pab': 'b/.',
+    'vef': 'bs',
+    'bzd': 'bz$',
+    'nio': 'c$',
+    'chf': 'chf',
+    'huf': 'ft',
+    'awg': 'ƒ',
+    'ang': 'ƒ',
+    'pyg': 'gs',
+    'jmd': 'j$',
+    'czk': 'kč',
+    'bam': 'km',
+    'hrk': 'kn',
+    'dkk': 'kr',
+    'eek': 'kr',
+    'isk': 'kr',
+    'nok': 'kr',
+    'sek': 'kr',
+    'hnl': 'l',
+    'ron': 'lei',
+    'all': 'lek',
+    'lvl': 'ls',
+    'ltl': 'lt',
+    'mzn': 'mt',
+    'twd': 'nt$',
+    'bwp': 'p',
+    'byr': 'p.',
+    'gtq': 'q',
+    'zar': 'r',
+    'brl': 'r$',
+    'dop': 'rd$',
+    'myr': 'rm',
+    'idr': 'rp',
+    'sos': 's',
+    'pen': 's/.',
+    'ttd': 'tt$',
+    'zwd': 'z$',
+    'pln': 'zł',
+    'mkd': 'ден',
+    'rsd': 'Дин.',
+    'bgn': 'лв',
+    'kzt': 'лв',
+    'kgs': 'лв',
+    'uzs': 'лв',
+    'azn': 'ман',
+    'rub': 'руб',
+    'inr': '',
+    'try': '',
+    '': ''
+  }
+};
+
+// node_modules/shop.js-util/src/currency.coffee
+var currencySeparator;
+var currencySigns;
+var digitsOnlyRe;
+
+currencySeparator = '.';
+
+digitsOnlyRe = new RegExp('[^\\d.-]', 'g');
+
+currencySigns = currencies.data;
+
+var isZeroDecimal = function(code) {
+  if (code) {
+    code = code.toLowerCase();
+  }
+  if (code === 'bif' || code === 'clp' || code === 'djf' || code === 'gnf' || code === 'jpy' || code === 'kmf' || code === 'krw' || code === 'mga' || code === 'pyg' || code === 'rwf' || code === 'vnd' || code === 'vuv' || code === 'xaf' || code === 'xof' || code === 'xpf') {
+    return true;
+  }
+  return false;
+};
+
+
+
+var renderUICurrencyFromJSON = function(code, jsonCurrency) {
+  var currentCurrencySign, ref;
+  if (code) {
+    code = code.toLowerCase();
+  }
+  if (isNaN(jsonCurrency)) {
+    jsonCurrency = 0;
+  }
+  currentCurrencySign = (ref = currencySigns[code]) != null ? ref : '';
+  if (code === 'eth' || code === 'btc' || code === 'xbt') {
+    jsonCurrency = jsonCurrency / 1e9;
+    return currentCurrencySign + jsonCurrency;
+  }
+  jsonCurrency = '' + jsonCurrency;
+  if (isZeroDecimal(code)) {
+    return currentCurrencySign + jsonCurrency;
+  }
+  while (jsonCurrency.length < 3) {
+    jsonCurrency = '0' + jsonCurrency;
+  }
+  return currentCurrencySign + jsonCurrency.substr(0, jsonCurrency.length - 2) + '.' + jsonCurrency.substr(-2);
+};
+
+var renderJSONCurrencyFromUI = function(code, uiCurrency) {
+  var currentCurrencySign, parts;
+  if (code) {
+    code = code.toLowerCase();
+  }
+  if (code === 'eth' || code === 'btc' || code === 'xbt') {
+    return parseFloat(('' + uiCurrency).replace(digitsOnlyRe, '')) * 1e9;
+  }
+  if (isZeroDecimal(code)) {
+    return parseInt(('' + uiCurrency).replace(digitsOnlyRe, '').replace(currencySeparator, ''), 10);
+  }
+  parts = uiCurrency.split(currencySeparator);
+  if (parts.length > 1) {
+    parts[1] = parts[1].substr(0, 2);
+    while (parts[1].length < 2) {
+      parts[1] += '0';
+    }
+  } else {
+    parts[1] = '00';
+  }
+  return parseInt(parseFloat(parts[0].replace(digitsOnlyRe, '')) * 100 + parseFloat(parts[1].replace(digitsOnlyRe, '')), 10);
+};
+
+// src/controls/currency.coffee
+var Currency;
+var extend$7 = function(child, parent) { for (var key in parent) { if (hasProp$6.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$6 = {}.hasOwnProperty;
+
+var currency = Currency = (function(superClass) {
+  extend$7(Currency, superClass);
+
+  function Currency() {
+    return Currency.__super__.constructor.apply(this, arguments);
+  }
+
+  Currency.prototype.tag = 'currency';
+
+  Currency.prototype.html = html$3;
+
+  Currency.prototype.init = function() {
+    Currency.__super__.init.apply(this, arguments);
+    return this.on('mounted', (function(_this) {
+      return function() {
+        var el;
+        el = _this.root.getElementsByTagName(_this.formElement)[0];
+        if (_this.type !== 'password') {
+          return placeholder(el);
+        }
+      };
+    })(this));
+  };
+
+  Currency.prototype.getValue = function(e) {
+    var el, ref;
+    el = e.target;
+    return renderJSONCurrencyFromUI(((ref = el.value) != null ? ref : '0').trim());
+  };
+
+  Currency.prototype.renderUICurrencyFromJSON = renderUICurrencyFromJSON;
+
+  return Currency;
+
+})(Text);
+
+Currency.register();
+
 // node_modules/zepto-modules/zepto.js
 //     Zepto.js
 //     (c) 2010-2016 Thomas Fuchs
@@ -6662,7 +7004,7 @@ function cmp(a, b) {
     return 0;
 }
 
-function extend$8(a, b) {
+function extend$10(a, b) {
     var i, n, k, object;
     for (i = 1, n = arguments.length; i < n; i++) {
         object = arguments[i];
@@ -7000,7 +7342,7 @@ Sifter.prototype.getSortFunction = function(search, options) {
 Sifter.prototype.prepareSearch = function(query, options) {
     if (typeof query === 'object') return query;
 
-    options = extend$8({}, options);
+    options = extend$10({}, options);
 
     var optionFields     = options.fields;
     var optionSort       = options.sort;
@@ -10030,129 +10372,22 @@ function selectize($select, optsUser) {
     });
 }
 
-// src/utils/placeholder.coffee
-var exports$1;
-var hidePlaceholderOnFocus;
-var unfocusOnAnElement;
-
-hidePlaceholderOnFocus = function(event) {
-  var target;
-  target = event.currentTarget ? event.currentTarget : event.srcElement;
-  if (target.value === target.getAttribute('placeholder')) {
-    return target.value = '';
-  }
-};
-
-unfocusOnAnElement = function(event) {
-  var target;
-  target = event.currentTarget ? event.currentTarget : event.srcElement;
-  if (target.value === '') {
-    return target.value = target.getAttribute('placeholder');
-  }
-};
-
-exports$1 = function() {};
-
-if (document.createElement("input").placeholder == null) {
-  exports$1 = function(input) {
-    var ref;
-    input = (ref = input[0]) != null ? ref : input;
-    if (input._placeholdered != null) {
-      return;
-    }
-    Object.defineProperty(input, '_placeholdered', {
-      value: true,
-      writable: true
-    });
-    if (!input.value) {
-      input.value = input.getAttribute('placeholder');
-    }
-    if (input.addEventListener) {
-      input.addEventListener('click', hidePlaceholderOnFocus, false);
-      return input.addEventListener('blur', unfocusOnAnElement, false);
-    } else if (input.attachEvent) {
-      input.attachEvent('onclick', hidePlaceholderOnFocus);
-      return input.attachEvent('onblur', unfocusOnAnElement);
-    }
-  };
-}
-
-var placeholder = exports$1;
-
-// templates/controls/text.pug
-var html$2 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\" placeholder=\"{ placeholder }\">\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: input.ref.get(input.name) || placeholder }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
-
-// src/controls/text.coffee
-var Text;
-var extend$9 = function(child, parent) { for (var key in parent) { if (hasProp$7.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$7 = {}.hasOwnProperty;
-
-var Text$1 = Text = (function(superClass) {
-  extend$9(Text, superClass);
-
-  function Text() {
-    return Text.__super__.constructor.apply(this, arguments);
-  }
-
-  Text.prototype.tag = 'text';
-
-  Text.prototype.html = html$2;
-
-  Text.prototype.type = 'text';
-
-  Text.prototype.formElement = 'input';
-
-  Text.prototype.autocomplete = 'on';
-
-  Text.prototype.autofocus = false;
-
-  Text.prototype.disabled = false;
-
-  Text.prototype.maxlength = null;
-
-  Text.prototype.readonly = false;
-
-  Text.prototype.placeholder = null;
-
-  Text.prototype.label = '';
-
-  Text.prototype.instructions = null;
-
-  Text.prototype.init = function() {
-    Text.__super__.init.apply(this, arguments);
-    return this.on('mounted', (function(_this) {
-      return function() {
-        var el;
-        el = _this.root.getElementsByTagName(_this.formElement)[0];
-        if (_this.type !== 'password') {
-          return placeholder(el);
-        }
-      };
-    })(this));
-  };
-
-  return Text;
-
-})(Control$1);
-
-Text.register();
-
 // templates/controls/dropdown.pug
-var html$3 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" style=\"display: none;\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" onchange=\"{ change }\" onblur=\"{ change }\" placeholder=\"{ placeholder }\"></select>\n</yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
+var html$4 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" style=\"display: none;\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" onchange=\"{ change }\" onblur=\"{ change }\" placeholder=\"{ placeholder }\"></select>\n</yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
 // src/controls/dropdown.coffee
 var Select$2;
 var coolDown;
 var isABrokenBrowser;
-var extend$7 = function(child, parent) { for (var key in parent) { if (hasProp$6.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$6 = {}.hasOwnProperty;
+var extend$9 = function(child, parent) { for (var key in parent) { if (hasProp$8.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$8 = {}.hasOwnProperty;
 
 isABrokenBrowser = window.navigator.userAgent.indexOf('MSIE') > 0 || window.navigator.userAgent.indexOf('Trident') > 0;
 
 coolDown = -1;
 
 var dropdown = Select$2 = (function(superClass) {
-  extend$7(Select, superClass);
+  extend$9(Select, superClass);
 
   function Select() {
     return Select.__super__.constructor.apply(this, arguments);
@@ -10160,7 +10395,7 @@ var dropdown = Select$2 = (function(superClass) {
 
   Select.prototype.tag = 'dropdown';
 
-  Select.prototype.html = html$3;
+  Select.prototype.html = html$4;
 
   Select.prototype.selectOptions = {};
 
@@ -10271,17 +10506,17 @@ var dropdown = Select$2 = (function(superClass) {
 
   return Select;
 
-})(Text$1);
+})(Text$2);
 
 Select$2.register();
 
 // src/controls/state-select.coffee
 var StateSelect;
-var extend$10 = function(child, parent) { for (var key in parent) { if (hasProp$8.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$8 = {}.hasOwnProperty;
+var extend$11 = function(child, parent) { for (var key in parent) { if (hasProp$9.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$9 = {}.hasOwnProperty;
 
 var stateSelect = StateSelect = (function(superClass) {
-  extend$10(StateSelect, superClass);
+  extend$11(StateSelect, superClass);
 
   function StateSelect() {
     return StateSelect.__super__.constructor.apply(this, arguments);
@@ -10352,15 +10587,15 @@ var stateSelect = StateSelect = (function(superClass) {
 StateSelect.register();
 
 // templates/controls/textarea.pug
-var html$4 = "\n<yield from=\"input\">\n  <textarea class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" onchange=\"{ change }\" onblur=\"{ change }\" rows=\"{ rows }\" cols=\"{ cols }\" disabled=\"{disabled\" maxlength=\"{ maxlength }\" placeholder=\"{ placeholder }\" readonly=\"{ readonly }\" wrap=\"{ wrap }\">{ input.ref.get(input.name) }</textarea>\n</yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
+var html$5 = "\n<yield from=\"input\">\n  <textarea class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" onchange=\"{ change }\" onblur=\"{ change }\" rows=\"{ rows }\" cols=\"{ cols }\" disabled=\"{disabled\" maxlength=\"{ maxlength }\" placeholder=\"{ placeholder }\" readonly=\"{ readonly }\" wrap=\"{ wrap }\">{ input.ref.get(input.name) }</textarea>\n</yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
 // src/controls/textbox.coffee
 var TextBox;
-var extend$11 = function(child, parent) { for (var key in parent) { if (hasProp$9.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$9 = {}.hasOwnProperty;
+var extend$12 = function(child, parent) { for (var key in parent) { if (hasProp$10.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$10 = {}.hasOwnProperty;
 
 TextBox = (function(superClass) {
-  extend$11(TextBox, superClass);
+  extend$12(TextBox, superClass);
 
   function TextBox() {
     return TextBox.__super__.constructor.apply(this, arguments);
@@ -10368,7 +10603,7 @@ TextBox = (function(superClass) {
 
   TextBox.prototype.tag = 'textbox';
 
-  TextBox.prototype.html = html$4;
+  TextBox.prototype.html = html$5;
 
   TextBox.prototype.formElement = 'textarea';
 
@@ -10386,7 +10621,7 @@ TextBox = (function(superClass) {
 
   return TextBox;
 
-})(Text$1);
+})(Text$2);
 
 TextBox.register();
 
@@ -10400,10 +10635,11 @@ exports.Events = Events$1;
 exports.CheckBox = checkbox;
 exports.Control = Control$1;
 exports.CountrySelect = countrySelect;
+exports.Currency = currency;
 exports.Dropdown = dropdown;
 exports.Select = Select$1;
 exports.StateSelect = stateSelect;
-exports.Text = Text$1;
+exports.Text = Text$2;
 exports.TextBox = TextBox$1;
 
 return exports;
