@@ -11,6 +11,7 @@ import {
 export default class Currency extends Text
   tag:          'currency'
   html:         html
+  currency:     ''
 
   init: ()->
     super
@@ -21,10 +22,17 @@ export default class Currency extends Text
       if @type != 'password'
         placeholder el
 
+  getCurrency: (e)->
+    if typeof currency == 'function'
+      return currency()
+
+    return currency
+
+  renderValue: ->
+    renderUICurrencyFromJSON @getCurrency(), @input.ref.get(input.name)
+
   getValue: (e)->
     el = e.target
-    return renderJSONCurrencyFromUI((el.value ? '0').trim())
-
-  renderUICurrencyFromJSON: renderUICurrencyFromJSON
+    return renderJSONCurrencyFromUI @getCurrency(), (el.value ? '0').trim()
 
 Currency.register()
