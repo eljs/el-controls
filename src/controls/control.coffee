@@ -30,9 +30,9 @@ export default class Control extends El.Input
 
       t = new Tween { x: wTop }
         .to { x: wTop + elTop }, 500, Easing.Cubic
-        .onUpdate ({ x })->
+        .on 'update', ({ x })->
           window.scrollTo window.pageXOffset, x
-        .onComplete ->
+        .on 'complete', ->
           scrolling = false
           autoPlay false
         .start()
