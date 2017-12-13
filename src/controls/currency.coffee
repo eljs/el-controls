@@ -1,4 +1,4 @@
-import Control from './text'
+import Text from './text'
 import placeholder from '../utils/placeholder'
 
 import html from '../../templates/controls/currency'
