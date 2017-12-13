@@ -5255,7 +5255,7 @@ if (document.createElement("input").placeholder == null) {
 var placeholder = exports$1;
 
 // templates/controls/text.pug
-var html$2 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\" placeholder=\"{ placeholder }\">\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: input.ref.get(input.name) || placeholder }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
+var html$2 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ renderValue() }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\" placeholder=\"{ placeholder }\">\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: input.ref.get(input.name) || placeholder }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
 // src/controls/text.coffee
 var Text;
@@ -5509,7 +5509,7 @@ var Currency;
 var extend$7 = function(child, parent) { for (var key in parent) { if (hasProp$6.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 var hasProp$6 = {}.hasOwnProperty;
 
-var currency = Currency = (function(superClass) {
+var currency$1 = Currency = (function(superClass) {
   extend$7(Currency, superClass);
 
   function Currency() {
@@ -5519,6 +5519,8 @@ var currency = Currency = (function(superClass) {
   Currency.prototype.tag = 'currency';
 
   Currency.prototype.html = html$3;
+
+  Currency.prototype.currency = '';
 
   Currency.prototype.init = function() {
     Currency.__super__.init.apply(this, arguments);
@@ -5533,13 +5535,22 @@ var currency = Currency = (function(superClass) {
     })(this));
   };
 
+  Currency.prototype.getCurrency = function(e) {
+    if (typeof currency === 'function') {
+      return currency();
+    }
+    return currency;
+  };
+
+  Currency.prototype.renderValue = function() {
+    return renderUICurrencyFromJSON(this.getCurrency(), this.input.ref.get(input.name));
+  };
+
   Currency.prototype.getValue = function(e) {
     var el, ref;
     el = e.target;
-    return renderJSONCurrencyFromUI(((ref = el.value) != null ? ref : '0').trim());
+    return renderJSONCurrencyFromUI(this.getCurrency(), ((ref = el.value) != null ? ref : '0').trim());
   };
-
-  Currency.prototype.renderUICurrencyFromJSON = renderUICurrencyFromJSON;
 
   return Currency;
 
@@ -10635,7 +10646,7 @@ exports.Events = Events$1;
 exports.CheckBox = checkbox;
 exports.Control = Control$1;
 exports.CountrySelect = countrySelect;
-exports.Currency = currency;
+exports.Currency = currency$1;
 exports.Dropdown = dropdown;
 exports.Select = Select$1;
 exports.StateSelect = stateSelect;
