@@ -5258,11 +5258,11 @@ var placeholder = exports$1;
 var html$2 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\" placeholder=\"{ placeholder }\">\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: input.ref.get(input.name) || placeholder }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
 // src/controls/text.coffee
-var Text$1;
+var Text;
 var extend$8 = function(child, parent) { for (var key in parent) { if (hasProp$7.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 var hasProp$7 = {}.hasOwnProperty;
 
-var Text$2 = Text$1 = (function(superClass) {
+var Text$1 = Text = (function(superClass) {
   extend$8(Text, superClass);
 
   function Text() {
@@ -5310,7 +5310,7 @@ var Text$2 = Text$1 = (function(superClass) {
 
 })(Control$1);
 
-Text$1.register();
+Text.register();
 
 // templates/controls/currency.pug
 var html$3 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ input.name.replace(/\\./g, &quot;-&quot;) }\" name=\"{ name || input.name.replace(/\\./g, &quot;-&quot;) }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\" placeholder=\"{ placeholder }\">\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: input.ref.get(input.name) || placeholder }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
@@ -5543,7 +5543,7 @@ var currency = Currency = (function(superClass) {
 
   return Currency;
 
-})(Text);
+})(Text$1);
 
 Currency.register();
 
@@ -10506,7 +10506,7 @@ var dropdown = Select$2 = (function(superClass) {
 
   return Select;
 
-})(Text$2);
+})(Text$1);
 
 Select$2.register();
 
@@ -10621,7 +10621,7 @@ TextBox = (function(superClass) {
 
   return TextBox;
 
-})(Text$2);
+})(Text$1);
 
 TextBox.register();
 
@@ -10639,7 +10639,7 @@ exports.Currency = currency;
 exports.Dropdown = dropdown;
 exports.Select = Select$1;
 exports.StateSelect = stateSelect;
-exports.Text = Text$2;
+exports.Text = Text$1;
 exports.TextBox = TextBox$1;
 
 return exports;
