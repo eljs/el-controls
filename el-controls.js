@@ -6361,7 +6361,7 @@ var currency = Currency = (function(superClass) {
   };
 
   Currency.prototype.renderValue = function() {
-    return renderUICurrencyFromJSON(this.getCurrency(), this.input.ref.get(input.name));
+    return renderUICurrencyFromJSON(this.getCurrency(), this.input.ref.get(this.input.name));
   };
 
   Currency.prototype.getValue = function(e) {
