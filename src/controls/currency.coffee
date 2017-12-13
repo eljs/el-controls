@@ -23,6 +23,7 @@ export default class Currency extends Text
         placeholder el
 
   getCurrency: (e)->
+    currency = @currency
     if typeof currency == 'function'
       return currency()
 
