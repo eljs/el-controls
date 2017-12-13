@@ -5,7 +5,7 @@
     type='{ type }'
     onchange='{ change }'
     onblur='{ change }'
-    riot-value='{ renderValue() }'
+    riot-value='{ input.ref.get(input.name) }'
     class='{invalid: errorMessage, valid: valid, labeled: label}'
     autocomplete='{ autocomplete }'
     autofocus='{ autofocus }'
