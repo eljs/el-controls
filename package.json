@@ -43,11 +43,11 @@
   },
   "dependencies": {
     "broken": "0.1.13",
-    "el.js": "2.1.31",
+    "el.js": "2.1.32",
     "es-raf": "3.3.1",
     "es-selectize": "0.12.10",
     "es-tween": "0.1.0",
-    "es6-tween": "5.0.2",
+    "es6-tween": "5.0.5",
     "shop.js-util": "0.0.3",
     "uglify-es": "github:mishoo/UglifyJS2#harmony",
     "zepto-modules": "1.0.1"
@@ -65,7 +65,7 @@
     "coveralls": "3.0.0",
     "css-mqpacker": "6.0.1",
     "debug": "^3.1.0",
-    "es5-shim": "^4.5.9",
+    "es5-shim": "^4.5.10",
     "istanbul": "0.4.5",
     "lost": "8.2.0",
     "lost-stylus": "0.1.3",
