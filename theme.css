@@ -166,7 +166,7 @@
   display:block;
 }
 .input select.labeled ~ .select-indicator{
-  top:1.5em;
+  top:1.75em;
 }
 .input select:disabled ~ .select-indicator{
   opacity:0.5;
@@ -183,6 +183,16 @@
   top:50%;
   -webkit-transform:translateY(-50%);
           transform:translateY(-50%);
+}
+.input .copy-text{
+  position:absolute;
+  right:0;
+  top:1em;
+  -webkit-transform:translateY(-50%);
+          transform:translateY(-50%);
+}
+.input .labeled ~ .copy-text{
+  top:1.75em;
 }
 .input .right-aligned{
   text-align:right;
