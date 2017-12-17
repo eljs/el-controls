@@ -1,5 +1,5 @@
 import Text from './text'
-import placeholder from '../utils/placeholder'
+import { valueOrCall } from '../utils/valueOrCall'
 
 import html from '../../templates/controls/currency'
 
@@ -16,18 +16,8 @@ export default class Currency extends Text
   init: ()->
     super
 
-    @on 'mounted', =>
-      el = @root.getElementsByTagName(@formElement)[0]
-
-      if @type != 'password'
-        placeholder el
-
   getCurrency: (e)->
-    currency = @currency
-    if typeof currency == 'function'
-      return currency()
-
-    return currency
+    return valueOrCall @currency
 
   renderValue: ->
     renderUICurrencyFromJSON @getCurrency(), @input.ref.get(@input.name)

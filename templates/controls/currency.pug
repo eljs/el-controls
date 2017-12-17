@@ -1,5 +1,5 @@
 #{ 'yield' }(from='input')
-  input(
+  input.right-aligned(
     id='{ getId() }'
     name='{ getName() }'
     type='{ type }'
@@ -16,7 +16,7 @@
   )
 #{ 'yield' }(from='label')
   .label(
-    class='{ active: input.ref.get(input.name) || placeholder }'
+    class='{ active: input.ref.get(input.name) || input.ref.get(input.name) == 0 || placeholder }'
     if='{ label }'
   )
     | { label }

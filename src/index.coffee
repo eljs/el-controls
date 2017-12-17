@@ -3,6 +3,7 @@ import './utils/patches'
 export {
   CheckBox
   Control
+  Copy
   CountrySelect
   Currency
   Dropdown

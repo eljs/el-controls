@@ -177,6 +177,16 @@
   border:1px solid;
   border-radius:2px;
 }
+.input .copy-text{
+  position:absolute;
+  right:0;
+  top:50%;
+  -webkit-transform:translateY(-50%);
+          transform:translateY(-50%);
+}
+.input .right-aligned{
+  text-align:right;
+}
 .input.input.input .invalid,
 .input .input.input .invalid{
   border-color:#f22469;
