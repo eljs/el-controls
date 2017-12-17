@@ -118,7 +118,7 @@ select
     display: block
 
   &.labeled ~ .select-indicator
-    top: $themeElementHeight * .75
+    top: $themeElementHeight * .875
 
   &:disabled ~ .select-indicator
     opacity: .5
@@ -135,6 +135,15 @@ select
   right: 0
   top: 50%
   transform: translateY(-50%)
+
+.copy-text
+  position: absolute
+  right: 0
+  top: $themeElementHeight * .5
+  transform: translateY(-50%)
+
+.labeled ~ .copy-text
+  top: $themeElementHeight * .875
 
 .right-aligned
   text-align: right
