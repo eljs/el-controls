@@ -2,12 +2,26 @@ import El       from 'el.js/src'
 import Events   from  '../events'
 
 import { Tween, Easing, autoPlay } from 'es6-tween/src/index'
+import { valueOrCall } from '../utils/valueOrCall'
 
 scrolling = false
 
+_controlId = 0
+
 export default class Control extends El.Input
+  _controlId: 0
+
+  name: null
+
   init: ->
     super
+    @_controlId = _controlId++
+
+  getId: () ->
+    return @tag + '-' + @_controlId
+
+  getName: () ->
+    return valueOrCall(@name) ? @input.name.replace /\\./g, '-'
 
   getValue: (event) ->
     return event.target.value?.trim()

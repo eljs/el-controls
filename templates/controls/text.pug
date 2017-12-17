@@ -1,7 +1,7 @@
 #{ 'yield' }(from='input')
   input(
-    id='{ input.name.replace(/\\./g, "-") }'
-    name='{ name || input.name.replace(/\\./g, "-") }'
+    id='{ getId() }'
+    name='{ getName() }'
     type='{ type }'
     onchange='{ change }'
     onblur='{ change }'
