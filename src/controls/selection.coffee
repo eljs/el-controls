@@ -22,12 +22,16 @@ export default class Select extends Control
     return @_optionsHash.length > 2
 
   options: ->
-    optionsHash = JSON.stringify @selectOptions
+    selectOptions = @selectOptions
+    if typeof selectOptions == 'function'
+      selectOptions = selectOptions()
+
+    optionsHash = JSON.stringify selectOptions
 
     if @_optionsHash != optionsHash
       @_optionsHash = optionsHash
 
-    return @selectOptions
+    return selectOptions
 
   getValue: (e)->
     el = e.target
