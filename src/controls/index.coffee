@@ -4,6 +4,7 @@ import Copy          from './copy'
 import CountrySelect from './country-select'
 import Currency      from './currency'
 import Dropdown      from './dropdown'
+import QRCode        from './qrcode'
 import Select        from './selection'
 import StateSelect   from './state-select'
 import Text          from './text'
@@ -16,6 +17,7 @@ export {
   CountrySelect
   Currency
   Dropdown
+  QRCode
   Select
   StateSelect
   Text

@@ -7,6 +7,7 @@ export {
   CountrySelect
   Currency
   Dropdown
+  QRCode
   Select
   StateSelect
   Text
