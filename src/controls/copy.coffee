@@ -13,17 +13,17 @@ export default class Copy extends Text
   # this is set automatically
   copied: false
 
-  init: ()->
+  init: ->
     if !@text
       super
 
-  getText: ()->
+  getText: ->
     return valueOrCall(@text) || @input.ref.get(input.name)
 
   # readonly
-  change:  ()->
-  _change: ()->
-  getName: ()->
+  change:  ->
+  _change: ->
+  getName: ->
 
   copy: (e)->
     text = @getText()

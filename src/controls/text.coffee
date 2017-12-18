@@ -18,7 +18,7 @@ export default class Text extends Control
   label:        ''
   instructions: null
 
-  init: ()->
+  init: ->
     super
 
     @on 'mounted', =>

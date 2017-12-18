@@ -22,9 +22,9 @@ export default class Select extends Text
   ignore: false
 
   events:
-    updated: ()->
+    updated: ->
       @onUpdated()
-    mount: ()->
+    mount: ->
       @onUpdated()
 
   getValue: (event)->
@@ -80,7 +80,7 @@ export default class Select extends Text
 
     @style = @style || 'width:100%'
 
-  onUpdated: ()->
+  onUpdated: ->
     if !@input?
       return
 
