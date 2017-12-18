@@ -21,9 +21,9 @@ export default class Copy extends Text
     return valueOrCall(@text) || @input.ref.get(input.name)
 
   # readonly
-  getName: ()->
-  change: ()->
+  change:  ()->
   _change: ()->
+  getName: ()->
 
   copy: (e)->
     text = @getText()
