@@ -2,7 +2,7 @@ import Text from './text'
 import html from '../../templates/controls/qrcode'
 
 import { valueOrCall } from '../utils/valueOrCall'
-import qrcode from 'qrcode-generator-es6'
+import qrcode from 'qrcode/build/qrcode.js'
 
 export default class QRCode extends Text
   tag: 'qrcode'
@@ -11,8 +11,8 @@ export default class QRCode extends Text
   # pass this in optionally to overwrite a specific value
   text: ''
 
-  # version '1' to '40', '0' for automatic detection (default)
-  version: '0'
+  # version '1' to '40', undefined for automatic detection (default)
+  version: undefined
 
   # level of error correction
   # 'L' = 7%
@@ -20,39 +20,36 @@ export default class QRCode extends Text
   # 'Q' = 25%
   # 'H' = 35%
   # 'S' = 50% (unsupported)
-  errorLevel: 'M'
+  errorCorrectionLevel: 'M'
 
-  # encoding mode
-  # Numeric
-  # Alphanumeric
-  # Byte (default)
-  # Kanji
-  mode: 'Byte'
+  # scale of a module
+  scale: 4
 
-  # Multibyte
-  # default (no support)
-  # SJIS
-  # UTF-8 (default)
-  multibyte: 'UTF-8'
+  # margin of white area around qr code in pixels
+  margin: 4
 
-  init: ()->
+  init: ->
     if !@text
       super
 
-  getText: ()->
+    @on 'updated', ->
+      canvas = @root.children[0]
+      qrcode.toCanvas canvas, @getText(),
+        version: @version
+        errorCorrectionLevel: @errorCorrectionLevel
+        scale: @scale
+        margin: @margin
+      , (error)->
+        if error
+          console.error error
+        console.log 'success!'
+
+  getText: ->
     return valueOrCall(@text) || @input.ref.get(input.name)
 
-  getDataUri: ()->
-    qrcode.stringToBytes = qrcode.stringToBytesFuncs[@multibyte]
-
-    qr = qrcode @version || 4, @errorLevel || 'M'
-    qr.addData @getText(), @mode
-    qr.make()
-    return /<img.*?src="(.*?)"/.exec(qr.createImgTag())[1]
-
   # readonly
-  change:  ()->
-  _change: ()->
-  getName: ()->
+  change:  ->
+  _change: ->
+  getName: ->
 
 QRCode.register()

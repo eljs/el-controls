@@ -53,7 +53,7 @@ export default class StateSelect extends Select
   getCountry: ->
     return ''
 
-  init: ()->
+  init: ->
     super
 
 StateSelect.register()

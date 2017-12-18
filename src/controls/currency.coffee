@@ -13,7 +13,7 @@ export default class Currency extends Text
   html:         html
   currency:     ''
 
-  init: ()->
+  init: ->
     super
 
   getCurrency: (e)->

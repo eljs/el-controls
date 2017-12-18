@@ -9,10 +9,10 @@ export class CopyControl extends Text
   # this is set automatically
   copied: false
 
-  init: ()->
+  init: ->
     super
 
-  getText: ()->
+  getText: ->
     if typeof @text == 'function'
       return @text()
 
