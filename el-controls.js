@@ -1,7 +1,5 @@
-var ElControls = (function (exports,buffer) {
+var ElControls = (function (exports) {
 'use strict';
-
-buffer = buffer && buffer.hasOwnProperty('default') ? buffer['default'] : buffer;
 
 // node_modules/broken/lib/broken.mjs
 // src/promise-inspection.coffee
@@ -11505,90 +11503,13 @@ Select$2.register();
 // templates/controls/qrcode.pug
 var html$6 = "\n<canvas></canvas>";
 
-//  commonjs-external:buffer
-
-// node_modules/qrcode/lib/utils/buffer.js
-var buffer$1 = buffer.Buffer;
-
-// node_modules/qrcode/lib/core/utils.js
-var toSJISFunction;
-var CODEWORDS_COUNT = [
-  0, // Not used
-  26, 44, 70, 100, 134, 172, 196, 242, 292, 346,
-  404, 466, 532, 581, 655, 733, 815, 901, 991, 1085,
-  1156, 1258, 1364, 1474, 1588, 1706, 1828, 1921, 2051, 2185,
-  2323, 2465, 2611, 2761, 2876, 3034, 3196, 3362, 3532, 3706
-];
-
-/**
- * Returns the QR Code size for the specified version
- *
- * @param  {Number} version QR Code version
- * @return {Number}         size of QR code
- */
-var getSymbolSize = function getSymbolSize (version) {
-  if (!version) throw new Error('"version" cannot be null or undefined')
-  if (version < 1 || version > 40) throw new Error('"version" should be in range from 1 to 40')
-  return version * 4 + 17
-};
-
-/**
- * Returns the total number of codewords used to store data and EC information.
- *
- * @param  {Number} version QR Code version
- * @return {Number}         Data length in bits
- */
-var getSymbolTotalCodewords = function getSymbolTotalCodewords (version) {
-  return CODEWORDS_COUNT[version]
-};
-
-/**
- * Encode data with Bose-Chaudhuri-Hocquenghem
- *
- * @param  {Number} data Value to encode
- * @return {Number}      Encoded value
- */
-var getBCHDigit = function (data) {
-  var digit = 0;
-
-  while (data !== 0) {
-    digit++;
-    data >>>= 1;
-  }
-
-  return digit
-};
-
-var setToSJISFunction = function setToSJISFunction (f) {
-  if (typeof f !== 'function') {
-    throw new Error('"toSJISFunc" is not a valid function.')
-  }
-
-  toSJISFunction = f;
-};
-
-var isKanjiModeEnabled = function () {
-  return typeof toSJISFunction !== 'undefined'
-};
-
-var toSJIS = function toSJIS (kanji) {
-  return toSJISFunction(kanji)
-};
-
-var utils = {
-	getSymbolSize: getSymbolSize,
-	getSymbolTotalCodewords: getSymbolTotalCodewords,
-	getBCHDigit: getBCHDigit,
-	setToSJISFunction: setToSJISFunction,
-	isKanjiModeEnabled: isKanjiModeEnabled,
-	toSJIS: toSJIS
-};
-
 //  commonjsHelpers
 
 
 
-
+function commonjsRequire () {
+	throw new Error('Dynamic requires are not currently supported by rollup-plugin-commonjs');
+}
 
 
 
@@ -11596,183 +11517,9 @@ function createCommonjsModule(fn, module) {
 	return module = { exports: {} }, fn(module, module.exports), module.exports;
 }
 
-var errorCorrectionLevel = createCommonjsModule(function (module, exports) {
-// node_modules/qrcode/lib/core/error-correction-level.js
-exports.L = { bit: 1 };
-exports.M = { bit: 0 };
-exports.Q = { bit: 3 };
-exports.H = { bit: 2 };
-
-function fromString (string) {
-  if (typeof string !== 'string') {
-    throw new Error('Param is not a string')
-  }
-
-  var lcStr = string.toLowerCase();
-
-  switch (lcStr) {
-    case 'l':
-    case 'low':
-      return exports.L
-
-    case 'm':
-    case 'medium':
-      return exports.M
-
-    case 'q':
-    case 'quartile':
-      return exports.Q
-
-    case 'h':
-    case 'high':
-      return exports.H
-
-    default:
-      throw new Error('Unknown EC Level: ' + string)
-  }
-}
-
-exports.isValid = function isValid (level) {
-  return level && typeof level.bit !== 'undefined' &&
-    level.bit >= 0 && level.bit < 4
-};
-
-exports.from = function from (value, defaultValue) {
-  if (exports.isValid(value)) {
-    return value
-  }
-
-  try {
-    return fromString(value)
-  } catch (e) {
-    return defaultValue
-  }
-};
-});
-
-var errorCorrectionLevel_1 = errorCorrectionLevel.L;
-var errorCorrectionLevel_2 = errorCorrectionLevel.M;
-var errorCorrectionLevel_3 = errorCorrectionLevel.Q;
-var errorCorrectionLevel_4 = errorCorrectionLevel.H;
-var errorCorrectionLevel_5 = errorCorrectionLevel.isValid;
-var errorCorrectionLevel_6 = errorCorrectionLevel.from;
-
-// node_modules/qrcode/lib/core/bit-buffer.js
-function BitBuffer () {
-  this.buffer = [];
-  this.length = 0;
-}
-
-BitBuffer.prototype = {
-
-  get: function (index) {
-    var bufIndex = Math.floor(index / 8);
-    return ((this.buffer[bufIndex] >>> (7 - index % 8)) & 1) === 1
-  },
-
-  put: function (num, length) {
-    for (var i = 0; i < length; i++) {
-      this.putBit(((num >>> (length - i - 1)) & 1) === 1);
-    }
-  },
-
-  getLengthInBits: function () {
-    return this.length
-  },
-
-  putBit: function (bit) {
-    var bufIndex = Math.floor(this.length / 8);
-    if (this.buffer.length <= bufIndex) {
-      this.buffer.push(0);
-    }
-
-    if (bit) {
-      this.buffer[bufIndex] |= (0x80 >>> (this.length % 8));
-    }
-
-    this.length++;
-  }
-};
-
-var bitBuffer = BitBuffer;
-
-//  commonjs-proxy:/Users/dtai/work/hanzo/el-controls/node_modules/qrcode/lib/utils/buffer.js
-
-// node_modules/qrcode/lib/core/bit-matrix.js
-
-
-/**
- * Helper class to handle QR Code symbol modules
- *
- * @param {Number} size Symbol size
- */
-function BitMatrix (size) {
-  if (!size || size < 1) {
-    throw new Error('BitMatrix size must be defined and greater than 0')
-  }
-
-  this.size = size;
-  this.data = new buffer$1(size * size);
-  this.data.fill(0);
-  this.reservedBit = new buffer$1(size * size);
-  this.reservedBit.fill(0);
-}
-
-/**
- * Set bit value at specified location
- * If reserved flag is set, this bit will be ignored during masking process
- *
- * @param {Number}  row
- * @param {Number}  col
- * @param {Boolean} value
- * @param {Boolean} reserved
- */
-BitMatrix.prototype.set = function (row, col, value, reserved) {
-  var index = row * this.size + col;
-  this.data[index] = value;
-  if (reserved) this.reservedBit[index] = true;
-};
-
-/**
- * Returns bit value at specified location
- *
- * @param  {Number}  row
- * @param  {Number}  col
- * @return {Boolean}
- */
-BitMatrix.prototype.get = function (row, col) {
-  return this.data[row * this.size + col]
-};
-
-/**
- * Applies xor operator at specified location
- * (used during masking process)
- *
- * @param {Number}  row
- * @param {Number}  col
- * @param {Boolean} value
- */
-BitMatrix.prototype.xor = function (row, col, value) {
-  this.data[row * this.size + col] ^= value;
-};
-
-/**
- * Check if bit at specified location is reserved
- *
- * @param {Number}   row
- * @param {Number}   col
- * @return {Boolean}
- */
-BitMatrix.prototype.isReserved = function (row, col) {
-  return this.reservedBit[row * this.size + col]
-};
-
-var bitMatrix = BitMatrix;
-
-//  commonjs-proxy:/Users/dtai/work/hanzo/el-controls/node_modules/qrcode/lib/core/utils.js
-
-var alignmentPattern = createCommonjsModule(function (module, exports) {
-// node_modules/qrcode/lib/core/alignment-pattern.js
+var qrcode$1 = createCommonjsModule(function (module, exports) {
+// node_modules/qrcode/build/qrcode.js
+(function(f){{module.exports=f();}})(function(){return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof commonjsRequire=="function"&&commonjsRequire;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND", f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r);}return n[o].exports}var i=typeof commonjsRequire=="function"&&commonjsRequire;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 /**
  * Alignment pattern are fixed reference pattern in defined positions
  * in a matrix symbology, which enables the decode software to re-synchronise
@@ -11783,7 +11530,7 @@ var alignmentPattern = createCommonjsModule(function (module, exports) {
  * and their number depends on the symbol version.
  */
 
-var getSymbolSize = utils.getSymbolSize;
+var getSymbolSize = require('./utils').getSymbolSize;
 
 /**
  * Calculate the row/column coordinates of the center module of each alignment pattern
@@ -11856,13 +11603,398 @@ exports.getPositions = function getPositions (version) {
 
   return coords
 };
-});
 
-var alignmentPattern_1 = alignmentPattern.getRowColCoords;
-var alignmentPattern_2 = alignmentPattern.getPositions;
+},{"./utils":20}],2:[function(require,module,exports){
+var Mode = require('./mode');
 
-// node_modules/qrcode/lib/core/finder-pattern.js
-var getSymbolSize$1 = utils.getSymbolSize;
+/**
+ * Array of characters available in alphanumeric mode
+ *
+ * As per QR Code specification, to each character
+ * is assigned a value from 0 to 44 which in this case coincides
+ * with the array index
+ *
+ * @type {Array}
+ */
+var ALPHA_NUM_CHARS = [
+  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+  'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+  'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+  ' ', '$', '%', '*', '+', '-', '.', '/', ':'
+];
+
+function AlphanumericData (data) {
+  this.mode = Mode.ALPHANUMERIC;
+  this.data = data;
+}
+
+AlphanumericData.getBitsLength = function getBitsLength (length) {
+  return 11 * Math.floor(length / 2) + 6 * (length % 2)
+};
+
+AlphanumericData.prototype.getLength = function getLength () {
+  return this.data.length
+};
+
+AlphanumericData.prototype.getBitsLength = function getBitsLength () {
+  return AlphanumericData.getBitsLength(this.data.length)
+};
+
+AlphanumericData.prototype.write = function write (bitBuffer) {
+  var i;
+
+  // Input data characters are divided into groups of two characters
+  // and encoded as 11-bit binary codes.
+  for (i = 0; i + 2 <= this.data.length; i += 2) {
+    // The character value of the first character is multiplied by 45
+    var value = ALPHA_NUM_CHARS.indexOf(this.data[i]) * 45;
+
+    // The character value of the second digit is added to the product
+    value += ALPHA_NUM_CHARS.indexOf(this.data[i + 1]);
+
+    // The sum is then stored as 11-bit binary number
+    bitBuffer.put(value, 11);
+  }
+
+  // If the number of input data characters is not a multiple of two,
+  // the character value of the final character is encoded as a 6-bit binary number.
+  if (this.data.length % 2) {
+    bitBuffer.put(ALPHA_NUM_CHARS.indexOf(this.data[i]), 6);
+  }
+};
+
+module.exports = AlphanumericData;
+
+},{"./mode":13}],3:[function(require,module,exports){
+function BitBuffer () {
+  this.buffer = [];
+  this.length = 0;
+}
+
+BitBuffer.prototype = {
+
+  get: function (index) {
+    var bufIndex = Math.floor(index / 8);
+    return ((this.buffer[bufIndex] >>> (7 - index % 8)) & 1) === 1
+  },
+
+  put: function (num, length) {
+    for (var i = 0; i < length; i++) {
+      this.putBit(((num >>> (length - i - 1)) & 1) === 1);
+    }
+  },
+
+  getLengthInBits: function () {
+    return this.length
+  },
+
+  putBit: function (bit) {
+    var bufIndex = Math.floor(this.length / 8);
+    if (this.buffer.length <= bufIndex) {
+      this.buffer.push(0);
+    }
+
+    if (bit) {
+      this.buffer[bufIndex] |= (0x80 >>> (this.length % 8));
+    }
+
+    this.length++;
+  }
+};
+
+module.exports = BitBuffer;
+
+},{}],4:[function(require,module,exports){
+var Buffer = require('../utils/buffer');
+
+/**
+ * Helper class to handle QR Code symbol modules
+ *
+ * @param {Number} size Symbol size
+ */
+function BitMatrix (size) {
+  if (!size || size < 1) {
+    throw new Error('BitMatrix size must be defined and greater than 0')
+  }
+
+  this.size = size;
+  this.data = new Buffer(size * size);
+  this.data.fill(0);
+  this.reservedBit = new Buffer(size * size);
+  this.reservedBit.fill(0);
+}
+
+/**
+ * Set bit value at specified location
+ * If reserved flag is set, this bit will be ignored during masking process
+ *
+ * @param {Number}  row
+ * @param {Number}  col
+ * @param {Boolean} value
+ * @param {Boolean} reserved
+ */
+BitMatrix.prototype.set = function (row, col, value, reserved) {
+  var index = row * this.size + col;
+  this.data[index] = value;
+  if (reserved) this.reservedBit[index] = true;
+};
+
+/**
+ * Returns bit value at specified location
+ *
+ * @param  {Number}  row
+ * @param  {Number}  col
+ * @return {Boolean}
+ */
+BitMatrix.prototype.get = function (row, col) {
+  return this.data[row * this.size + col]
+};
+
+/**
+ * Applies xor operator at specified location
+ * (used during masking process)
+ *
+ * @param {Number}  row
+ * @param {Number}  col
+ * @param {Boolean} value
+ */
+BitMatrix.prototype.xor = function (row, col, value) {
+  this.data[row * this.size + col] ^= value;
+};
+
+/**
+ * Check if bit at specified location is reserved
+ *
+ * @param {Number}   row
+ * @param {Number}   col
+ * @return {Boolean}
+ */
+BitMatrix.prototype.isReserved = function (row, col) {
+  return this.reservedBit[row * this.size + col]
+};
+
+module.exports = BitMatrix;
+
+},{"../utils/buffer":26}],5:[function(require,module,exports){
+var Buffer = require('../utils/buffer');
+var Mode = require('./mode');
+
+function ByteData (data) {
+  this.mode = Mode.BYTE;
+  this.data = new Buffer(data);
+}
+
+ByteData.getBitsLength = function getBitsLength (length) {
+  return length * 8
+};
+
+ByteData.prototype.getLength = function getLength () {
+  return this.data.length
+};
+
+ByteData.prototype.getBitsLength = function getBitsLength () {
+  return ByteData.getBitsLength(this.data.length)
+};
+
+ByteData.prototype.write = function (bitBuffer) {
+  for (var i = 0, l = this.data.length; i < l; i++) {
+    bitBuffer.put(this.data[i], 8);
+  }
+};
+
+module.exports = ByteData;
+
+},{"../utils/buffer":26,"./mode":13}],6:[function(require,module,exports){
+var ECLevel = require('./error-correction-level');
+
+var EC_BLOCKS_TABLE = [
+// L  M  Q  H
+  1, 1, 1, 1,
+  1, 1, 1, 1,
+  1, 1, 2, 2,
+  1, 2, 2, 4,
+  1, 2, 4, 4,
+  2, 4, 4, 4,
+  2, 4, 6, 5,
+  2, 4, 6, 6,
+  2, 5, 8, 8,
+  4, 5, 8, 8,
+  4, 5, 8, 11,
+  4, 8, 10, 11,
+  4, 9, 12, 16,
+  4, 9, 16, 16,
+  6, 10, 12, 18,
+  6, 10, 17, 16,
+  6, 11, 16, 19,
+  6, 13, 18, 21,
+  7, 14, 21, 25,
+  8, 16, 20, 25,
+  8, 17, 23, 25,
+  9, 17, 23, 34,
+  9, 18, 25, 30,
+  10, 20, 27, 32,
+  12, 21, 29, 35,
+  12, 23, 34, 37,
+  12, 25, 34, 40,
+  13, 26, 35, 42,
+  14, 28, 38, 45,
+  15, 29, 40, 48,
+  16, 31, 43, 51,
+  17, 33, 45, 54,
+  18, 35, 48, 57,
+  19, 37, 51, 60,
+  19, 38, 53, 63,
+  20, 40, 56, 66,
+  21, 43, 59, 70,
+  22, 45, 62, 74,
+  24, 47, 65, 77,
+  25, 49, 68, 81
+];
+
+var EC_CODEWORDS_TABLE = [
+// L  M  Q  H
+  7, 10, 13, 17,
+  10, 16, 22, 28,
+  15, 26, 36, 44,
+  20, 36, 52, 64,
+  26, 48, 72, 88,
+  36, 64, 96, 112,
+  40, 72, 108, 130,
+  48, 88, 132, 156,
+  60, 110, 160, 192,
+  72, 130, 192, 224,
+  80, 150, 224, 264,
+  96, 176, 260, 308,
+  104, 198, 288, 352,
+  120, 216, 320, 384,
+  132, 240, 360, 432,
+  144, 280, 408, 480,
+  168, 308, 448, 532,
+  180, 338, 504, 588,
+  196, 364, 546, 650,
+  224, 416, 600, 700,
+  224, 442, 644, 750,
+  252, 476, 690, 816,
+  270, 504, 750, 900,
+  300, 560, 810, 960,
+  312, 588, 870, 1050,
+  336, 644, 952, 1110,
+  360, 700, 1020, 1200,
+  390, 728, 1050, 1260,
+  420, 784, 1140, 1350,
+  450, 812, 1200, 1440,
+  480, 868, 1290, 1530,
+  510, 924, 1350, 1620,
+  540, 980, 1440, 1710,
+  570, 1036, 1530, 1800,
+  570, 1064, 1590, 1890,
+  600, 1120, 1680, 1980,
+  630, 1204, 1770, 2100,
+  660, 1260, 1860, 2220,
+  720, 1316, 1950, 2310,
+  750, 1372, 2040, 2430
+];
+
+/**
+ * Returns the number of error correction block that the QR Code should contain
+ * for the specified version and error correction level.
+ *
+ * @param  {Number} version              QR Code version
+ * @param  {Number} errorCorrectionLevel Error correction level
+ * @return {Number}                      Number of error correction blocks
+ */
+exports.getBlocksCount = function getBlocksCount (version, errorCorrectionLevel) {
+  switch (errorCorrectionLevel) {
+    case ECLevel.L:
+      return EC_BLOCKS_TABLE[(version - 1) * 4 + 0]
+    case ECLevel.M:
+      return EC_BLOCKS_TABLE[(version - 1) * 4 + 1]
+    case ECLevel.Q:
+      return EC_BLOCKS_TABLE[(version - 1) * 4 + 2]
+    case ECLevel.H:
+      return EC_BLOCKS_TABLE[(version - 1) * 4 + 3]
+    default:
+      return undefined
+  }
+};
+
+/**
+ * Returns the number of error correction codewords to use for the specified
+ * version and error correction level.
+ *
+ * @param  {Number} version              QR Code version
+ * @param  {Number} errorCorrectionLevel Error correction level
+ * @return {Number}                      Number of error correction codewords
+ */
+exports.getTotalCodewordsCount = function getTotalCodewordsCount (version, errorCorrectionLevel) {
+  switch (errorCorrectionLevel) {
+    case ECLevel.L:
+      return EC_CODEWORDS_TABLE[(version - 1) * 4 + 0]
+    case ECLevel.M:
+      return EC_CODEWORDS_TABLE[(version - 1) * 4 + 1]
+    case ECLevel.Q:
+      return EC_CODEWORDS_TABLE[(version - 1) * 4 + 2]
+    case ECLevel.H:
+      return EC_CODEWORDS_TABLE[(version - 1) * 4 + 3]
+    default:
+      return undefined
+  }
+};
+
+},{"./error-correction-level":7}],7:[function(require,module,exports){
+exports.L = { bit: 1 };
+exports.M = { bit: 0 };
+exports.Q = { bit: 3 };
+exports.H = { bit: 2 };
+
+function fromString (string) {
+  if (typeof string !== 'string') {
+    throw new Error('Param is not a string')
+  }
+
+  var lcStr = string.toLowerCase();
+
+  switch (lcStr) {
+    case 'l':
+    case 'low':
+      return exports.L
+
+    case 'm':
+    case 'medium':
+      return exports.M
+
+    case 'q':
+    case 'quartile':
+      return exports.Q
+
+    case 'h':
+    case 'high':
+      return exports.H
+
+    default:
+      throw new Error('Unknown EC Level: ' + string)
+  }
+}
+
+exports.isValid = function isValid (level) {
+  return level && typeof level.bit !== 'undefined' &&
+    level.bit >= 0 && level.bit < 4
+};
+
+exports.from = function from (value, defaultValue) {
+  if (exports.isValid(value)) {
+    return value
+  }
+
+  try {
+    return fromString(value)
+  } catch (e) {
+    return defaultValue
+  }
+};
+
+},{}],8:[function(require,module,exports){
+var getSymbolSize = require('./utils').getSymbolSize;
 var FINDER_PATTERN_SIZE = 7;
 
 /**
@@ -11872,8 +12004,8 @@ var FINDER_PATTERN_SIZE = 7;
  * @param  {Number} version QR Code version
  * @return {Array}          Array of coordinates
  */
-var getPositions = function getPositions (version) {
-  var size = getSymbolSize$1(version);
+exports.getPositions = function getPositions (version) {
+  var size = getSymbolSize(version);
 
   return [
     // top-left
@@ -11885,12 +12017,158 @@ var getPositions = function getPositions (version) {
   ]
 };
 
-var finderPattern = {
-	getPositions: getPositions
+},{"./utils":20}],9:[function(require,module,exports){
+var Utils = require('./utils');
+
+var G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
+var G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
+var G15_BCH = Utils.getBCHDigit(G15);
+
+/**
+ * Returns format information with relative error correction bits
+ *
+ * The format information is a 15-bit sequence containing 5 data bits,
+ * with 10 error correction bits calculated using the (15, 5) BCH code.
+ *
+ * @param  {Number} errorCorrectionLevel Error correction level
+ * @param  {Number} mask                 Mask pattern
+ * @return {Number}                      Encoded format information bits
+ */
+exports.getEncodedBits = function getEncodedBits (errorCorrectionLevel, mask) {
+  var data = ((errorCorrectionLevel.bit << 3) | mask);
+  var d = data << 10;
+
+  while (Utils.getBCHDigit(d) - G15_BCH >= 0) {
+    d ^= (G15 << (Utils.getBCHDigit(d) - G15_BCH));
+  }
+
+  // xor final data with mask pattern in order to ensure that
+  // no combination of Error Correction Level and data mask pattern
+  // will result in an all-zero data string
+  return ((data << 10) | d) ^ G15_MASK
 };
 
-var maskPattern = createCommonjsModule(function (module, exports) {
-// node_modules/qrcode/lib/core/mask-pattern.js
+},{"./utils":20}],10:[function(require,module,exports){
+var Buffer = require('../utils/buffer');
+
+var EXP_TABLE = new Buffer(512);
+var LOG_TABLE = new Buffer(256);(function initTables () {
+  var x = 1;
+  for (var i = 0; i < 255; i++) {
+    EXP_TABLE[i] = x;
+    LOG_TABLE[x] = i;
+
+    x <<= 1; // multiply by 2
+
+    // The QR code specification says to use byte-wise modulo 100011101 arithmetic.
+    // This means that when a number is 256 or larger, it should be XORed with 0x11D.
+    if (x & 0x100) { // similar to x >= 256, but a lot faster (because 0x100 == 256)
+      x ^= 0x11D;
+    }
+  }
+
+  // Optimization: double the size of the anti-log table so that we don't need to mod 255 to
+  // stay inside the bounds (because we will mainly use this table for the multiplication of
+  // two GF numbers, no more).
+  // @see {@link mul}
+  for (i = 255; i < 512; i++) {
+    EXP_TABLE[i] = EXP_TABLE[i - 255];
+  }
+}());
+
+/**
+ * Returns log value of n inside Galois Field
+ *
+ * @param  {Number} n
+ * @return {Number}
+ */
+exports.log = function log (n) {
+  if (n < 1) throw new Error('log(' + n + ')')
+  return LOG_TABLE[n]
+};
+
+/**
+ * Returns anti-log value of n inside Galois Field
+ *
+ * @param  {Number} n
+ * @return {Number}
+ */
+exports.exp = function exp (n) {
+  return EXP_TABLE[n]
+};
+
+/**
+ * Multiplies two number inside Galois Field
+ *
+ * @param  {Number} x
+ * @param  {Number} y
+ * @return {Number}
+ */
+exports.mul = function mul (x, y) {
+  if (x === 0 || y === 0) return 0
+
+  // should be EXP_TABLE[(LOG_TABLE[x] + LOG_TABLE[y]) % 255] if EXP_TABLE wasn't oversized
+  // @see {@link initTables}
+  return EXP_TABLE[LOG_TABLE[x] + LOG_TABLE[y]]
+};
+
+},{"../utils/buffer":26}],11:[function(require,module,exports){
+var Mode = require('./mode');
+var Utils = require('./utils');
+
+function KanjiData (data) {
+  this.mode = Mode.KANJI;
+  this.data = data;
+}
+
+KanjiData.getBitsLength = function getBitsLength (length) {
+  return length * 13
+};
+
+KanjiData.prototype.getLength = function getLength () {
+  return this.data.length
+};
+
+KanjiData.prototype.getBitsLength = function getBitsLength () {
+  return KanjiData.getBitsLength(this.data.length)
+};
+
+KanjiData.prototype.write = function (bitBuffer) {
+  var i;
+
+  // In the Shift JIS system, Kanji characters are represented by a two byte combination.
+  // These byte values are shifted from the JIS X 0208 values.
+  // JIS X 0208 gives details of the shift coded representation.
+  for (i = 0; i < this.data.length; i++) {
+    var value = Utils.toSJIS(this.data[i]);
+
+    // For characters with Shift JIS values from 0x8140 to 0x9FFC:
+    if (value >= 0x8140 && value <= 0x9FFC) {
+      // Subtract 0x8140 from Shift JIS value
+      value -= 0x8140;
+
+    // For characters with Shift JIS values from 0xE040 to 0xEBBF
+    } else if (value >= 0xE040 && value <= 0xEBBF) {
+      // Subtract 0xC140 from Shift JIS value
+      value -= 0xC140;
+    } else {
+      throw new Error(
+        'Invalid SJIS character: ' + this.data[i] + '\n' +
+        'Make sure your charset is UTF-8')
+    }
+
+    // Multiply most significant byte of result by 0xC0
+    // and add least significant byte to product
+    value = (((value >>> 8) & 0xff) * 0xC0) + (value & 0xff);
+
+    // Convert result to a 13-bit binary string
+    bitBuffer.put(value, 13);
+  }
+};
+
+module.exports = KanjiData;
+
+},{"./mode":13,"./utils":20}],12:[function(require,module,exports){
 /**
  * Data mask pattern reference
  * @type {Object}
@@ -12125,421 +12403,10 @@ exports.getBestMask = function getBestMask (data, setupFormatFunc) {
 
   return bestPattern
 };
-});
 
-var maskPattern_1 = maskPattern.Patterns;
-var maskPattern_2 = maskPattern.isValid;
-var maskPattern_3 = maskPattern.from;
-var maskPattern_4 = maskPattern.getPenaltyN1;
-var maskPattern_5 = maskPattern.getPenaltyN2;
-var maskPattern_6 = maskPattern.getPenaltyN3;
-var maskPattern_7 = maskPattern.getPenaltyN4;
-var maskPattern_8 = maskPattern.applyMask;
-var maskPattern_9 = maskPattern.getBestMask;
-
-//  commonjs-proxy:/Users/dtai/work/hanzo/el-controls/node_modules/qrcode/lib/core/error-correction-level.js
-
-// node_modules/qrcode/lib/core/error-correction-code.js
-
-
-var EC_BLOCKS_TABLE = [
-// L  M  Q  H
-  1, 1, 1, 1,
-  1, 1, 1, 1,
-  1, 1, 2, 2,
-  1, 2, 2, 4,
-  1, 2, 4, 4,
-  2, 4, 4, 4,
-  2, 4, 6, 5,
-  2, 4, 6, 6,
-  2, 5, 8, 8,
-  4, 5, 8, 8,
-  4, 5, 8, 11,
-  4, 8, 10, 11,
-  4, 9, 12, 16,
-  4, 9, 16, 16,
-  6, 10, 12, 18,
-  6, 10, 17, 16,
-  6, 11, 16, 19,
-  6, 13, 18, 21,
-  7, 14, 21, 25,
-  8, 16, 20, 25,
-  8, 17, 23, 25,
-  9, 17, 23, 34,
-  9, 18, 25, 30,
-  10, 20, 27, 32,
-  12, 21, 29, 35,
-  12, 23, 34, 37,
-  12, 25, 34, 40,
-  13, 26, 35, 42,
-  14, 28, 38, 45,
-  15, 29, 40, 48,
-  16, 31, 43, 51,
-  17, 33, 45, 54,
-  18, 35, 48, 57,
-  19, 37, 51, 60,
-  19, 38, 53, 63,
-  20, 40, 56, 66,
-  21, 43, 59, 70,
-  22, 45, 62, 74,
-  24, 47, 65, 77,
-  25, 49, 68, 81
-];
-
-var EC_CODEWORDS_TABLE = [
-// L  M  Q  H
-  7, 10, 13, 17,
-  10, 16, 22, 28,
-  15, 26, 36, 44,
-  20, 36, 52, 64,
-  26, 48, 72, 88,
-  36, 64, 96, 112,
-  40, 72, 108, 130,
-  48, 88, 132, 156,
-  60, 110, 160, 192,
-  72, 130, 192, 224,
-  80, 150, 224, 264,
-  96, 176, 260, 308,
-  104, 198, 288, 352,
-  120, 216, 320, 384,
-  132, 240, 360, 432,
-  144, 280, 408, 480,
-  168, 308, 448, 532,
-  180, 338, 504, 588,
-  196, 364, 546, 650,
-  224, 416, 600, 700,
-  224, 442, 644, 750,
-  252, 476, 690, 816,
-  270, 504, 750, 900,
-  300, 560, 810, 960,
-  312, 588, 870, 1050,
-  336, 644, 952, 1110,
-  360, 700, 1020, 1200,
-  390, 728, 1050, 1260,
-  420, 784, 1140, 1350,
-  450, 812, 1200, 1440,
-  480, 868, 1290, 1530,
-  510, 924, 1350, 1620,
-  540, 980, 1440, 1710,
-  570, 1036, 1530, 1800,
-  570, 1064, 1590, 1890,
-  600, 1120, 1680, 1980,
-  630, 1204, 1770, 2100,
-  660, 1260, 1860, 2220,
-  720, 1316, 1950, 2310,
-  750, 1372, 2040, 2430
-];
-
-/**
- * Returns the number of error correction block that the QR Code should contain
- * for the specified version and error correction level.
- *
- * @param  {Number} version              QR Code version
- * @param  {Number} errorCorrectionLevel Error correction level
- * @return {Number}                      Number of error correction blocks
- */
-var getBlocksCount = function getBlocksCount (version, errorCorrectionLevel$$1) {
-  switch (errorCorrectionLevel$$1) {
-    case errorCorrectionLevel.L:
-      return EC_BLOCKS_TABLE[(version - 1) * 4 + 0]
-    case errorCorrectionLevel.M:
-      return EC_BLOCKS_TABLE[(version - 1) * 4 + 1]
-    case errorCorrectionLevel.Q:
-      return EC_BLOCKS_TABLE[(version - 1) * 4 + 2]
-    case errorCorrectionLevel.H:
-      return EC_BLOCKS_TABLE[(version - 1) * 4 + 3]
-    default:
-      return undefined
-  }
-};
-
-/**
- * Returns the number of error correction codewords to use for the specified
- * version and error correction level.
- *
- * @param  {Number} version              QR Code version
- * @param  {Number} errorCorrectionLevel Error correction level
- * @return {Number}                      Number of error correction codewords
- */
-var getTotalCodewordsCount = function getTotalCodewordsCount (version, errorCorrectionLevel$$1) {
-  switch (errorCorrectionLevel$$1) {
-    case errorCorrectionLevel.L:
-      return EC_CODEWORDS_TABLE[(version - 1) * 4 + 0]
-    case errorCorrectionLevel.M:
-      return EC_CODEWORDS_TABLE[(version - 1) * 4 + 1]
-    case errorCorrectionLevel.Q:
-      return EC_CODEWORDS_TABLE[(version - 1) * 4 + 2]
-    case errorCorrectionLevel.H:
-      return EC_CODEWORDS_TABLE[(version - 1) * 4 + 3]
-    default:
-      return undefined
-  }
-};
-
-var errorCorrectionCode = {
-	getBlocksCount: getBlocksCount,
-	getTotalCodewordsCount: getTotalCodewordsCount
-};
-
-// node_modules/qrcode/lib/core/galois-field.js
-
-
-var EXP_TABLE = new buffer$1(512);
-var LOG_TABLE = new buffer$1(256);(function initTables () {
-  var x = 1;
-  for (var i = 0; i < 255; i++) {
-    EXP_TABLE[i] = x;
-    LOG_TABLE[x] = i;
-
-    x <<= 1; // multiply by 2
-
-    // The QR code specification says to use byte-wise modulo 100011101 arithmetic.
-    // This means that when a number is 256 or larger, it should be XORed with 0x11D.
-    if (x & 0x100) { // similar to x >= 256, but a lot faster (because 0x100 == 256)
-      x ^= 0x11D;
-    }
-  }
-
-  // Optimization: double the size of the anti-log table so that we don't need to mod 255 to
-  // stay inside the bounds (because we will mainly use this table for the multiplication of
-  // two GF numbers, no more).
-  // @see {@link mul}
-  for (i = 255; i < 512; i++) {
-    EXP_TABLE[i] = EXP_TABLE[i - 255];
-  }
-}());
-
-/**
- * Returns log value of n inside Galois Field
- *
- * @param  {Number} n
- * @return {Number}
- */
-var log = function log (n) {
-  if (n < 1) throw new Error('log(' + n + ')')
-  return LOG_TABLE[n]
-};
-
-/**
- * Returns anti-log value of n inside Galois Field
- *
- * @param  {Number} n
- * @return {Number}
- */
-var exp = function exp (n) {
-  return EXP_TABLE[n]
-};
-
-/**
- * Multiplies two number inside Galois Field
- *
- * @param  {Number} x
- * @param  {Number} y
- * @return {Number}
- */
-var mul = function mul (x, y) {
-  if (x === 0 || y === 0) return 0
-
-  // should be EXP_TABLE[(LOG_TABLE[x] + LOG_TABLE[y]) % 255] if EXP_TABLE wasn't oversized
-  // @see {@link initTables}
-  return EXP_TABLE[LOG_TABLE[x] + LOG_TABLE[y]]
-};
-
-var galoisField = {
-	log: log,
-	exp: exp,
-	mul: mul
-};
-
-//  commonjs-proxy:/Users/dtai/work/hanzo/el-controls/node_modules/qrcode/lib/core/galois-field.js
-
-var polynomial = createCommonjsModule(function (module, exports) {
-// node_modules/qrcode/lib/core/polynomial.js
-
-
-
-/**
- * Multiplies two polynomials inside Galois Field
- *
- * @param  {Buffer} p1 Polynomial
- * @param  {Buffer} p2 Polynomial
- * @return {Buffer}    Product of p1 and p2
- */
-exports.mul = function mul (p1, p2) {
-  var coeff = new buffer$1(p1.length + p2.length - 1);
-  coeff.fill(0);
-
-  for (var i = 0; i < p1.length; i++) {
-    for (var j = 0; j < p2.length; j++) {
-      coeff[i + j] ^= galoisField.mul(p1[i], p2[j]);
-    }
-  }
-
-  return coeff
-};
-
-/**
- * Calculate the remainder of polynomials division
- *
- * @param  {Buffer} divident Polynomial
- * @param  {Buffer} divisor  Polynomial
- * @return {Buffer}          Remainder
- */
-exports.mod = function mod (divident, divisor) {
-  var result = new buffer$1(divident);
-
-  while ((result.length - divisor.length) >= 0) {
-    var coeff = result[0];
-
-    for (var i = 0; i < divisor.length; i++) {
-      result[i] ^= galoisField.mul(divisor[i], coeff);
-    }
-
-    // remove all zeros from buffer head
-    var offset = 0;
-    while (offset < result.length && result[offset] === 0) offset++;
-    result = result.slice(offset);
-  }
-
-  return result
-};
-
-/**
- * Generate an irreducible generator polynomial of specified degree
- * (used by Reed-Solomon encoder)
- *
- * @param  {Number} degree Degree of the generator polynomial
- * @return {Buffer}        Buffer containing polynomial coefficients
- */
-exports.generateECPolynomial = function generateECPolynomial (degree) {
-  var poly = new buffer$1([1]);
-  for (var i = 0; i < degree; i++) {
-    poly = exports.mul(poly, [1, galoisField.exp(i)]);
-  }
-
-  return poly
-};
-});
-
-var polynomial_1 = polynomial.mul;
-var polynomial_2 = polynomial.mod;
-var polynomial_3 = polynomial.generateECPolynomial;
-
-//  commonjs-proxy:/Users/dtai/work/hanzo/el-controls/node_modules/qrcode/lib/core/polynomial.js
-
-// node_modules/qrcode/lib/core/reed-solomon-encoder.js
-
-
-
-function ReedSolomonEncoder (degree) {
-  this.genPoly = undefined;
-  this.degree = degree;
-
-  if (this.degree) this.initialize(this.degree);
-}
-
-/**
- * Initialize the encoder.
- * The input param should correspond to the number of error correction codewords.
- *
- * @param  {Number} degree
- */
-ReedSolomonEncoder.prototype.initialize = function initialize (degree) {
-  // create an irreducible generator polynomial
-  this.degree = degree;
-  this.genPoly = polynomial.generateECPolynomial(this.degree);
-};
-
-/**
- * Encodes a chunk of data
- *
- * @param  {Buffer} data Buffer containing input data
- * @return {Buffer}      Buffer containing encoded data
- */
-ReedSolomonEncoder.prototype.encode = function encode (data) {
-  if (!this.genPoly) {
-    throw new Error('Encoder not initialized')
-  }
-
-  // Calculate EC for this data block
-  // extends data size to data+genPoly size
-  var pad = new buffer$1(this.degree);
-  pad.fill(0);
-  var paddedData = buffer$1.concat([data, pad], data.length + this.degree);
-
-  // The error correction codewords are the remainder after dividing the data codewords
-  // by a generator polynomial
-  var remainder = polynomial.mod(paddedData, this.genPoly);
-
-  // return EC data blocks (last n byte, where n is the degree of genPoly)
-  // If coefficients number in remainder are less than genPoly degree,
-  // pad with 0s to the left to reach the needed number of coefficients
-  var start = this.degree - remainder.length;
-  if (start > 0) {
-    var buff = new buffer$1(this.degree);
-    buff.fill(0);
-    remainder.copy(buff, start);
-
-    return buff
-  }
-
-  return remainder
-};
-
-var reedSolomonEncoder = ReedSolomonEncoder;
-
-// node_modules/qrcode/lib/core/regex.js
-var numeric = '[0-9]+';
-var alphanumeric = '[A-Z $%*+-./:]+';
-var kanji = '(?:[u3000-u303F]|[u3040-u309F]|[u30A0-u30FF]|' +
-  '[uFF00-uFFEF]|[u4E00-u9FAF]|[u2605-u2606]|[u2190-u2195]|u203B|' +
-  '[u2010u2015u2018u2019u2025u2026u201Cu201Du2225u2260]|' +
-  '[u0391-u0451]|[u00A7u00A8u00B1u00B4u00D7u00F7])+';
-kanji = kanji.replace(/u/g, '\\u');
-
-var byte = '(?:(?![A-Z0-9 $%*+-./:]|' + kanji + ').)+';
-
-var KANJI = new RegExp(kanji, 'g');
-var BYTE_KANJI = new RegExp('[^A-Z0-9 $%*+-./:]+', 'g');
-var BYTE = new RegExp(byte, 'g');
-var NUMERIC = new RegExp(numeric, 'g');
-var ALPHANUMERIC = new RegExp(alphanumeric, 'g');
-
-var TEST_KANJI = new RegExp('^' + kanji + '$');
-var TEST_NUMERIC = new RegExp('^' + numeric + '$');
-var TEST_ALPHANUMERIC = new RegExp('^[A-Z0-9 $%*+-./:]+$');
-
-var testKanji = function testKanji (str) {
-  return TEST_KANJI.test(str)
-};
-
-var testNumeric = function testNumeric (str) {
-  return TEST_NUMERIC.test(str)
-};
-
-var testAlphanumeric = function testAlphanumeric (str) {
-  return TEST_ALPHANUMERIC.test(str)
-};
-
-var regex = {
-	KANJI: KANJI,
-	BYTE_KANJI: BYTE_KANJI,
-	BYTE: BYTE,
-	NUMERIC: NUMERIC,
-	ALPHANUMERIC: ALPHANUMERIC,
-	testKanji: testKanji,
-	testNumeric: testNumeric,
-	testAlphanumeric: testAlphanumeric
-};
-
-//  commonjs-proxy:/Users/dtai/work/hanzo/el-controls/node_modules/qrcode/lib/core/version.js
-
-//  commonjs-proxy:/Users/dtai/work/hanzo/el-controls/node_modules/qrcode/lib/core/regex.js
-
-var mode = createCommonjsModule(function (module, exports) {
-// node_modules/qrcode/lib/core/mode.js
-
-
+},{}],13:[function(require,module,exports){
+var Version = require('./version');
+var Regex = require('./regex');
 
 /**
  * Numeric mode encodes data from the decimal digit set (0 - 9)
@@ -12616,7 +12483,7 @@ exports.MIXED = {
 exports.getCharCountIndicator = function getCharCountIndicator (mode, version) {
   if (!mode.ccBits) throw new Error('Invalid mode: ' + mode)
 
-  if (!version$2.isValid(version)) {
+  if (!Version.isValid(version)) {
     throw new Error('Invalid version: ' + version)
   }
 
@@ -12632,9 +12499,9 @@ exports.getCharCountIndicator = function getCharCountIndicator (mode, version) {
  * @return {Mode}           Best mode
  */
 exports.getBestModeForData = function getBestModeForData (dataStr) {
-  if (regex.testNumeric(dataStr)) return exports.NUMERIC
-  else if (regex.testAlphanumeric(dataStr)) return exports.ALPHANUMERIC
-  else if (regex.testKanji(dataStr)) return exports.KANJI
+  if (Regex.testNumeric(dataStr)) return exports.NUMERIC
+  else if (Regex.testAlphanumeric(dataStr)) return exports.ALPHANUMERIC
+  else if (Regex.testKanji(dataStr)) return exports.KANJI
   else return exports.BYTE
 };
 
@@ -12705,46 +12572,1124 @@ exports.from = function from (value, defaultValue) {
     return defaultValue
   }
 };
-});
 
-var mode_1 = mode.NUMERIC;
-var mode_2 = mode.ALPHANUMERIC;
-var mode_3 = mode.BYTE;
-var mode_4 = mode.KANJI;
-var mode_5 = mode.MIXED;
-var mode_6 = mode.getCharCountIndicator;
-var mode_7 = mode.getBestModeForData;
-var mode_8 = mode.isValid;
-var mode_9 = mode.from;
+},{"./regex":18,"./version":21}],14:[function(require,module,exports){
+var Mode = require('./mode');
 
-// node_modules/isarray/index.js
-var toString$1 = {}.toString;
+function NumericData (data) {
+  this.mode = Mode.NUMERIC;
+  this.data = data.toString();
+}
 
-var isarray = Array.isArray || function (arr) {
-  return toString$1.call(arr) == '[object Array]';
+NumericData.getBitsLength = function getBitsLength (length) {
+  return 10 * Math.floor(length / 3) + ((length % 3) ? ((length % 3) * 3 + 1) : 0)
 };
 
-//  commonjs-proxy:/Users/dtai/work/hanzo/el-controls/node_modules/qrcode/lib/core/error-correction-code.js
+NumericData.prototype.getLength = function getLength () {
+  return this.data.length
+};
 
-//  commonjs-proxy:/Users/dtai/work/hanzo/el-controls/node_modules/qrcode/lib/core/mode.js
+NumericData.prototype.getBitsLength = function getBitsLength () {
+  return NumericData.getBitsLength(this.data.length)
+};
 
-//  commonjs-proxy:/Users/dtai/work/hanzo/el-controls/node_modules/isarray/index.js
+NumericData.prototype.write = function write (bitBuffer) {
+  var i, group, value;
 
-var version$2 = createCommonjsModule(function (module, exports) {
-// node_modules/qrcode/lib/core/version.js
+  // The input data string is divided into groups of three digits,
+  // and each group is converted to its 10-bit binary equivalent.
+  for (i = 0; i + 3 <= this.data.length; i += 3) {
+    group = this.data.substr(i, 3);
+    value = parseInt(group, 10);
 
+    bitBuffer.put(value, 10);
+  }
 
+  // If the number of input digits is not an exact multiple of three,
+  // the final one or two digits are converted to 4 or 7 bits respectively.
+  var remainingNum = this.data.length - i;
+  if (remainingNum > 0) {
+    group = this.data.substr(i);
+    value = parseInt(group, 10);
 
+    bitBuffer.put(value, remainingNum * 3 + 1);
+  }
+};
 
+module.exports = NumericData;
 
+},{"./mode":13}],15:[function(require,module,exports){
+var Buffer = require('../utils/buffer');
+var GF = require('./galois-field');
+
+/**
+ * Multiplies two polynomials inside Galois Field
+ *
+ * @param  {Buffer} p1 Polynomial
+ * @param  {Buffer} p2 Polynomial
+ * @return {Buffer}    Product of p1 and p2
+ */
+exports.mul = function mul (p1, p2) {
+  var coeff = new Buffer(p1.length + p2.length - 1);
+  coeff.fill(0);
+
+  for (var i = 0; i < p1.length; i++) {
+    for (var j = 0; j < p2.length; j++) {
+      coeff[i + j] ^= GF.mul(p1[i], p2[j]);
+    }
+  }
+
+  return coeff
+};
+
+/**
+ * Calculate the remainder of polynomials division
+ *
+ * @param  {Buffer} divident Polynomial
+ * @param  {Buffer} divisor  Polynomial
+ * @return {Buffer}          Remainder
+ */
+exports.mod = function mod (divident, divisor) {
+  var result = new Buffer(divident);
+
+  while ((result.length - divisor.length) >= 0) {
+    var coeff = result[0];
+
+    for (var i = 0; i < divisor.length; i++) {
+      result[i] ^= GF.mul(divisor[i], coeff);
+    }
+
+    // remove all zeros from buffer head
+    var offset = 0;
+    while (offset < result.length && result[offset] === 0) offset++;
+    result = result.slice(offset);
+  }
+
+  return result
+};
+
+/**
+ * Generate an irreducible generator polynomial of specified degree
+ * (used by Reed-Solomon encoder)
+ *
+ * @param  {Number} degree Degree of the generator polynomial
+ * @return {Buffer}        Buffer containing polynomial coefficients
+ */
+exports.generateECPolynomial = function generateECPolynomial (degree) {
+  var poly = new Buffer([1]);
+  for (var i = 0; i < degree; i++) {
+    poly = exports.mul(poly, [1, GF.exp(i)]);
+  }
+
+  return poly
+};
+
+},{"../utils/buffer":26,"./galois-field":10}],16:[function(require,module,exports){
+var Buffer = require('../utils/buffer');
+var Utils = require('./utils');
+var ECLevel = require('./error-correction-level');
+var BitBuffer = require('./bit-buffer');
+var BitMatrix = require('./bit-matrix');
+var AlignmentPattern = require('./alignment-pattern');
+var FinderPattern = require('./finder-pattern');
+var MaskPattern = require('./mask-pattern');
+var ECCode = require('./error-correction-code');
+var ReedSolomonEncoder = require('./reed-solomon-encoder');
+var Version = require('./version');
+var FormatInfo = require('./format-info');
+var Mode = require('./mode');
+var Segments = require('./segments');
+var isArray = require('isarray');
+
+/**
+ * QRCode for JavaScript
+ *
+ * modified by Ryan Day for nodejs support
+ * Copyright (c) 2011 Ryan Day
+ *
+ * Licensed under the MIT license:
+ *   http://www.opensource.org/licenses/mit-license.php
+ *
+//---------------------------------------------------------------------
+// QRCode for JavaScript
+//
+// Copyright (c) 2009 Kazuhiko Arase
+//
+// URL: http://www.d-project.com/
+//
+// Licensed under the MIT license:
+//   http://www.opensource.org/licenses/mit-license.php
+//
+// The word "QR Code" is registered trademark of
+// DENSO WAVE INCORPORATED
+//   http://www.denso-wave.com/qrcode/faqpatent-e.html
+//
+//---------------------------------------------------------------------
+*/
+
+/**
+ * Add finder patterns bits to matrix
+ *
+ * @param  {BitMatrix} matrix  Modules matrix
+ * @param  {Number}    version QR Code version
+ */
+function setupFinderPattern (matrix, version) {
+  var size = matrix.size;
+  var pos = FinderPattern.getPositions(version);
+
+  for (var i = 0; i < pos.length; i++) {
+    var row = pos[i][0];
+    var col = pos[i][1];
+
+    for (var r = -1; r <= 7; r++) {
+      if (row + r <= -1 || size <= row + r) continue
+
+      for (var c = -1; c <= 7; c++) {
+        if (col + c <= -1 || size <= col + c) continue
+
+        if ((r >= 0 && r <= 6 && (c === 0 || c === 6)) ||
+          (c >= 0 && c <= 6 && (r === 0 || r === 6)) ||
+          (r >= 2 && r <= 4 && c >= 2 && c <= 4)) {
+          matrix.set(row + r, col + c, true, true);
+        } else {
+          matrix.set(row + r, col + c, false, true);
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Add timing pattern bits to matrix
+ *
+ * Note: this function must be called before {@link setupAlignmentPattern}
+ *
+ * @param  {BitMatrix} matrix Modules matrix
+ */
+function setupTimingPattern (matrix) {
+  var size = matrix.size;
+
+  for (var r = 8; r < size - 8; r++) {
+    var value = r % 2 === 0;
+    matrix.set(r, 6, value, true);
+    matrix.set(6, r, value, true);
+  }
+}
+
+/**
+ * Add alignment patterns bits to matrix
+ *
+ * Note: this function must be called after {@link setupTimingPattern}
+ *
+ * @param  {BitMatrix} matrix  Modules matrix
+ * @param  {Number}    version QR Code version
+ */
+function setupAlignmentPattern (matrix, version) {
+  var pos = AlignmentPattern.getPositions(version);
+
+  for (var i = 0; i < pos.length; i++) {
+    var row = pos[i][0];
+    var col = pos[i][1];
+
+    for (var r = -2; r <= 2; r++) {
+      for (var c = -2; c <= 2; c++) {
+        if (r === -2 || r === 2 || c === -2 || c === 2 ||
+          (r === 0 && c === 0)) {
+          matrix.set(row + r, col + c, true, true);
+        } else {
+          matrix.set(row + r, col + c, false, true);
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Add version info bits to matrix
+ *
+ * @param  {BitMatrix} matrix  Modules matrix
+ * @param  {Number}    version QR Code version
+ */
+function setupVersionInfo (matrix, version) {
+  var size = matrix.size;
+  var bits = Version.getEncodedBits(version);
+  var row, col, mod;
+
+  for (var i = 0; i < 18; i++) {
+    row = Math.floor(i / 3);
+    col = i % 3 + size - 8 - 3;
+    mod = ((bits >> i) & 1) === 1;
+
+    matrix.set(row, col, mod, true);
+    matrix.set(col, row, mod, true);
+  }
+}
+
+/**
+ * Add format info bits to matrix
+ *
+ * @param  {BitMatrix} matrix               Modules matrix
+ * @param  {ErrorCorrectionLevel}    errorCorrectionLevel Error correction level
+ * @param  {Number}    maskPattern          Mask pattern reference value
+ */
+function setupFormatInfo (matrix, errorCorrectionLevel, maskPattern) {
+  var size = matrix.size;
+  var bits = FormatInfo.getEncodedBits(errorCorrectionLevel, maskPattern);
+  var i, mod;
+
+  for (i = 0; i < 15; i++) {
+    mod = ((bits >> i) & 1) === 1;
+
+    // vertical
+    if (i < 6) {
+      matrix.set(i, 8, mod, true);
+    } else if (i < 8) {
+      matrix.set(i + 1, 8, mod, true);
+    } else {
+      matrix.set(size - 15 + i, 8, mod, true);
+    }
+
+    // horizontal
+    if (i < 8) {
+      matrix.set(8, size - i - 1, mod, true);
+    } else if (i < 9) {
+      matrix.set(8, 15 - i - 1 + 1, mod, true);
+    } else {
+      matrix.set(8, 15 - i - 1, mod, true);
+    }
+  }
+
+  // fixed module
+  matrix.set(size - 8, 8, 1, true);
+}
+
+/**
+ * Add encoded data bits to matrix
+ *
+ * @param  {BitMatrix} matrix Modules matrix
+ * @param  {Buffer}    data   Data codewords
+ */
+function setupData (matrix, data) {
+  var size = matrix.size;
+  var inc = -1;
+  var row = size - 1;
+  var bitIndex = 7;
+  var byteIndex = 0;
+
+  for (var col = size - 1; col > 0; col -= 2) {
+    if (col === 6) col--;
+
+    while (true) {
+      for (var c = 0; c < 2; c++) {
+        if (!matrix.isReserved(row, col - c)) {
+          var dark = false;
+
+          if (byteIndex < data.length) {
+            dark = (((data[byteIndex] >>> bitIndex) & 1) === 1);
+          }
+
+          matrix.set(row, col - c, dark);
+          bitIndex--;
+
+          if (bitIndex === -1) {
+            byteIndex++;
+            bitIndex = 7;
+          }
+        }
+      }
+
+      row += inc;
+
+      if (row < 0 || size <= row) {
+        row -= inc;
+        inc = -inc;
+        break
+      }
+    }
+  }
+}
+
+/**
+ * Create encoded codewords from data input
+ *
+ * @param  {Number}   version              QR Code version
+ * @param  {ErrorCorrectionLevel}   errorCorrectionLevel Error correction level
+ * @param  {ByteData} data                 Data input
+ * @return {Buffer}                        Buffer containing encoded codewords
+ */
+function createData (version, errorCorrectionLevel, segments) {
+  // Prepare data buffer
+  var buffer = new BitBuffer();
+
+  segments.forEach(function (data) {
+    // prefix data with mode indicator (4 bits)
+    buffer.put(data.mode.bit, 4);
+
+    // Prefix data with character count indicator.
+    // The character count indicator is a string of bits that represents the
+    // number of characters that are being encoded.
+    // The character count indicator must be placed after the mode indicator
+    // and must be a certain number of bits long, depending on the QR version
+    // and data mode
+    // @see {@link Mode.getCharCountIndicator}.
+    buffer.put(data.getLength(), Mode.getCharCountIndicator(data.mode, version));
+
+    // add binary data sequence to buffer
+    data.write(buffer);
+  });
+
+  // Calculate required number of bits
+  var totalCodewords = Utils.getSymbolTotalCodewords(version);
+  var ecTotalCodewords = ECCode.getTotalCodewordsCount(version, errorCorrectionLevel);
+  var dataTotalCodewordsBits = (totalCodewords - ecTotalCodewords) * 8;
+
+  // Add a terminator.
+  // If the bit string is shorter than the total number of required bits,
+  // a terminator of up to four 0s must be added to the right side of the string.
+  // If the bit string is more than four bits shorter than the required number of bits,
+  // add four 0s to the end.
+  if (buffer.getLengthInBits() + 4 <= dataTotalCodewordsBits) {
+    buffer.put(0, 4);
+  }
+
+  // If the bit string is fewer than four bits shorter, add only the number of 0s that
+  // are needed to reach the required number of bits.
+
+  // After adding the terminator, if the number of bits in the string is not a multiple of 8,
+  // pad the string on the right with 0s to make the string's length a multiple of 8.
+  while (buffer.getLengthInBits() % 8 !== 0) {
+    buffer.putBit(0);
+  }
+
+  // Add pad bytes if the string is still shorter than the total number of required bits.
+  // Extend the buffer to fill the data capacity of the symbol corresponding to
+  // the Version and Error Correction Level by adding the Pad Codewords 11101100 (0xEC)
+  // and 00010001 (0x11) alternately.
+  var remainingByte = (dataTotalCodewordsBits - buffer.getLengthInBits()) / 8;
+  for (var i = 0; i < remainingByte; i++) {
+    buffer.put(i % 2 ? 0x11 : 0xEC, 8);
+  }
+
+  return createCodewords(buffer, version, errorCorrectionLevel)
+}
+
+/**
+ * Encode input data with Reed-Solomon and return codewords with
+ * relative error correction bits
+ *
+ * @param  {BitBuffer} bitBuffer            Data to encode
+ * @param  {Number}    version              QR Code version
+ * @param  {ErrorCorrectionLevel} errorCorrectionLevel Error correction level
+ * @return {Buffer}                         Buffer containing encoded codewords
+ */
+function createCodewords (bitBuffer, version, errorCorrectionLevel) {
+  // Total codewords for this QR code version (Data + Error correction)
+  var totalCodewords = Utils.getSymbolTotalCodewords(version);
+
+  // Total number of error correction codewords
+  var ecTotalCodewords = ECCode.getTotalCodewordsCount(version, errorCorrectionLevel);
+
+  // Total number of data codewords
+  var dataTotalCodewords = totalCodewords - ecTotalCodewords;
+
+  // Total number of blocks
+  var ecTotalBlocks = ECCode.getBlocksCount(version, errorCorrectionLevel);
+
+  // Calculate how many blocks each group should contain
+  var blocksInGroup2 = totalCodewords % ecTotalBlocks;
+  var blocksInGroup1 = ecTotalBlocks - blocksInGroup2;
+
+  var totalCodewordsInGroup1 = Math.floor(totalCodewords / ecTotalBlocks);
+
+  var dataCodewordsInGroup1 = Math.floor(dataTotalCodewords / ecTotalBlocks);
+  var dataCodewordsInGroup2 = dataCodewordsInGroup1 + 1;
+
+  // Number of EC codewords is the same for both groups
+  var ecCount = totalCodewordsInGroup1 - dataCodewordsInGroup1;
+
+  // Initialize a Reed-Solomon encoder with a generator polynomial of degree ecCount
+  var rs = new ReedSolomonEncoder(ecCount);
+
+  var offset = 0;
+  var dcData = new Array(ecTotalBlocks);
+  var ecData = new Array(ecTotalBlocks);
+  var maxDataSize = 0;
+  var buffer = new Buffer(bitBuffer.buffer);
+
+  // Divide the buffer into the required number of blocks
+  for (var b = 0; b < ecTotalBlocks; b++) {
+    var dataSize = b < blocksInGroup1 ? dataCodewordsInGroup1 : dataCodewordsInGroup2;
+
+    // extract a block of data from buffer
+    dcData[b] = buffer.slice(offset, offset + dataSize);
+
+    // Calculate EC codewords for this data block
+    ecData[b] = rs.encode(dcData[b]);
+
+    offset += dataSize;
+    maxDataSize = Math.max(maxDataSize, dataSize);
+  }
+
+  // Create final data
+  // Interleave the data and error correction codewords from each block
+  var data = new Buffer(totalCodewords);
+  var index = 0;
+  var i, r;
+
+  // Add data codewords
+  for (i = 0; i < maxDataSize; i++) {
+    for (r = 0; r < ecTotalBlocks; r++) {
+      if (i < dcData[r].length) {
+        data[index++] = dcData[r][i];
+      }
+    }
+  }
+
+  // Apped EC codewords
+  for (i = 0; i < ecCount; i++) {
+    for (r = 0; r < ecTotalBlocks; r++) {
+      data[index++] = ecData[r][i];
+    }
+  }
+
+  return data
+}
+
+/**
+ * Build QR Code symbol
+ *
+ * @param  {String} data                 Input string
+ * @param  {Number} version              QR Code version
+ * @param  {ErrorCorretionLevel} errorCorrectionLevel Error level
+ * @param  {MaskPattern} maskPattern     Mask pattern
+ * @return {Object}                      Object containing symbol data
+ */
+function createSymbol (data, version, errorCorrectionLevel, maskPattern) {
+  var segments;
+
+  if (isArray(data)) {
+    segments = Segments.fromArray(data);
+  } else if (typeof data === 'string') {
+    var estimatedVersion = version;
+
+    if (!estimatedVersion) {
+      var rawSegments = Segments.rawSplit(data);
+
+      // Estimate best version that can contain raw splitted segments
+      estimatedVersion = Version.getBestVersionForData(rawSegments,
+        errorCorrectionLevel);
+    }
+
+    // Build optimized segments
+    // If estimated version is undefined, try with the highest version
+    segments = Segments.fromString(data, estimatedVersion || 40);
+  } else {
+    throw new Error('Invalid data')
+  }
+
+  // Get the min version that can contain data
+  var bestVersion = Version.getBestVersionForData(segments,
+      errorCorrectionLevel);
+
+  // If no version is found, data cannot be stored
+  if (!bestVersion) {
+    throw new Error('The amount of data is too big to be stored in a QR Code')
+  }
+
+  // If not specified, use min version as default
+  if (!version) {
+    version = bestVersion;
+
+  // Check if the specified version can contain the data
+  } else if (version < bestVersion) {
+    throw new Error('\n' +
+      'The chosen QR Code version cannot contain this amount of data.\n' +
+      'Minimum version required to store current data is: ' + bestVersion + '.\n'
+    )
+  }
+
+  var dataBits = createData(version, errorCorrectionLevel, segments);
+
+  // Allocate matrix buffer
+  var moduleCount = Utils.getSymbolSize(version);
+  var modules = new BitMatrix(moduleCount);
+
+  // Add function modules
+  setupFinderPattern(modules, version);
+  setupTimingPattern(modules);
+  setupAlignmentPattern(modules, version);
+
+  // Add temporary dummy bits for format info just to set them as reserved.
+  // This is needed to prevent these bits from being masked by {@link MaskPattern.applyMask}
+  // since the masking operation must be performed only on the encoding region.
+  // These blocks will be replaced with correct values later in code.
+  setupFormatInfo(modules, errorCorrectionLevel, 0);
+
+  if (version >= 7) {
+    setupVersionInfo(modules, version);
+  }
+
+  // Add data codewords
+  setupData(modules, dataBits);
+
+  if (!maskPattern) {
+    // Find best mask pattern
+    maskPattern = MaskPattern.getBestMask(modules,
+      setupFormatInfo.bind(null, modules, errorCorrectionLevel));
+  }
+
+  // Apply mask pattern
+  MaskPattern.applyMask(maskPattern, modules);
+
+  // Replace format info bits with correct values
+  setupFormatInfo(modules, errorCorrectionLevel, maskPattern);
+
+  return {
+    modules: modules,
+    version: version,
+    errorCorrectionLevel: errorCorrectionLevel,
+    maskPattern: maskPattern,
+    segments: segments
+  }
+}
+
+/**
+ * QR Code
+ *
+ * @param {String | Array} data                 Input data
+ * @param {Object} options                      Optional configurations
+ * @param {Number} options.version              QR Code version
+ * @param {String} options.errorCorrectionLevel Error correction level
+ * @param {Function} options.toSJISFunc         Helper func to convert utf8 to sjis
+ */
+exports.create = function create (data, options) {
+  if (typeof data === 'undefined' || data === '') {
+    throw new Error('No input text')
+  }
+
+  var errorCorrectionLevel = ECLevel.M;
+  var version;
+  var mask;
+
+  if (typeof options !== 'undefined') {
+    // Use higher error correction level as default
+    errorCorrectionLevel = ECLevel.from(options.errorCorrectionLevel, ECLevel.M);
+    version = Version.from(options.version);
+    mask = MaskPattern.from(options.maskPattern);
+
+    if (options.toSJISFunc) {
+      Utils.setToSJISFunction(options.toSJISFunc);
+    }
+  }
+
+  return createSymbol(data, version, errorCorrectionLevel, mask)
+};
+
+},{"../utils/buffer":26,"./alignment-pattern":1,"./bit-buffer":3,"./bit-matrix":4,"./error-correction-code":6,"./error-correction-level":7,"./finder-pattern":8,"./format-info":9,"./mask-pattern":12,"./mode":13,"./reed-solomon-encoder":17,"./segments":19,"./utils":20,"./version":21,"isarray":28}],17:[function(require,module,exports){
+var Buffer = require('../utils/buffer');
+var Polynomial = require('./polynomial');
+
+function ReedSolomonEncoder (degree) {
+  this.genPoly = undefined;
+  this.degree = degree;
+
+  if (this.degree) this.initialize(this.degree);
+}
+
+/**
+ * Initialize the encoder.
+ * The input param should correspond to the number of error correction codewords.
+ *
+ * @param  {Number} degree
+ */
+ReedSolomonEncoder.prototype.initialize = function initialize (degree) {
+  // create an irreducible generator polynomial
+  this.degree = degree;
+  this.genPoly = Polynomial.generateECPolynomial(this.degree);
+};
+
+/**
+ * Encodes a chunk of data
+ *
+ * @param  {Buffer} data Buffer containing input data
+ * @return {Buffer}      Buffer containing encoded data
+ */
+ReedSolomonEncoder.prototype.encode = function encode (data) {
+  if (!this.genPoly) {
+    throw new Error('Encoder not initialized')
+  }
+
+  // Calculate EC for this data block
+  // extends data size to data+genPoly size
+  var pad = new Buffer(this.degree);
+  pad.fill(0);
+  var paddedData = Buffer.concat([data, pad], data.length + this.degree);
+
+  // The error correction codewords are the remainder after dividing the data codewords
+  // by a generator polynomial
+  var remainder = Polynomial.mod(paddedData, this.genPoly);
+
+  // return EC data blocks (last n byte, where n is the degree of genPoly)
+  // If coefficients number in remainder are less than genPoly degree,
+  // pad with 0s to the left to reach the needed number of coefficients
+  var start = this.degree - remainder.length;
+  if (start > 0) {
+    var buff = new Buffer(this.degree);
+    buff.fill(0);
+    remainder.copy(buff, start);
+
+    return buff
+  }
+
+  return remainder
+};
+
+module.exports = ReedSolomonEncoder;
+
+},{"../utils/buffer":26,"./polynomial":15}],18:[function(require,module,exports){
+var numeric = '[0-9]+';
+var alphanumeric = '[A-Z $%*+-./:]+';
+var kanji = '(?:[u3000-u303F]|[u3040-u309F]|[u30A0-u30FF]|' +
+  '[uFF00-uFFEF]|[u4E00-u9FAF]|[u2605-u2606]|[u2190-u2195]|u203B|' +
+  '[u2010u2015u2018u2019u2025u2026u201Cu201Du2225u2260]|' +
+  '[u0391-u0451]|[u00A7u00A8u00B1u00B4u00D7u00F7])+';
+kanji = kanji.replace(/u/g, '\\u');
+
+var byte = '(?:(?![A-Z0-9 $%*+-./:]|' + kanji + ').)+';
+
+exports.KANJI = new RegExp(kanji, 'g');
+exports.BYTE_KANJI = new RegExp('[^A-Z0-9 $%*+-./:]+', 'g');
+exports.BYTE = new RegExp(byte, 'g');
+exports.NUMERIC = new RegExp(numeric, 'g');
+exports.ALPHANUMERIC = new RegExp(alphanumeric, 'g');
+
+var TEST_KANJI = new RegExp('^' + kanji + '$');
+var TEST_NUMERIC = new RegExp('^' + numeric + '$');
+var TEST_ALPHANUMERIC = new RegExp('^[A-Z0-9 $%*+-./:]+$');
+
+exports.testKanji = function testKanji (str) {
+  return TEST_KANJI.test(str)
+};
+
+exports.testNumeric = function testNumeric (str) {
+  return TEST_NUMERIC.test(str)
+};
+
+exports.testAlphanumeric = function testAlphanumeric (str) {
+  return TEST_ALPHANUMERIC.test(str)
+};
+
+},{}],19:[function(require,module,exports){
+var Mode = require('./mode');
+var NumericData = require('./numeric-data');
+var AlphanumericData = require('./alphanumeric-data');
+var ByteData = require('./byte-data');
+var KanjiData = require('./kanji-data');
+var Regex = require('./regex');
+var Utils = require('./utils');
+var dijkstra = require('dijkstrajs');
+
+/**
+ * Returns UTF8 byte length
+ *
+ * @param  {String} str Input string
+ * @return {Number}     Number of byte
+ */
+function getStringByteLength (str) {
+  return unescape(encodeURIComponent(str)).length
+}
+
+/**
+ * Get a list of segments of the specified mode
+ * from a string
+ *
+ * @param  {Mode}   mode Segment mode
+ * @param  {String} str  String to process
+ * @return {Array}       Array of object with segments data
+ */
+function getSegments (regex, mode, str) {
+  var segments = [];
+  var result;
+
+  while ((result = regex.exec(str)) !== null) {
+    segments.push({
+      data: result[0],
+      index: result.index,
+      mode: mode,
+      length: result[0].length
+    });
+  }
+
+  return segments
+}
+
+/**
+ * Extracts a series of segments with the appropriate
+ * modes from a string
+ *
+ * @param  {String} dataStr Input string
+ * @return {Array}          Array of object with segments data
+ */
+function getSegmentsFromString (dataStr) {
+  var numSegs = getSegments(Regex.NUMERIC, Mode.NUMERIC, dataStr);
+  var alphaNumSegs = getSegments(Regex.ALPHANUMERIC, Mode.ALPHANUMERIC, dataStr);
+  var byteSegs;
+  var kanjiSegs;
+
+  if (Utils.isKanjiModeEnabled()) {
+    byteSegs = getSegments(Regex.BYTE, Mode.BYTE, dataStr);
+    kanjiSegs = getSegments(Regex.KANJI, Mode.KANJI, dataStr);
+  } else {
+    byteSegs = getSegments(Regex.BYTE_KANJI, Mode.BYTE, dataStr);
+    kanjiSegs = [];
+  }
+
+  var segs = numSegs.concat(alphaNumSegs, byteSegs, kanjiSegs);
+
+  return segs
+    .sort(function (s1, s2) {
+      return s1.index - s2.index
+    })
+    .map(function (obj) {
+      return {
+        data: obj.data,
+        mode: obj.mode,
+        length: obj.length
+      }
+    })
+}
+
+/**
+ * Returns how many bits are needed to encode a string of
+ * specified length with the specified mode
+ *
+ * @param  {Number} length String length
+ * @param  {Mode} mode     Segment mode
+ * @return {Number}        Bit length
+ */
+function getSegmentBitsLength (length, mode) {
+  switch (mode) {
+    case Mode.NUMERIC:
+      return NumericData.getBitsLength(length)
+    case Mode.ALPHANUMERIC:
+      return AlphanumericData.getBitsLength(length)
+    case Mode.KANJI:
+      return KanjiData.getBitsLength(length)
+    case Mode.BYTE:
+      return ByteData.getBitsLength(length)
+  }
+}
+
+/**
+ * Merges adjacent segments which have the same mode
+ *
+ * @param  {Array} segs Array of object with segments data
+ * @return {Array}      Array of object with segments data
+ */
+function mergeSegments (segs) {
+  return segs.reduce(function (acc, curr) {
+    var prevSeg = acc.length - 1 >= 0 ? acc[acc.length - 1] : null;
+    if (prevSeg && prevSeg.mode === curr.mode) {
+      acc[acc.length - 1].data += curr.data;
+      return acc
+    }
+
+    acc.push(curr);
+    return acc
+  }, [])
+}
+
+/**
+ * Generates a list of all possible nodes combination which
+ * will be used to build a segments graph.
+ *
+ * Nodes are divided by groups. Each group will contain a list of all the modes
+ * in which is possible to encode the given text.
+ *
+ * For example the text '12345' can be encoded as Numeric, Alphanumeric or Byte.
+ * The group for '12345' will contain then 3 objects, one for each
+ * possible encoding mode.
+ *
+ * Each node represents a possible segment.
+ *
+ * @param  {Array} segs Array of object with segments data
+ * @return {Array}      Array of object with segments data
+ */
+function buildNodes (segs) {
+  var nodes = [];
+  for (var i = 0; i < segs.length; i++) {
+    var seg = segs[i];
+
+    switch (seg.mode) {
+      case Mode.NUMERIC:
+        nodes.push([seg,
+          { data: seg.data, mode: Mode.ALPHANUMERIC, length: seg.length },
+          { data: seg.data, mode: Mode.BYTE, length: seg.length }
+        ]);
+        break
+      case Mode.ALPHANUMERIC:
+        nodes.push([seg,
+          { data: seg.data, mode: Mode.BYTE, length: seg.length }
+        ]);
+        break
+      case Mode.KANJI:
+        nodes.push([seg,
+          { data: seg.data, mode: Mode.BYTE, length: getStringByteLength(seg.data) }
+        ]);
+        break
+      case Mode.BYTE:
+        nodes.push([
+          { data: seg.data, mode: Mode.BYTE, length: getStringByteLength(seg.data) }
+        ]);
+    }
+  }
+
+  return nodes
+}
+
+/**
+ * Builds a graph from a list of nodes.
+ * All segments in each node group will be connected with all the segments of
+ * the next group and so on.
+ *
+ * At each connection will be assigned a weight depending on the
+ * segment's byte length.
+ *
+ * @param  {Array} nodes    Array of object with segments data
+ * @param  {Number} version QR Code version
+ * @return {Object}         Graph of all possible segments
+ */
+function buildGraph (nodes, version) {
+  var table = {};
+  var graph = {'start': {}};
+  var prevNodeIds = ['start'];
+
+  for (var i = 0; i < nodes.length; i++) {
+    var nodeGroup = nodes[i];
+    var currentNodeIds = [];
+
+    for (var j = 0; j < nodeGroup.length; j++) {
+      var node = nodeGroup[j];
+      var key = '' + i + j;
+
+      currentNodeIds.push(key);
+      table[key] = { node: node, lastCount: 0 };
+      graph[key] = {};
+
+      for (var n = 0; n < prevNodeIds.length; n++) {
+        var prevNodeId = prevNodeIds[n];
+
+        if (table[prevNodeId] && table[prevNodeId].node.mode === node.mode) {
+          graph[prevNodeId][key] =
+            getSegmentBitsLength(table[prevNodeId].lastCount + node.length, node.mode) -
+            getSegmentBitsLength(table[prevNodeId].lastCount, node.mode);
+
+          table[prevNodeId].lastCount += node.length;
+        } else {
+          if (table[prevNodeId]) table[prevNodeId].lastCount = node.length;
+
+          graph[prevNodeId][key] = getSegmentBitsLength(node.length, node.mode) +
+            4 + Mode.getCharCountIndicator(node.mode, version); // switch cost
+        }
+      }
+    }
+
+    prevNodeIds = currentNodeIds;
+  }
+
+  for (n = 0; n < prevNodeIds.length; n++) {
+    graph[prevNodeIds[n]]['end'] = 0;
+  }
+
+  return { map: graph, table: table }
+}
+
+/**
+ * Builds a segment from a specified data and mode.
+ * If a mode is not specified, the more suitable will be used.
+ *
+ * @param  {String} data             Input data
+ * @param  {Mode | String} modesHint Data mode
+ * @return {Segment}                 Segment
+ */
+function buildSingleSegment (data, modesHint) {
+  var mode;
+  var bestMode = Mode.getBestModeForData(data);
+
+  mode = Mode.from(modesHint, bestMode);
+
+  // Make sure data can be encoded
+  if (mode !== Mode.BYTE && mode.bit < bestMode.bit) {
+    throw new Error('"' + data + '"' +
+      ' cannot be encoded with mode ' + Mode.toString(mode) +
+      '.\n Suggested mode is: ' + Mode.toString(bestMode))
+  }
+
+  // Use Mode.BYTE if Kanji support is disabled
+  if (mode === Mode.KANJI && !Utils.isKanjiModeEnabled()) {
+    mode = Mode.BYTE;
+  }
+
+  switch (mode) {
+    case Mode.NUMERIC:
+      return new NumericData(data)
+
+    case Mode.ALPHANUMERIC:
+      return new AlphanumericData(data)
+
+    case Mode.KANJI:
+      return new KanjiData(data)
+
+    case Mode.BYTE:
+      return new ByteData(data)
+  }
+}
+
+/**
+ * Builds a list of segments from an array.
+ * Array can contain Strings or Objects with segment's info.
+ *
+ * For each item which is a string, will be generated a segment with the given
+ * string and the more appropriate encoding mode.
+ *
+ * For each item which is an object, will be generated a segment with the given
+ * data and mode.
+ * Objects must contain at least the property "data".
+ * If property "mode" is not present, the more suitable mode will be used.
+ *
+ * @param  {Array} array Array of objects with segments data
+ * @return {Array}       Array of Segments
+ */
+exports.fromArray = function fromArray (array) {
+  return array.reduce(function (acc, seg) {
+    if (typeof seg === 'string') {
+      acc.push(buildSingleSegment(seg, null));
+    } else if (seg.data) {
+      acc.push(buildSingleSegment(seg.data, seg.mode));
+    }
+
+    return acc
+  }, [])
+};
+
+/**
+ * Builds an optimized sequence of segments from a string,
+ * which will produce the shortest possible bitstream.
+ *
+ * @param  {String} data    Input string
+ * @param  {Number} version QR Code version
+ * @return {Array}          Array of segments
+ */
+exports.fromString = function fromString (data, version) {
+  var segs = getSegmentsFromString(data, Utils.isKanjiModeEnabled());
+
+  var nodes = buildNodes(segs);
+  var graph = buildGraph(nodes, version);
+  var path = dijkstra.find_path(graph.map, 'start', 'end');
+
+  var optimizedSegs = [];
+  for (var i = 1; i < path.length - 1; i++) {
+    optimizedSegs.push(graph.table[path[i]].node);
+  }
+
+  return exports.fromArray(mergeSegments(optimizedSegs))
+};
+
+/**
+ * Splits a string in various segments with the modes which
+ * best represent their content.
+ * The produced segments are far from being optimized.
+ * The output of this function is only used to estimate a QR Code version
+ * which may contain the data.
+ *
+ * @param  {string} data Input string
+ * @return {Array}       Array of segments
+ */
+exports.rawSplit = function rawSplit (data) {
+  return exports.fromArray(
+    getSegmentsFromString(data, Utils.isKanjiModeEnabled())
+  )
+};
+
+},{"./alphanumeric-data":2,"./byte-data":5,"./kanji-data":11,"./mode":13,"./numeric-data":14,"./regex":18,"./utils":20,"dijkstrajs":27}],20:[function(require,module,exports){
+var toSJISFunction;
+var CODEWORDS_COUNT = [
+  0, // Not used
+  26, 44, 70, 100, 134, 172, 196, 242, 292, 346,
+  404, 466, 532, 581, 655, 733, 815, 901, 991, 1085,
+  1156, 1258, 1364, 1474, 1588, 1706, 1828, 1921, 2051, 2185,
+  2323, 2465, 2611, 2761, 2876, 3034, 3196, 3362, 3532, 3706
+];
+
+/**
+ * Returns the QR Code size for the specified version
+ *
+ * @param  {Number} version QR Code version
+ * @return {Number}         size of QR code
+ */
+exports.getSymbolSize = function getSymbolSize (version) {
+  if (!version) throw new Error('"version" cannot be null or undefined')
+  if (version < 1 || version > 40) throw new Error('"version" should be in range from 1 to 40')
+  return version * 4 + 17
+};
+
+/**
+ * Returns the total number of codewords used to store data and EC information.
+ *
+ * @param  {Number} version QR Code version
+ * @return {Number}         Data length in bits
+ */
+exports.getSymbolTotalCodewords = function getSymbolTotalCodewords (version) {
+  return CODEWORDS_COUNT[version]
+};
+
+/**
+ * Encode data with Bose-Chaudhuri-Hocquenghem
+ *
+ * @param  {Number} data Value to encode
+ * @return {Number}      Encoded value
+ */
+exports.getBCHDigit = function (data) {
+  var digit = 0;
+
+  while (data !== 0) {
+    digit++;
+    data >>>= 1;
+  }
+
+  return digit
+};
+
+exports.setToSJISFunction = function setToSJISFunction (f) {
+  if (typeof f !== 'function') {
+    throw new Error('"toSJISFunc" is not a valid function.')
+  }
+
+  toSJISFunction = f;
+};
+
+exports.isKanjiModeEnabled = function () {
+  return typeof toSJISFunction !== 'undefined'
+};
+
+exports.toSJIS = function toSJIS (kanji) {
+  return toSJISFunction(kanji)
+};
+
+},{}],21:[function(require,module,exports){
+var Utils = require('./utils');
+var ECCode = require('./error-correction-code');
+var ECLevel = require('./error-correction-level');
+var Mode = require('./mode');
+var isArray = require('isarray');
 
 // Generator polynomial used to encode version information
 var G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
-var G18_BCH = utils.getBCHDigit(G18);
+var G18_BCH = Utils.getBCHDigit(G18);
 
-function getBestVersionForDataLength (mode$$1, length, errorCorrectionLevel$$2) {
+function getBestVersionForDataLength (mode, length, errorCorrectionLevel) {
   for (var currentVersion = 1; currentVersion <= 40; currentVersion++) {
-    if (length <= exports.getCapacity(currentVersion, errorCorrectionLevel$$2, mode$$1)) {
+    if (length <= exports.getCapacity(currentVersion, errorCorrectionLevel, mode)) {
       return currentVersion
     }
   }
@@ -12752,9 +13697,9 @@ function getBestVersionForDataLength (mode$$1, length, errorCorrectionLevel$$2) 
   return undefined
 }
 
-function getReservedBitsCount (mode$$1, version) {
+function getReservedBitsCount (mode, version) {
   // Character count indicator + mode indicator bits
-  return mode.getCharCountIndicator(mode$$1, version) + 4
+  return Mode.getCharCountIndicator(mode, version) + 4
 }
 
 function getTotalBitsFromDataArray (segments, version) {
@@ -12768,10 +13713,10 @@ function getTotalBitsFromDataArray (segments, version) {
   return totalBits
 }
 
-function getBestVersionForMixedData (segments, errorCorrectionLevel$$2) {
+function getBestVersionForMixedData (segments, errorCorrectionLevel) {
   for (var currentVersion = 1; currentVersion <= 40; currentVersion++) {
     var length = getTotalBitsFromDataArray(segments, currentVersion);
-    if (length <= exports.getCapacity(currentVersion, errorCorrectionLevel$$2, mode.MIXED)) {
+    if (length <= exports.getCapacity(currentVersion, errorCorrectionLevel, Mode.MIXED)) {
       return currentVersion
     }
   }
@@ -12814,39 +13759,39 @@ exports.from = function from (value, defaultValue) {
  * @param  {Mode}   mode                 Data mode
  * @return {Number}                      Quantity of storable data
  */
-exports.getCapacity = function getCapacity (version, errorCorrectionLevel$$2, mode$$1) {
+exports.getCapacity = function getCapacity (version, errorCorrectionLevel, mode) {
   if (!exports.isValid(version)) {
     throw new Error('Invalid QR Code version')
   }
 
   // Use Byte mode as default
-  if (typeof mode$$1 === 'undefined') mode$$1 = mode.BYTE;
+  if (typeof mode === 'undefined') mode = Mode.BYTE;
 
   // Total codewords for this QR code version (Data + Error correction)
-  var totalCodewords = utils.getSymbolTotalCodewords(version);
+  var totalCodewords = Utils.getSymbolTotalCodewords(version);
 
   // Total number of error correction codewords
-  var ecTotalCodewords = errorCorrectionCode.getTotalCodewordsCount(version, errorCorrectionLevel$$2);
+  var ecTotalCodewords = ECCode.getTotalCodewordsCount(version, errorCorrectionLevel);
 
   // Total number of data codewords
   var dataTotalCodewordsBits = (totalCodewords - ecTotalCodewords) * 8;
 
-  if (mode$$1 === mode.MIXED) return dataTotalCodewordsBits
+  if (mode === Mode.MIXED) return dataTotalCodewordsBits
 
-  var usableBits = dataTotalCodewordsBits - getReservedBitsCount(mode$$1, version);
+  var usableBits = dataTotalCodewordsBits - getReservedBitsCount(mode, version);
 
   // Return max number of storable codewords
-  switch (mode$$1) {
-    case mode.NUMERIC:
+  switch (mode) {
+    case Mode.NUMERIC:
       return Math.floor((usableBits / 10) * 3)
 
-    case mode.ALPHANUMERIC:
+    case Mode.ALPHANUMERIC:
       return Math.floor((usableBits / 11) * 2)
 
-    case mode.KANJI:
+    case Mode.KANJI:
       return Math.floor(usableBits / 13)
 
-    case mode.BYTE:
+    case Mode.BYTE:
     default:
       return Math.floor(usableBits / 8)
   }
@@ -12860,12 +13805,12 @@ exports.getCapacity = function getCapacity (version, errorCorrectionLevel$$2, mo
  * @param  {Mode} mode                       Data mode
  * @return {Number}                          QR Code version
  */
-exports.getBestVersionForData = function getBestVersionForData (data, errorCorrectionLevel$$2) {
+exports.getBestVersionForData = function getBestVersionForData (data, errorCorrectionLevel) {
   var seg;
 
-  var ecl = errorCorrectionLevel.from(errorCorrectionLevel$$2, errorCorrectionLevel.M);
+  var ecl = ECLevel.from(errorCorrectionLevel, ECLevel.M);
 
-  if (isarray(data)) {
+  if (isArray(data)) {
     if (data.length > 1) {
       return getBestVersionForMixedData(data, ecl)
     }
@@ -12899,248 +13844,761 @@ exports.getEncodedBits = function getEncodedBits (version) {
 
   var d = version << 12;
 
-  while (utils.getBCHDigit(d) - G18_BCH >= 0) {
-    d ^= (G18 << (utils.getBCHDigit(d) - G18_BCH));
+  while (Utils.getBCHDigit(d) - G18_BCH >= 0) {
+    d ^= (G18 << (Utils.getBCHDigit(d) - G18_BCH));
   }
 
   return (version << 12) | d
 };
+
+},{"./error-correction-code":6,"./error-correction-level":7,"./mode":13,"./utils":20,"isarray":28}],22:[function(require,module,exports){
+var QRCode = require('./core/qrcode');
+var CanvasRenderer = require('./renderer/canvas');
+var SvgRenderer = require('./renderer/svg-render.js');
+
+function renderCanvas (renderFunc, canvas, text, opts, cb) {
+  var argsNum = arguments.length - 1;
+  if (argsNum < 2) {
+    throw new Error('Too few arguments provided')
+  }
+
+  if (argsNum === 2) {
+    cb = text;
+    text = canvas;
+    canvas = opts = undefined;
+  } else if (argsNum === 3) {
+    if (canvas.getContext && typeof cb === 'undefined') {
+      cb = opts;
+      opts = undefined;
+    } else {
+      cb = opts;
+      opts = text;
+      text = canvas;
+      canvas = undefined;
+    }
+  }
+
+  if (typeof cb !== 'function') {
+    throw new Error('Callback required as last argument')
+  }
+
+  try {
+    var data = QRCode.create(text, opts);
+    cb(null, renderFunc(data, canvas, opts));
+  } catch (e) {
+    cb(e);
+  }
+}
+
+exports.create = QRCode.create;
+exports.toCanvas = renderCanvas.bind(null, CanvasRenderer.render);
+exports.toDataURL = renderCanvas.bind(null, CanvasRenderer.renderToDataURL);
+
+// only svg for now.
+exports.toString = renderCanvas.bind(null, function (data, _, opts) {
+  return SvgRenderer.render(data, opts)
 });
 
-var version_1 = version$2.isValid;
-var version_2 = version$2.from;
-var version_3 = version$2.getCapacity;
-var version_4 = version$2.getBestVersionForData;
-var version_5 = version$2.getEncodedBits;
+},{"./core/qrcode":16,"./renderer/canvas":23,"./renderer/svg-render.js":24}],23:[function(require,module,exports){
+var Utils = require('./utils');
 
-// node_modules/qrcode/lib/core/format-info.js
+function clearCanvas (ctx, canvas, size) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  if (!canvas.style) canvas.style = {};
+  canvas.height = size;
+  canvas.width = size;
+  canvas.style.height = size + 'px';
+  canvas.style.width = size + 'px';
+}
 
-var G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
-var G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
-var G15_BCH = utils.getBCHDigit(G15);
+function getCanvasElement () {
+  try {
+    return document.createElement('canvas')
+  } catch (e) {
+    throw new Error('You need to specify a canvas element')
+  }
+}
 
+exports.render = function render (qrData, canvas, options) {
+  var opts = options;
+  var canvasEl = canvas;
+
+  if (typeof opts === 'undefined' && (!canvas || !canvas.getContext)) {
+    opts = canvas;
+    canvas = undefined;
+  }
+
+  if (!canvas) {
+    canvasEl = getCanvasElement();
+  }
+
+  opts = Utils.getOptions(opts);
+  var size = (qrData.modules.size + opts.margin * 2) * opts.scale;
+
+  var ctx = canvasEl.getContext('2d');
+  var image = ctx.createImageData(size, size);
+  Utils.qrToImageData(image.data, qrData, opts.margin, opts.scale, opts.color);
+
+  clearCanvas(ctx, canvasEl, size);
+  ctx.putImageData(image, 0, 0);
+
+  return canvasEl
+};
+
+exports.renderToDataURL = function renderToDataURL (qrData, canvas, options) {
+  var opts = options;
+
+  if (typeof opts === 'undefined' && (!canvas || !canvas.getContext)) {
+    opts = canvas;
+    canvas = undefined;
+  }
+
+  if (!opts) opts = {};
+
+  var canvasEl = exports.render(qrData, canvas, opts);
+
+  var type = opts.type || 'image/png';
+  var rendererOpts = opts.rendererOpts || {};
+
+  return canvasEl.toDataURL(type, rendererOpts.quality)
+};
+
+},{"./utils":25}],24:[function(require,module,exports){
+var Utils = require('./utils');
+
+function getColorAttrib (color) {
+  return 'fill="rgb(' + [color.r, color.g, color.b].join(',') + ')" ' +
+    'fill-opacity="' + (color.a / 255).toFixed(2) + '"'
+}
+
+exports.render = function render (qrData, options) {
+  var opts = Utils.getOptions(options);
+  var size = qrData.modules.size;
+  var data = qrData.modules.data;
+  var qrcodesize = (size + opts.margin * 2) * opts.scale;
+
+  var xmlStr = '<?xml version="1.0" encoding="utf-8"?>\n';
+  xmlStr += '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n';
+
+  xmlStr += '<svg version="1.1" baseProfile="full"';
+  xmlStr += ' width="' + qrcodesize + '" height="' + qrcodesize + '"';
+  xmlStr += ' viewBox="0 0 ' + qrcodesize + ' ' + qrcodesize + '"';
+  xmlStr += ' xmlns="http://www.w3.org/2000/svg"';
+  xmlStr += ' xmlns:xlink="http://www.w3.org/1999/xlink"';
+  xmlStr += ' xmlns:ev="http://www.w3.org/2001/xml-events">\n';
+
+  xmlStr += '<rect x="0" y="0" width="' + qrcodesize + '" height="' + qrcodesize + '" ' + getColorAttrib(opts.color.light) + ' />\n';
+  xmlStr += '<defs><rect id="p" width="' + opts.scale + '" height="' + opts.scale + '" /></defs>\n';
+  xmlStr += '<g ' + getColorAttrib(opts.color.dark) + '>\n';
+
+  for (var i = 0; i < size; i++) {
+    for (var j = 0; j < size; j++) {
+      if (!data[i * size + j]) continue
+
+      var x = (opts.margin + j) * opts.scale;
+      var y = (opts.margin + i) * opts.scale;
+      xmlStr += '<use x="' + x + '" y="' + y + '" xlink:href="#p" />\n';
+    }
+  }
+
+  xmlStr += '</g>\n';
+  xmlStr += '</svg>';
+
+  return xmlStr
+};
+
+},{"./utils":25}],25:[function(require,module,exports){
+function hex2rgba (hex) {
+  if (typeof hex !== 'string') {
+    throw new Error('Color should be defined as hex string')
+  }
+
+  var hexCode = hex.slice().replace('#', '').split('');
+  if (hexCode.length < 3 || hexCode.length === 5 || hexCode.length > 8) {
+    throw new Error('Invalid hex color: ' + hex)
+  }
+
+  // Convert from short to long form (fff -> ffffff)
+  if (hexCode.length === 3 || hexCode.length === 4) {
+    hexCode = Array.prototype.concat.apply([], hexCode.map(function (c) {
+      return [c, c]
+    }));
+  }
+
+  // Add default alpha value
+  if (hexCode.length === 6) hexCode.push('F', 'F');
+
+  var hexValue = parseInt(hexCode.join(''), 16);
+
+  return {
+    r: (hexValue >> 24) & 255,
+    g: (hexValue >> 16) & 255,
+    b: (hexValue >> 8) & 255,
+    a: hexValue & 255
+  }
+}
+
+exports.getOptions = function getOptions (options) {
+  if (!options) options = {};
+  if (!options.color) options.color = {};
+
+  var margin = typeof options.margin === 'undefined' ||
+    options.margin === null ||
+    options.margin < 0 ? 4 : options.margin;
+
+  return {
+    scale: options.scale || 4,
+    margin: margin,
+    color: {
+      dark: hex2rgba(options.color.dark || '#000000ff'),
+      light: hex2rgba(options.color.light || '#ffffffff')
+    },
+    type: options.type,
+    rendererOpts: options.rendererOpts || {}
+  }
+};
+
+exports.qrToImageData = function qrToImageData (imgData, qr, margin, scale, color) {
+  var size = qr.modules.size;
+  var data = qr.modules.data;
+  var scaledMargin = margin * scale;
+  var symbolSize = size * scale + scaledMargin * 2;
+  var palette = [color.light, color.dark];
+
+  for (var i = 0; i < symbolSize; i++) {
+    for (var j = 0; j < symbolSize; j++) {
+      var posDst = (i * symbolSize + j) * 4;
+      var pxColor = color.light;
+
+      if (i >= scaledMargin && j >= scaledMargin &&
+        i < symbolSize - scaledMargin && j < symbolSize - scaledMargin) {
+        var iSrc = Math.floor((i - scaledMargin) / scale);
+        var jSrc = Math.floor((j - scaledMargin) / scale);
+        pxColor = palette[data[iSrc * size + jSrc] ? 1 : 0];
+      }
+
+      imgData[posDst++] = pxColor.r;
+      imgData[posDst++] = pxColor.g;
+      imgData[posDst++] = pxColor.b;
+      imgData[posDst] = pxColor.a;
+    }
+  }
+};
+
+},{}],26:[function(require,module,exports){
 /**
- * Returns format information with relative error correction bits
- *
- * The format information is a 15-bit sequence containing 5 data bits,
- * with 10 error correction bits calculated using the (15, 5) BCH code.
- *
- * @param  {Number} errorCorrectionLevel Error correction level
- * @param  {Number} mask                 Mask pattern
- * @return {Number}                      Encoded format information bits
+ * Implementation of a subset of node.js Buffer methods for the browser.
+ * Based on https://github.com/feross/buffer
  */
-var getEncodedBits = function getEncodedBits (errorCorrectionLevel, mask) {
-  var data = ((errorCorrectionLevel.bit << 3) | mask);
-  var d = data << 10;
 
-  while (utils.getBCHDigit(d) - G15_BCH >= 0) {
-    d ^= (G15 << (utils.getBCHDigit(d) - G15_BCH));
+/* eslint-disable no-proto */
+
+var isArray = require('isarray');
+
+function typedArraySupport () {
+  // Can typed array instances be augmented?
+  try {
+    var arr = new Uint8Array(1);
+    arr.__proto__ = {__proto__: Uint8Array.prototype, foo: function () { return 42 }};
+    return arr.foo() === 42
+  } catch (e) {
+    return false
   }
-
-  // xor final data with mask pattern in order to ensure that
-  // no combination of Error Correction Level and data mask pattern
-  // will result in an all-zero data string
-  return ((data << 10) | d) ^ G15_MASK
-};
-
-var formatInfo = {
-	getEncodedBits: getEncodedBits
-};
-
-// node_modules/qrcode/lib/core/numeric-data.js
-
-
-function NumericData (data) {
-  this.mode = mode.NUMERIC;
-  this.data = data.toString();
 }
 
-NumericData.getBitsLength = function getBitsLength (length) {
-  return 10 * Math.floor(length / 3) + ((length % 3) ? ((length % 3) * 3 + 1) : 0)
-};
+Buffer.TYPED_ARRAY_SUPPORT = typedArraySupport();
 
-NumericData.prototype.getLength = function getLength () {
-  return this.data.length
-};
+var K_MAX_LENGTH = Buffer.TYPED_ARRAY_SUPPORT
+    ? 0x7fffffff
+    : 0x3fffffff;
 
-NumericData.prototype.getBitsLength = function getBitsLength () {
-  return NumericData.getBitsLength(this.data.length)
-};
-
-NumericData.prototype.write = function write (bitBuffer) {
-  var i, group, value;
-
-  // The input data string is divided into groups of three digits,
-  // and each group is converted to its 10-bit binary equivalent.
-  for (i = 0; i + 3 <= this.data.length; i += 3) {
-    group = this.data.substr(i, 3);
-    value = parseInt(group, 10);
-
-    bitBuffer.put(value, 10);
+function Buffer (arg, offset, length) {
+  if (!Buffer.TYPED_ARRAY_SUPPORT && !(this instanceof Buffer)) {
+    return new Buffer(arg, offset, length)
   }
 
-  // If the number of input digits is not an exact multiple of three,
-  // the final one or two digits are converted to 4 or 7 bits respectively.
-  var remainingNum = this.data.length - i;
-  if (remainingNum > 0) {
-    group = this.data.substr(i);
-    value = parseInt(group, 10);
-
-    bitBuffer.put(value, remainingNum * 3 + 1);
+  if (typeof arg === 'number') {
+    return allocUnsafe(this, arg)
   }
-};
 
-var numericData = NumericData;
-
-// node_modules/qrcode/lib/core/alphanumeric-data.js
-
-
-/**
- * Array of characters available in alphanumeric mode
- *
- * As per QR Code specification, to each character
- * is assigned a value from 0 to 44 which in this case coincides
- * with the array index
- *
- * @type {Array}
- */
-var ALPHA_NUM_CHARS = [
-  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-  'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-  'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-  ' ', '$', '%', '*', '+', '-', '.', '/', ':'
-];
-
-function AlphanumericData (data) {
-  this.mode = mode.ALPHANUMERIC;
-  this.data = data;
+  return from(this, arg, offset, length)
 }
 
-AlphanumericData.getBitsLength = function getBitsLength (length) {
-  return 11 * Math.floor(length / 2) + 6 * (length % 2)
-};
+if (Buffer.TYPED_ARRAY_SUPPORT) {
+  Buffer.prototype.__proto__ = Uint8Array.prototype;
+  Buffer.__proto__ = Uint8Array;
 
-AlphanumericData.prototype.getLength = function getLength () {
-  return this.data.length
-};
-
-AlphanumericData.prototype.getBitsLength = function getBitsLength () {
-  return AlphanumericData.getBitsLength(this.data.length)
-};
-
-AlphanumericData.prototype.write = function write (bitBuffer) {
-  var i;
-
-  // Input data characters are divided into groups of two characters
-  // and encoded as 11-bit binary codes.
-  for (i = 0; i + 2 <= this.data.length; i += 2) {
-    // The character value of the first character is multiplied by 45
-    var value = ALPHA_NUM_CHARS.indexOf(this.data[i]) * 45;
-
-    // The character value of the second digit is added to the product
-    value += ALPHA_NUM_CHARS.indexOf(this.data[i + 1]);
-
-    // The sum is then stored as 11-bit binary number
-    bitBuffer.put(value, 11);
+  // Fix subarray() in ES2016. See: https://github.com/feross/buffer/pull/97
+  if (typeof Symbol !== 'undefined' && Symbol.species &&
+      Buffer[Symbol.species] === Buffer) {
+    Object.defineProperty(Buffer, Symbol.species, {
+      value: null,
+      configurable: true,
+      enumerable: false,
+      writable: false
+    });
   }
-
-  // If the number of input data characters is not a multiple of two,
-  // the character value of the final character is encoded as a 6-bit binary number.
-  if (this.data.length % 2) {
-    bitBuffer.put(ALPHA_NUM_CHARS.indexOf(this.data[i]), 6);
-  }
-};
-
-var alphanumericData = AlphanumericData;
-
-// node_modules/qrcode/lib/core/byte-data.js
-
-
-
-function ByteData (data) {
-  this.mode = mode.BYTE;
-  this.data = new buffer$1(data);
 }
 
-ByteData.getBitsLength = function getBitsLength (length) {
-  return length * 8
-};
-
-ByteData.prototype.getLength = function getLength () {
-  return this.data.length
-};
-
-ByteData.prototype.getBitsLength = function getBitsLength () {
-  return ByteData.getBitsLength(this.data.length)
-};
-
-ByteData.prototype.write = function (bitBuffer) {
-  for (var i = 0, l = this.data.length; i < l; i++) {
-    bitBuffer.put(this.data[i], 8);
+function checked (length) {
+  // Note: cannot use `length < K_MAX_LENGTH` here because that fails when
+  // length is NaN (which is otherwise coerced to zero.)
+  if (length >= K_MAX_LENGTH) {
+    throw new RangeError('Attempt to allocate Buffer larger than maximum ' +
+                         'size: 0x' + K_MAX_LENGTH.toString(16) + ' bytes')
   }
-};
-
-var byteData = ByteData;
-
-// node_modules/qrcode/lib/core/kanji-data.js
-
-
-
-function KanjiData (data) {
-  this.mode = mode.KANJI;
-  this.data = data;
+  return length | 0
 }
 
-KanjiData.getBitsLength = function getBitsLength (length) {
-  return length * 13
-};
+function isnan (val) {
+  return val !== val // eslint-disable-line no-self-compare
+}
 
-KanjiData.prototype.getLength = function getLength () {
-  return this.data.length
-};
+function createBuffer (that, length) {
+  var buf;
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    buf = new Uint8Array(length);
+    buf.__proto__ = Buffer.prototype;
+  } else {
+    // Fallback: Return an object instance of the Buffer class
+    buf = that;
+    if (buf === null) {
+      buf = new Buffer(length);
+    }
+    buf.length = length;
+  }
 
-KanjiData.prototype.getBitsLength = function getBitsLength () {
-  return KanjiData.getBitsLength(this.data.length)
-};
+  return buf
+}
 
-KanjiData.prototype.write = function (bitBuffer) {
-  var i;
+function allocUnsafe (that, size) {
+  var buf = createBuffer(that, size < 0 ? 0 : checked(size) | 0);
 
-  // In the Shift JIS system, Kanji characters are represented by a two byte combination.
-  // These byte values are shifted from the JIS X 0208 values.
-  // JIS X 0208 gives details of the shift coded representation.
-  for (i = 0; i < this.data.length; i++) {
-    var value = utils.toSJIS(this.data[i]);
+  if (!Buffer.TYPED_ARRAY_SUPPORT) {
+    for (var i = 0; i < size; ++i) {
+      buf[i] = 0;
+    }
+  }
 
-    // For characters with Shift JIS values from 0x8140 to 0x9FFC:
-    if (value >= 0x8140 && value <= 0x9FFC) {
-      // Subtract 0x8140 from Shift JIS value
-      value -= 0x8140;
+  return buf
+}
 
-    // For characters with Shift JIS values from 0xE040 to 0xEBBF
-    } else if (value >= 0xE040 && value <= 0xEBBF) {
-      // Subtract 0xC140 from Shift JIS value
-      value -= 0xC140;
-    } else {
-      throw new Error(
-        'Invalid SJIS character: ' + this.data[i] + '\n' +
-        'Make sure your charset is UTF-8')
+function fromString (that, string) {
+  var length = byteLength(string) | 0;
+  var buf = createBuffer(that, length);
+
+  var actual = buf.write(string);
+
+  if (actual !== length) {
+    // Writing a hex string, for example, that contains invalid characters will
+    // cause everything after the first invalid character to be ignored. (e.g.
+    // 'abxxcd' will be treated as 'ab')
+    buf = buf.slice(0, actual);
+  }
+
+  return buf
+}
+
+function fromArrayLike (that, array) {
+  var length = array.length < 0 ? 0 : checked(array.length) | 0;
+  var buf = createBuffer(that, length);
+  for (var i = 0; i < length; i += 1) {
+    buf[i] = array[i] & 255;
+  }
+  return buf
+}
+
+function fromArrayBuffer (that, array, byteOffset, length) {
+  if (byteOffset < 0 || array.byteLength < byteOffset) {
+    throw new RangeError('\'offset\' is out of bounds')
+  }
+
+  if (array.byteLength < byteOffset + (length || 0)) {
+    throw new RangeError('\'length\' is out of bounds')
+  }
+
+  var buf;
+  if (byteOffset === undefined && length === undefined) {
+    buf = new Uint8Array(array);
+  } else if (length === undefined) {
+    buf = new Uint8Array(array, byteOffset);
+  } else {
+    buf = new Uint8Array(array, byteOffset, length);
+  }
+
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    // Return an augmented `Uint8Array` instance, for best performance
+    buf.__proto__ = Buffer.prototype;
+  } else {
+    // Fallback: Return an object instance of the Buffer class
+    buf = fromArrayLike(that, buf);
+  }
+
+  return buf
+}
+
+function fromObject (that, obj) {
+  if (Buffer.isBuffer(obj)) {
+    var len = checked(obj.length) | 0;
+    var buf = createBuffer(that, len);
+
+    if (buf.length === 0) {
+      return buf
     }
 
-    // Multiply most significant byte of result by 0xC0
-    // and add least significant byte to product
-    value = (((value >>> 8) & 0xff) * 0xC0) + (value & 0xff);
-
-    // Convert result to a 13-bit binary string
-    bitBuffer.put(value, 13);
+    obj.copy(buf, 0, 0, len);
+    return buf
   }
+
+  if (obj) {
+    if ((typeof ArrayBuffer !== 'undefined' &&
+        obj.buffer instanceof ArrayBuffer) || 'length' in obj) {
+      if (typeof obj.length !== 'number' || isnan(obj.length)) {
+        return createBuffer(that, 0)
+      }
+      return fromArrayLike(that, obj)
+    }
+
+    if (obj.type === 'Buffer' && Array.isArray(obj.data)) {
+      return fromArrayLike(that, obj.data)
+    }
+  }
+
+  throw new TypeError('First argument must be a string, Buffer, ArrayBuffer, Array, or array-like object.')
+}
+
+function utf8ToBytes (string, units) {
+  units = units || Infinity;
+  var codePoint;
+  var length = string.length;
+  var leadSurrogate = null;
+  var bytes = [];
+
+  for (var i = 0; i < length; ++i) {
+    codePoint = string.charCodeAt(i);
+
+    // is surrogate component
+    if (codePoint > 0xD7FF && codePoint < 0xE000) {
+      // last char was a lead
+      if (!leadSurrogate) {
+        // no lead yet
+        if (codePoint > 0xDBFF) {
+          // unexpected trail
+          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD);
+          continue
+        } else if (i + 1 === length) {
+          // unpaired lead
+          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD);
+          continue
+        }
+
+        // valid lead
+        leadSurrogate = codePoint;
+
+        continue
+      }
+
+      // 2 leads in a row
+      if (codePoint < 0xDC00) {
+        if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD);
+        leadSurrogate = codePoint;
+        continue
+      }
+
+      // valid surrogate pair
+      codePoint = (leadSurrogate - 0xD800 << 10 | codePoint - 0xDC00) + 0x10000;
+    } else if (leadSurrogate) {
+      // valid bmp char, but last char was a lead
+      if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD);
+    }
+
+    leadSurrogate = null;
+
+    // encode utf8
+    if (codePoint < 0x80) {
+      if ((units -= 1) < 0) break
+      bytes.push(codePoint);
+    } else if (codePoint < 0x800) {
+      if ((units -= 2) < 0) break
+      bytes.push(
+        codePoint >> 0x6 | 0xC0,
+        codePoint & 0x3F | 0x80
+      );
+    } else if (codePoint < 0x10000) {
+      if ((units -= 3) < 0) break
+      bytes.push(
+        codePoint >> 0xC | 0xE0,
+        codePoint >> 0x6 & 0x3F | 0x80,
+        codePoint & 0x3F | 0x80
+      );
+    } else if (codePoint < 0x110000) {
+      if ((units -= 4) < 0) break
+      bytes.push(
+        codePoint >> 0x12 | 0xF0,
+        codePoint >> 0xC & 0x3F | 0x80,
+        codePoint >> 0x6 & 0x3F | 0x80,
+        codePoint & 0x3F | 0x80
+      );
+    } else {
+      throw new Error('Invalid code point')
+    }
+  }
+
+  return bytes
+}
+
+function byteLength (string) {
+  if (Buffer.isBuffer(string)) {
+    return string.length
+  }
+  if (typeof ArrayBuffer !== 'undefined' && typeof ArrayBuffer.isView === 'function' &&
+      (ArrayBuffer.isView(string) || string instanceof ArrayBuffer)) {
+    return string.byteLength
+  }
+  if (typeof string !== 'string') {
+    string = '' + string;
+  }
+
+  var len = string.length;
+  if (len === 0) return 0
+
+  return utf8ToBytes(string).length
+}
+
+function blitBuffer (src, dst, offset, length) {
+  for (var i = 0; i < length; ++i) {
+    if ((i + offset >= dst.length) || (i >= src.length)) break
+    dst[i + offset] = src[i];
+  }
+  return i
+}
+
+function utf8Write (buf, string, offset, length) {
+  return blitBuffer(utf8ToBytes(string, buf.length - offset), buf, offset, length)
+}
+
+function from (that, value, offset, length) {
+  if (typeof value === 'number') {
+    throw new TypeError('"value" argument must not be a number')
+  }
+
+  if (typeof ArrayBuffer !== 'undefined' && value instanceof ArrayBuffer) {
+    return fromArrayBuffer(that, value, offset, length)
+  }
+
+  if (typeof value === 'string') {
+    return fromString(that, value, offset)
+  }
+
+  return fromObject(that, value)
+}
+
+Buffer.prototype.write = function write (string, offset, length) {
+  // Buffer#write(string)
+  if (offset === undefined) {
+    length = this.length;
+    offset = 0;
+  // Buffer#write(string, encoding)
+  } else if (length === undefined && typeof offset === 'string') {
+    length = this.length;
+    offset = 0;
+  // Buffer#write(string, offset[, length])
+  } else if (isFinite(offset)) {
+    offset = offset | 0;
+    if (isFinite(length)) {
+      length = length | 0;
+    } else {
+      length = undefined;
+    }
+  }
+
+  var remaining = this.length - offset;
+  if (length === undefined || length > remaining) length = remaining;
+
+  if ((string.length > 0 && (length < 0 || offset < 0)) || offset > this.length) {
+    throw new RangeError('Attempt to write outside buffer bounds')
+  }
+
+  return utf8Write(this, string, offset, length)
 };
 
-var kanjiData = KanjiData;
+Buffer.prototype.slice = function slice (start, end) {
+  var len = this.length;
+  start = ~~start;
+  end = end === undefined ? len : ~~end;
 
-var dijkstra_1 = createCommonjsModule(function (module) {
-// node_modules/dijkstrajs/dijkstra.js
+  if (start < 0) {
+    start += len;
+    if (start < 0) start = 0;
+  } else if (start > len) {
+    start = len;
+  }
+
+  if (end < 0) {
+    end += len;
+    if (end < 0) end = 0;
+  } else if (end > len) {
+    end = len;
+  }
+
+  if (end < start) end = start;
+
+  var newBuf;
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    newBuf = this.subarray(start, end);
+    // Return an augmented `Uint8Array` instance
+    newBuf.__proto__ = Buffer.prototype;
+  } else {
+    var sliceLen = end - start;
+    newBuf = new Buffer(sliceLen, undefined);
+    for (var i = 0; i < sliceLen; ++i) {
+      newBuf[i] = this[i + start];
+    }
+  }
+
+  return newBuf
+};
+
+Buffer.prototype.copy = function copy (target, targetStart, start, end) {
+  if (!start) start = 0;
+  if (!end && end !== 0) end = this.length;
+  if (targetStart >= target.length) targetStart = target.length;
+  if (!targetStart) targetStart = 0;
+  if (end > 0 && end < start) end = start;
+
+  // Copy 0 bytes; we're done
+  if (end === start) return 0
+  if (target.length === 0 || this.length === 0) return 0
+
+  // Fatal error conditions
+  if (targetStart < 0) {
+    throw new RangeError('targetStart out of bounds')
+  }
+  if (start < 0 || start >= this.length) throw new RangeError('sourceStart out of bounds')
+  if (end < 0) throw new RangeError('sourceEnd out of bounds')
+
+  // Are we oob?
+  if (end > this.length) end = this.length;
+  if (target.length - targetStart < end - start) {
+    end = target.length - targetStart + start;
+  }
+
+  var len = end - start;
+  var i;
+
+  if (this === target && start < targetStart && targetStart < end) {
+    // descending copy from end
+    for (i = len - 1; i >= 0; --i) {
+      target[i + targetStart] = this[i + start];
+    }
+  } else if (len < 1000 || !Buffer.TYPED_ARRAY_SUPPORT) {
+    // ascending copy from start
+    for (i = 0; i < len; ++i) {
+      target[i + targetStart] = this[i + start];
+    }
+  } else {
+    Uint8Array.prototype.set.call(
+      target,
+      this.subarray(start, start + len),
+      targetStart
+    );
+  }
+
+  return len
+};
+
+Buffer.prototype.fill = function fill (val, start, end) {
+  // Handle string cases:
+  if (typeof val === 'string') {
+    if (typeof start === 'string') {
+      start = 0;
+      end = this.length;
+    } else if (typeof end === 'string') {
+      end = this.length;
+    }
+    if (val.length === 1) {
+      var code = val.charCodeAt(0);
+      if (code < 256) {
+        val = code;
+      }
+    }
+  } else if (typeof val === 'number') {
+    val = val & 255;
+  }
+
+  // Invalid ranges are not set to a default, so can range check early.
+  if (start < 0 || this.length < start || this.length < end) {
+    throw new RangeError('Out of range index')
+  }
+
+  if (end <= start) {
+    return this
+  }
+
+  start = start >>> 0;
+  end = end === undefined ? this.length : end >>> 0;
+
+  if (!val) val = 0;
+
+  var i;
+  if (typeof val === 'number') {
+    for (i = start; i < end; ++i) {
+      this[i] = val;
+    }
+  } else {
+    var bytes = Buffer.isBuffer(val)
+      ? val
+      : new Buffer(val);
+    var len = bytes.length;
+    for (i = 0; i < end - start; ++i) {
+      this[i + start] = bytes[i % len];
+    }
+  }
+
+  return this
+};
+
+Buffer.concat = function concat (list, length) {
+  if (!isArray(list)) {
+    throw new TypeError('"list" argument must be an Array of Buffers')
+  }
+
+  if (list.length === 0) {
+    return createBuffer(null, 0)
+  }
+
+  var i;
+  if (length === undefined) {
+    length = 0;
+    for (i = 0; i < list.length; ++i) {
+      length += list[i].length;
+    }
+  }
+
+  var buffer = allocUnsafe(null, length);
+  var pos = 0;
+  for (i = 0; i < list.length; ++i) {
+    var buf = list[i];
+    if (!Buffer.isBuffer(buf)) {
+      throw new TypeError('"list" argument must be an Array of Buffers')
+    }
+    buf.copy(buffer, pos);
+    pos += buf.length;
+  }
+  return buffer
+};
+
+Buffer.byteLength = byteLength;
+
+Buffer.prototype._isBuffer = true;
+Buffer.isBuffer = function isBuffer (b) {
+  return !!(b != null && b._isBuffer)
+};
+
+module.exports = Buffer;
+
+},{"isarray":28}],27:[function(require,module,exports){
 var dijkstra = {
   single_source_shortest_paths: function(graph, s, d) {
     // Predecessor map for each node that has been encountered.
@@ -13280,1143 +14738,21 @@ var dijkstra = {
 
 
 // node.js module exports
-{
+if (typeof module !== 'undefined') {
   module.exports = dijkstra;
 }
+
+},{}],28:[function(require,module,exports){
+var toString = {}.toString;
+
+module.exports = Array.isArray || function (arr) {
+  return toString.call(arr) == '[object Array]';
+};
+
+},{}]},{},[22])(22)
 });
 
-//  commonjs-proxy:/Users/dtai/work/hanzo/el-controls/node_modules/qrcode/lib/core/numeric-data.js
-
-//  commonjs-proxy:/Users/dtai/work/hanzo/el-controls/node_modules/qrcode/lib/core/alphanumeric-data.js
-
-//  commonjs-proxy:/Users/dtai/work/hanzo/el-controls/node_modules/qrcode/lib/core/byte-data.js
-
-//  commonjs-proxy:/Users/dtai/work/hanzo/el-controls/node_modules/qrcode/lib/core/kanji-data.js
-
-//  commonjs-proxy:/Users/dtai/work/hanzo/el-controls/node_modules/dijkstrajs/dijkstra.js
-
-var segments = createCommonjsModule(function (module, exports) {
-// node_modules/qrcode/lib/core/segments.js
-
-
-
-
-
-
-
-
-
-/**
- * Returns UTF8 byte length
- *
- * @param  {String} str Input string
- * @return {Number}     Number of byte
- */
-function getStringByteLength (str) {
-  return unescape(encodeURIComponent(str)).length
-}
-
-/**
- * Get a list of segments of the specified mode
- * from a string
- *
- * @param  {Mode}   mode Segment mode
- * @param  {String} str  String to process
- * @return {Array}       Array of object with segments data
- */
-function getSegments (regex$$2, mode$$2, str) {
-  var segments = [];
-  var result;
-
-  while ((result = regex$$2.exec(str)) !== null) {
-    segments.push({
-      data: result[0],
-      index: result.index,
-      mode: mode$$2,
-      length: result[0].length
-    });
-  }
-
-  return segments
-}
-
-/**
- * Extracts a series of segments with the appropriate
- * modes from a string
- *
- * @param  {String} dataStr Input string
- * @return {Array}          Array of object with segments data
- */
-function getSegmentsFromString (dataStr) {
-  var numSegs = getSegments(regex.NUMERIC, mode.NUMERIC, dataStr);
-  var alphaNumSegs = getSegments(regex.ALPHANUMERIC, mode.ALPHANUMERIC, dataStr);
-  var byteSegs;
-  var kanjiSegs;
-
-  if (utils.isKanjiModeEnabled()) {
-    byteSegs = getSegments(regex.BYTE, mode.BYTE, dataStr);
-    kanjiSegs = getSegments(regex.KANJI, mode.KANJI, dataStr);
-  } else {
-    byteSegs = getSegments(regex.BYTE_KANJI, mode.BYTE, dataStr);
-    kanjiSegs = [];
-  }
-
-  var segs = numSegs.concat(alphaNumSegs, byteSegs, kanjiSegs);
-
-  return segs
-    .sort(function (s1, s2) {
-      return s1.index - s2.index
-    })
-    .map(function (obj) {
-      return {
-        data: obj.data,
-        mode: obj.mode,
-        length: obj.length
-      }
-    })
-}
-
-/**
- * Returns how many bits are needed to encode a string of
- * specified length with the specified mode
- *
- * @param  {Number} length String length
- * @param  {Mode} mode     Segment mode
- * @return {Number}        Bit length
- */
-function getSegmentBitsLength (length, mode$$2) {
-  switch (mode$$2) {
-    case mode.NUMERIC:
-      return numericData.getBitsLength(length)
-    case mode.ALPHANUMERIC:
-      return alphanumericData.getBitsLength(length)
-    case mode.KANJI:
-      return kanjiData.getBitsLength(length)
-    case mode.BYTE:
-      return byteData.getBitsLength(length)
-  }
-}
-
-/**
- * Merges adjacent segments which have the same mode
- *
- * @param  {Array} segs Array of object with segments data
- * @return {Array}      Array of object with segments data
- */
-function mergeSegments (segs) {
-  return segs.reduce(function (acc, curr) {
-    var prevSeg = acc.length - 1 >= 0 ? acc[acc.length - 1] : null;
-    if (prevSeg && prevSeg.mode === curr.mode) {
-      acc[acc.length - 1].data += curr.data;
-      return acc
-    }
-
-    acc.push(curr);
-    return acc
-  }, [])
-}
-
-/**
- * Generates a list of all possible nodes combination which
- * will be used to build a segments graph.
- *
- * Nodes are divided by groups. Each group will contain a list of all the modes
- * in which is possible to encode the given text.
- *
- * For example the text '12345' can be encoded as Numeric, Alphanumeric or Byte.
- * The group for '12345' will contain then 3 objects, one for each
- * possible encoding mode.
- *
- * Each node represents a possible segment.
- *
- * @param  {Array} segs Array of object with segments data
- * @return {Array}      Array of object with segments data
- */
-function buildNodes (segs) {
-  var nodes = [];
-  for (var i = 0; i < segs.length; i++) {
-    var seg = segs[i];
-
-    switch (seg.mode) {
-      case mode.NUMERIC:
-        nodes.push([seg,
-          { data: seg.data, mode: mode.ALPHANUMERIC, length: seg.length },
-          { data: seg.data, mode: mode.BYTE, length: seg.length }
-        ]);
-        break
-      case mode.ALPHANUMERIC:
-        nodes.push([seg,
-          { data: seg.data, mode: mode.BYTE, length: seg.length }
-        ]);
-        break
-      case mode.KANJI:
-        nodes.push([seg,
-          { data: seg.data, mode: mode.BYTE, length: getStringByteLength(seg.data) }
-        ]);
-        break
-      case mode.BYTE:
-        nodes.push([
-          { data: seg.data, mode: mode.BYTE, length: getStringByteLength(seg.data) }
-        ]);
-    }
-  }
-
-  return nodes
-}
-
-/**
- * Builds a graph from a list of nodes.
- * All segments in each node group will be connected with all the segments of
- * the next group and so on.
- *
- * At each connection will be assigned a weight depending on the
- * segment's byte length.
- *
- * @param  {Array} nodes    Array of object with segments data
- * @param  {Number} version QR Code version
- * @return {Object}         Graph of all possible segments
- */
-function buildGraph (nodes, version) {
-  var table = {};
-  var graph = {'start': {}};
-  var prevNodeIds = ['start'];
-
-  for (var i = 0; i < nodes.length; i++) {
-    var nodeGroup = nodes[i];
-    var currentNodeIds = [];
-
-    for (var j = 0; j < nodeGroup.length; j++) {
-      var node = nodeGroup[j];
-      var key = '' + i + j;
-
-      currentNodeIds.push(key);
-      table[key] = { node: node, lastCount: 0 };
-      graph[key] = {};
-
-      for (var n = 0; n < prevNodeIds.length; n++) {
-        var prevNodeId = prevNodeIds[n];
-
-        if (table[prevNodeId] && table[prevNodeId].node.mode === node.mode) {
-          graph[prevNodeId][key] =
-            getSegmentBitsLength(table[prevNodeId].lastCount + node.length, node.mode) -
-            getSegmentBitsLength(table[prevNodeId].lastCount, node.mode);
-
-          table[prevNodeId].lastCount += node.length;
-        } else {
-          if (table[prevNodeId]) table[prevNodeId].lastCount = node.length;
-
-          graph[prevNodeId][key] = getSegmentBitsLength(node.length, node.mode) +
-            4 + mode.getCharCountIndicator(node.mode, version); // switch cost
-        }
-      }
-    }
-
-    prevNodeIds = currentNodeIds;
-  }
-
-  for (n = 0; n < prevNodeIds.length; n++) {
-    graph[prevNodeIds[n]]['end'] = 0;
-  }
-
-  return { map: graph, table: table }
-}
-
-/**
- * Builds a segment from a specified data and mode.
- * If a mode is not specified, the more suitable will be used.
- *
- * @param  {String} data             Input data
- * @param  {Mode | String} modesHint Data mode
- * @return {Segment}                 Segment
- */
-function buildSingleSegment (data, modesHint) {
-  var mode$$2;
-  var bestMode = mode.getBestModeForData(data);
-
-  mode$$2 = mode.from(modesHint, bestMode);
-
-  // Make sure data can be encoded
-  if (mode$$2 !== mode.BYTE && mode$$2.bit < bestMode.bit) {
-    throw new Error('"' + data + '"' +
-      ' cannot be encoded with mode ' + mode.toString(mode$$2) +
-      '.\n Suggested mode is: ' + mode.toString(bestMode))
-  }
-
-  // Use Mode.BYTE if Kanji support is disabled
-  if (mode$$2 === mode.KANJI && !utils.isKanjiModeEnabled()) {
-    mode$$2 = mode.BYTE;
-  }
-
-  switch (mode$$2) {
-    case mode.NUMERIC:
-      return new numericData(data)
-
-    case mode.ALPHANUMERIC:
-      return new alphanumericData(data)
-
-    case mode.KANJI:
-      return new kanjiData(data)
-
-    case mode.BYTE:
-      return new byteData(data)
-  }
-}
-
-/**
- * Builds a list of segments from an array.
- * Array can contain Strings or Objects with segment's info.
- *
- * For each item which is a string, will be generated a segment with the given
- * string and the more appropriate encoding mode.
- *
- * For each item which is an object, will be generated a segment with the given
- * data and mode.
- * Objects must contain at least the property "data".
- * If property "mode" is not present, the more suitable mode will be used.
- *
- * @param  {Array} array Array of objects with segments data
- * @return {Array}       Array of Segments
- */
-exports.fromArray = function fromArray (array) {
-  return array.reduce(function (acc, seg) {
-    if (typeof seg === 'string') {
-      acc.push(buildSingleSegment(seg, null));
-    } else if (seg.data) {
-      acc.push(buildSingleSegment(seg.data, seg.mode));
-    }
-
-    return acc
-  }, [])
-};
-
-/**
- * Builds an optimized sequence of segments from a string,
- * which will produce the shortest possible bitstream.
- *
- * @param  {String} data    Input string
- * @param  {Number} version QR Code version
- * @return {Array}          Array of segments
- */
-exports.fromString = function fromString (data, version) {
-  var segs = getSegmentsFromString(data, utils.isKanjiModeEnabled());
-
-  var nodes = buildNodes(segs);
-  var graph = buildGraph(nodes, version);
-  var path = dijkstra_1.find_path(graph.map, 'start', 'end');
-
-  var optimizedSegs = [];
-  for (var i = 1; i < path.length - 1; i++) {
-    optimizedSegs.push(graph.table[path[i]].node);
-  }
-
-  return exports.fromArray(mergeSegments(optimizedSegs))
-};
-
-/**
- * Splits a string in various segments with the modes which
- * best represent their content.
- * The produced segments are far from being optimized.
- * The output of this function is only used to estimate a QR Code version
- * which may contain the data.
- *
- * @param  {string} data Input string
- * @return {Array}       Array of segments
- */
-exports.rawSplit = function rawSplit (data) {
-  return exports.fromArray(
-    getSegmentsFromString(data, utils.isKanjiModeEnabled())
-  )
-};
 });
-
-var segments_1 = segments.fromArray;
-var segments_2 = segments.fromString;
-var segments_3 = segments.rawSplit;
-
-//  commonjs-proxy:/Users/dtai/work/hanzo/el-controls/node_modules/qrcode/lib/core/bit-buffer.js
-
-//  commonjs-proxy:/Users/dtai/work/hanzo/el-controls/node_modules/qrcode/lib/core/bit-matrix.js
-
-//  commonjs-proxy:/Users/dtai/work/hanzo/el-controls/node_modules/qrcode/lib/core/alignment-pattern.js
-
-//  commonjs-proxy:/Users/dtai/work/hanzo/el-controls/node_modules/qrcode/lib/core/finder-pattern.js
-
-//  commonjs-proxy:/Users/dtai/work/hanzo/el-controls/node_modules/qrcode/lib/core/mask-pattern.js
-
-//  commonjs-proxy:/Users/dtai/work/hanzo/el-controls/node_modules/qrcode/lib/core/reed-solomon-encoder.js
-
-//  commonjs-proxy:/Users/dtai/work/hanzo/el-controls/node_modules/qrcode/lib/core/format-info.js
-
-//  commonjs-proxy:/Users/dtai/work/hanzo/el-controls/node_modules/qrcode/lib/core/segments.js
-
-// node_modules/qrcode/lib/core/qrcode.js
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/**
- * QRCode for JavaScript
- *
- * modified by Ryan Day for nodejs support
- * Copyright (c) 2011 Ryan Day
- *
- * Licensed under the MIT license:
- *   http://www.opensource.org/licenses/mit-license.php
- *
-//---------------------------------------------------------------------
-// QRCode for JavaScript
-//
-// Copyright (c) 2009 Kazuhiko Arase
-//
-// URL: http://www.d-project.com/
-//
-// Licensed under the MIT license:
-//   http://www.opensource.org/licenses/mit-license.php
-//
-// The word "QR Code" is registered trademark of
-// DENSO WAVE INCORPORATED
-//   http://www.denso-wave.com/qrcode/faqpatent-e.html
-//
-//---------------------------------------------------------------------
-*/
-
-/**
- * Add finder patterns bits to matrix
- *
- * @param  {BitMatrix} matrix  Modules matrix
- * @param  {Number}    version QR Code version
- */
-function setupFinderPattern (matrix, version) {
-  var size = matrix.size;
-  var pos = finderPattern.getPositions(version);
-
-  for (var i = 0; i < pos.length; i++) {
-    var row = pos[i][0];
-    var col = pos[i][1];
-
-    for (var r = -1; r <= 7; r++) {
-      if (row + r <= -1 || size <= row + r) continue
-
-      for (var c = -1; c <= 7; c++) {
-        if (col + c <= -1 || size <= col + c) continue
-
-        if ((r >= 0 && r <= 6 && (c === 0 || c === 6)) ||
-          (c >= 0 && c <= 6 && (r === 0 || r === 6)) ||
-          (r >= 2 && r <= 4 && c >= 2 && c <= 4)) {
-          matrix.set(row + r, col + c, true, true);
-        } else {
-          matrix.set(row + r, col + c, false, true);
-        }
-      }
-    }
-  }
-}
-
-/**
- * Add timing pattern bits to matrix
- *
- * Note: this function must be called before {@link setupAlignmentPattern}
- *
- * @param  {BitMatrix} matrix Modules matrix
- */
-function setupTimingPattern (matrix) {
-  var size = matrix.size;
-
-  for (var r = 8; r < size - 8; r++) {
-    var value = r % 2 === 0;
-    matrix.set(r, 6, value, true);
-    matrix.set(6, r, value, true);
-  }
-}
-
-/**
- * Add alignment patterns bits to matrix
- *
- * Note: this function must be called after {@link setupTimingPattern}
- *
- * @param  {BitMatrix} matrix  Modules matrix
- * @param  {Number}    version QR Code version
- */
-function setupAlignmentPattern (matrix, version) {
-  var pos = alignmentPattern.getPositions(version);
-
-  for (var i = 0; i < pos.length; i++) {
-    var row = pos[i][0];
-    var col = pos[i][1];
-
-    for (var r = -2; r <= 2; r++) {
-      for (var c = -2; c <= 2; c++) {
-        if (r === -2 || r === 2 || c === -2 || c === 2 ||
-          (r === 0 && c === 0)) {
-          matrix.set(row + r, col + c, true, true);
-        } else {
-          matrix.set(row + r, col + c, false, true);
-        }
-      }
-    }
-  }
-}
-
-/**
- * Add version info bits to matrix
- *
- * @param  {BitMatrix} matrix  Modules matrix
- * @param  {Number}    version QR Code version
- */
-function setupVersionInfo (matrix, version) {
-  var size = matrix.size;
-  var bits = version$2.getEncodedBits(version);
-  var row, col, mod;
-
-  for (var i = 0; i < 18; i++) {
-    row = Math.floor(i / 3);
-    col = i % 3 + size - 8 - 3;
-    mod = ((bits >> i) & 1) === 1;
-
-    matrix.set(row, col, mod, true);
-    matrix.set(col, row, mod, true);
-  }
-}
-
-/**
- * Add format info bits to matrix
- *
- * @param  {BitMatrix} matrix               Modules matrix
- * @param  {ErrorCorrectionLevel}    errorCorrectionLevel Error correction level
- * @param  {Number}    maskPattern          Mask pattern reference value
- */
-function setupFormatInfo (matrix, errorCorrectionLevel$$1, maskPattern$$1) {
-  var size = matrix.size;
-  var bits = formatInfo.getEncodedBits(errorCorrectionLevel$$1, maskPattern$$1);
-  var i, mod;
-
-  for (i = 0; i < 15; i++) {
-    mod = ((bits >> i) & 1) === 1;
-
-    // vertical
-    if (i < 6) {
-      matrix.set(i, 8, mod, true);
-    } else if (i < 8) {
-      matrix.set(i + 1, 8, mod, true);
-    } else {
-      matrix.set(size - 15 + i, 8, mod, true);
-    }
-
-    // horizontal
-    if (i < 8) {
-      matrix.set(8, size - i - 1, mod, true);
-    } else if (i < 9) {
-      matrix.set(8, 15 - i - 1 + 1, mod, true);
-    } else {
-      matrix.set(8, 15 - i - 1, mod, true);
-    }
-  }
-
-  // fixed module
-  matrix.set(size - 8, 8, 1, true);
-}
-
-/**
- * Add encoded data bits to matrix
- *
- * @param  {BitMatrix} matrix Modules matrix
- * @param  {Buffer}    data   Data codewords
- */
-function setupData (matrix, data) {
-  var size = matrix.size;
-  var inc = -1;
-  var row = size - 1;
-  var bitIndex = 7;
-  var byteIndex = 0;
-
-  for (var col = size - 1; col > 0; col -= 2) {
-    if (col === 6) col--;
-
-    while (true) {
-      for (var c = 0; c < 2; c++) {
-        if (!matrix.isReserved(row, col - c)) {
-          var dark = false;
-
-          if (byteIndex < data.length) {
-            dark = (((data[byteIndex] >>> bitIndex) & 1) === 1);
-          }
-
-          matrix.set(row, col - c, dark);
-          bitIndex--;
-
-          if (bitIndex === -1) {
-            byteIndex++;
-            bitIndex = 7;
-          }
-        }
-      }
-
-      row += inc;
-
-      if (row < 0 || size <= row) {
-        row -= inc;
-        inc = -inc;
-        break
-      }
-    }
-  }
-}
-
-/**
- * Create encoded codewords from data input
- *
- * @param  {Number}   version              QR Code version
- * @param  {ErrorCorrectionLevel}   errorCorrectionLevel Error correction level
- * @param  {ByteData} data                 Data input
- * @return {Buffer}                        Buffer containing encoded codewords
- */
-function createData (version, errorCorrectionLevel$$1, segments$$1) {
-  // Prepare data buffer
-  var buffer$$1 = new bitBuffer();
-
-  segments$$1.forEach(function (data) {
-    // prefix data with mode indicator (4 bits)
-    buffer$$1.put(data.mode.bit, 4);
-
-    // Prefix data with character count indicator.
-    // The character count indicator is a string of bits that represents the
-    // number of characters that are being encoded.
-    // The character count indicator must be placed after the mode indicator
-    // and must be a certain number of bits long, depending on the QR version
-    // and data mode
-    // @see {@link Mode.getCharCountIndicator}.
-    buffer$$1.put(data.getLength(), mode.getCharCountIndicator(data.mode, version));
-
-    // add binary data sequence to buffer
-    data.write(buffer$$1);
-  });
-
-  // Calculate required number of bits
-  var totalCodewords = utils.getSymbolTotalCodewords(version);
-  var ecTotalCodewords = errorCorrectionCode.getTotalCodewordsCount(version, errorCorrectionLevel$$1);
-  var dataTotalCodewordsBits = (totalCodewords - ecTotalCodewords) * 8;
-
-  // Add a terminator.
-  // If the bit string is shorter than the total number of required bits,
-  // a terminator of up to four 0s must be added to the right side of the string.
-  // If the bit string is more than four bits shorter than the required number of bits,
-  // add four 0s to the end.
-  if (buffer$$1.getLengthInBits() + 4 <= dataTotalCodewordsBits) {
-    buffer$$1.put(0, 4);
-  }
-
-  // If the bit string is fewer than four bits shorter, add only the number of 0s that
-  // are needed to reach the required number of bits.
-
-  // After adding the terminator, if the number of bits in the string is not a multiple of 8,
-  // pad the string on the right with 0s to make the string's length a multiple of 8.
-  while (buffer$$1.getLengthInBits() % 8 !== 0) {
-    buffer$$1.putBit(0);
-  }
-
-  // Add pad bytes if the string is still shorter than the total number of required bits.
-  // Extend the buffer to fill the data capacity of the symbol corresponding to
-  // the Version and Error Correction Level by adding the Pad Codewords 11101100 (0xEC)
-  // and 00010001 (0x11) alternately.
-  var remainingByte = (dataTotalCodewordsBits - buffer$$1.getLengthInBits()) / 8;
-  for (var i = 0; i < remainingByte; i++) {
-    buffer$$1.put(i % 2 ? 0x11 : 0xEC, 8);
-  }
-
-  return createCodewords(buffer$$1, version, errorCorrectionLevel$$1)
-}
-
-/**
- * Encode input data with Reed-Solomon and return codewords with
- * relative error correction bits
- *
- * @param  {BitBuffer} bitBuffer            Data to encode
- * @param  {Number}    version              QR Code version
- * @param  {ErrorCorrectionLevel} errorCorrectionLevel Error correction level
- * @return {Buffer}                         Buffer containing encoded codewords
- */
-function createCodewords (bitBuffer$$1, version, errorCorrectionLevel$$1) {
-  // Total codewords for this QR code version (Data + Error correction)
-  var totalCodewords = utils.getSymbolTotalCodewords(version);
-
-  // Total number of error correction codewords
-  var ecTotalCodewords = errorCorrectionCode.getTotalCodewordsCount(version, errorCorrectionLevel$$1);
-
-  // Total number of data codewords
-  var dataTotalCodewords = totalCodewords - ecTotalCodewords;
-
-  // Total number of blocks
-  var ecTotalBlocks = errorCorrectionCode.getBlocksCount(version, errorCorrectionLevel$$1);
-
-  // Calculate how many blocks each group should contain
-  var blocksInGroup2 = totalCodewords % ecTotalBlocks;
-  var blocksInGroup1 = ecTotalBlocks - blocksInGroup2;
-
-  var totalCodewordsInGroup1 = Math.floor(totalCodewords / ecTotalBlocks);
-
-  var dataCodewordsInGroup1 = Math.floor(dataTotalCodewords / ecTotalBlocks);
-  var dataCodewordsInGroup2 = dataCodewordsInGroup1 + 1;
-
-  // Number of EC codewords is the same for both groups
-  var ecCount = totalCodewordsInGroup1 - dataCodewordsInGroup1;
-
-  // Initialize a Reed-Solomon encoder with a generator polynomial of degree ecCount
-  var rs = new reedSolomonEncoder(ecCount);
-
-  var offset = 0;
-  var dcData = new Array(ecTotalBlocks);
-  var ecData = new Array(ecTotalBlocks);
-  var maxDataSize = 0;
-  var buffer$$1 = new buffer$1(bitBuffer$$1.buffer);
-
-  // Divide the buffer into the required number of blocks
-  for (var b = 0; b < ecTotalBlocks; b++) {
-    var dataSize = b < blocksInGroup1 ? dataCodewordsInGroup1 : dataCodewordsInGroup2;
-
-    // extract a block of data from buffer
-    dcData[b] = buffer$$1.slice(offset, offset + dataSize);
-
-    // Calculate EC codewords for this data block
-    ecData[b] = rs.encode(dcData[b]);
-
-    offset += dataSize;
-    maxDataSize = Math.max(maxDataSize, dataSize);
-  }
-
-  // Create final data
-  // Interleave the data and error correction codewords from each block
-  var data = new buffer$1(totalCodewords);
-  var index = 0;
-  var i, r;
-
-  // Add data codewords
-  for (i = 0; i < maxDataSize; i++) {
-    for (r = 0; r < ecTotalBlocks; r++) {
-      if (i < dcData[r].length) {
-        data[index++] = dcData[r][i];
-      }
-    }
-  }
-
-  // Apped EC codewords
-  for (i = 0; i < ecCount; i++) {
-    for (r = 0; r < ecTotalBlocks; r++) {
-      data[index++] = ecData[r][i];
-    }
-  }
-
-  return data
-}
-
-/**
- * Build QR Code symbol
- *
- * @param  {String} data                 Input string
- * @param  {Number} version              QR Code version
- * @param  {ErrorCorretionLevel} errorCorrectionLevel Error level
- * @param  {MaskPattern} maskPattern     Mask pattern
- * @return {Object}                      Object containing symbol data
- */
-function createSymbol (data, version, errorCorrectionLevel$$1, maskPattern$$1) {
-  var segments$$1;
-
-  if (isarray(data)) {
-    segments$$1 = segments.fromArray(data);
-  } else if (typeof data === 'string') {
-    var estimatedVersion = version;
-
-    if (!estimatedVersion) {
-      var rawSegments = segments.rawSplit(data);
-
-      // Estimate best version that can contain raw splitted segments
-      estimatedVersion = version$2.getBestVersionForData(rawSegments,
-        errorCorrectionLevel$$1);
-    }
-
-    // Build optimized segments
-    // If estimated version is undefined, try with the highest version
-    segments$$1 = segments.fromString(data, estimatedVersion || 40);
-  } else {
-    throw new Error('Invalid data')
-  }
-
-  // Get the min version that can contain data
-  var bestVersion = version$2.getBestVersionForData(segments$$1,
-      errorCorrectionLevel$$1);
-
-  // If no version is found, data cannot be stored
-  if (!bestVersion) {
-    throw new Error('The amount of data is too big to be stored in a QR Code')
-  }
-
-  // If not specified, use min version as default
-  if (!version) {
-    version = bestVersion;
-
-  // Check if the specified version can contain the data
-  } else if (version < bestVersion) {
-    throw new Error('\n' +
-      'The chosen QR Code version cannot contain this amount of data.\n' +
-      'Minimum version required to store current data is: ' + bestVersion + '.\n'
-    )
-  }
-
-  var dataBits = createData(version, errorCorrectionLevel$$1, segments$$1);
-
-  // Allocate matrix buffer
-  var moduleCount = utils.getSymbolSize(version);
-  var modules = new bitMatrix(moduleCount);
-
-  // Add function modules
-  setupFinderPattern(modules, version);
-  setupTimingPattern(modules);
-  setupAlignmentPattern(modules, version);
-
-  // Add temporary dummy bits for format info just to set them as reserved.
-  // This is needed to prevent these bits from being masked by {@link MaskPattern.applyMask}
-  // since the masking operation must be performed only on the encoding region.
-  // These blocks will be replaced with correct values later in code.
-  setupFormatInfo(modules, errorCorrectionLevel$$1, 0);
-
-  if (version >= 7) {
-    setupVersionInfo(modules, version);
-  }
-
-  // Add data codewords
-  setupData(modules, dataBits);
-
-  if (!maskPattern$$1) {
-    // Find best mask pattern
-    maskPattern$$1 = maskPattern.getBestMask(modules,
-      setupFormatInfo.bind(null, modules, errorCorrectionLevel$$1));
-  }
-
-  // Apply mask pattern
-  maskPattern.applyMask(maskPattern$$1, modules);
-
-  // Replace format info bits with correct values
-  setupFormatInfo(modules, errorCorrectionLevel$$1, maskPattern$$1);
-
-  return {
-    modules: modules,
-    version: version,
-    errorCorrectionLevel: errorCorrectionLevel$$1,
-    maskPattern: maskPattern$$1,
-    segments: segments$$1
-  }
-}
-
-/**
- * QR Code
- *
- * @param {String | Array} data                 Input data
- * @param {Object} options                      Optional configurations
- * @param {Number} options.version              QR Code version
- * @param {String} options.errorCorrectionLevel Error correction level
- * @param {Function} options.toSJISFunc         Helper func to convert utf8 to sjis
- */
-var create$2 = function create (data, options) {
-  if (typeof data === 'undefined' || data === '') {
-    throw new Error('No input text')
-  }
-
-  var errorCorrectionLevel$$1 = errorCorrectionLevel.M;
-  var version;
-  var mask;
-
-  if (typeof options !== 'undefined') {
-    // Use higher error correction level as default
-    errorCorrectionLevel$$1 = errorCorrectionLevel.from(options.errorCorrectionLevel, errorCorrectionLevel.M);
-    version = version$2.from(options.version);
-    mask = maskPattern.from(options.maskPattern);
-
-    if (options.toSJISFunc) {
-      utils.setToSJISFunction(options.toSJISFunc);
-    }
-  }
-
-  return createSymbol(data, version, errorCorrectionLevel$$1, mask)
-};
-
-var qrcode$2 = {
-	create: create$2
-};
-
-// node_modules/qrcode/lib/renderer/utils.js
-function hex2rgba (hex) {
-  if (typeof hex !== 'string') {
-    throw new Error('Color should be defined as hex string')
-  }
-
-  var hexCode = hex.slice().replace('#', '').split('');
-  if (hexCode.length < 3 || hexCode.length === 5 || hexCode.length > 8) {
-    throw new Error('Invalid hex color: ' + hex)
-  }
-
-  // Convert from short to long form (fff -> ffffff)
-  if (hexCode.length === 3 || hexCode.length === 4) {
-    hexCode = Array.prototype.concat.apply([], hexCode.map(function (c) {
-      return [c, c]
-    }));
-  }
-
-  // Add default alpha value
-  if (hexCode.length === 6) hexCode.push('F', 'F');
-
-  var hexValue = parseInt(hexCode.join(''), 16);
-
-  return {
-    r: (hexValue >> 24) & 255,
-    g: (hexValue >> 16) & 255,
-    b: (hexValue >> 8) & 255,
-    a: hexValue & 255
-  }
-}
-
-var getOptions = function getOptions (options) {
-  if (!options) options = {};
-  if (!options.color) options.color = {};
-
-  var margin = typeof options.margin === 'undefined' ||
-    options.margin === null ||
-    options.margin < 0 ? 4 : options.margin;
-
-  return {
-    scale: options.scale || 4,
-    margin: margin,
-    color: {
-      dark: hex2rgba(options.color.dark || '#000000ff'),
-      light: hex2rgba(options.color.light || '#ffffffff')
-    },
-    type: options.type,
-    rendererOpts: options.rendererOpts || {}
-  }
-};
-
-var qrToImageData = function qrToImageData (imgData, qr, margin, scale, color) {
-  var size = qr.modules.size;
-  var data = qr.modules.data;
-  var scaledMargin = margin * scale;
-  var symbolSize = size * scale + scaledMargin * 2;
-  var palette = [color.light, color.dark];
-
-  for (var i = 0; i < symbolSize; i++) {
-    for (var j = 0; j < symbolSize; j++) {
-      var posDst = (i * symbolSize + j) * 4;
-      var pxColor = color.light;
-
-      if (i >= scaledMargin && j >= scaledMargin &&
-        i < symbolSize - scaledMargin && j < symbolSize - scaledMargin) {
-        var iSrc = Math.floor((i - scaledMargin) / scale);
-        var jSrc = Math.floor((j - scaledMargin) / scale);
-        pxColor = palette[data[iSrc * size + jSrc] ? 1 : 0];
-      }
-
-      imgData[posDst++] = pxColor.r;
-      imgData[posDst++] = pxColor.g;
-      imgData[posDst++] = pxColor.b;
-      imgData[posDst] = pxColor.a;
-    }
-  }
-};
-
-var utils$2 = {
-	getOptions: getOptions,
-	qrToImageData: qrToImageData
-};
-
-//  commonjs-proxy:/Users/dtai/work/hanzo/el-controls/node_modules/qrcode/lib/renderer/utils.js
-
-var canvas = createCommonjsModule(function (module, exports) {
-// node_modules/qrcode/lib/renderer/canvas.js
-
-
-function clearCanvas (ctx, canvas, size) {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  if (!canvas.style) canvas.style = {};
-  canvas.height = size;
-  canvas.width = size;
-  canvas.style.height = size + 'px';
-  canvas.style.width = size + 'px';
-}
-
-function getCanvasElement () {
-  try {
-    return document.createElement('canvas')
-  } catch (e) {
-    throw new Error('You need to specify a canvas element')
-  }
-}
-
-exports.render = function render (qrData, canvas, options) {
-  var opts = options;
-  var canvasEl = canvas;
-
-  if (typeof opts === 'undefined' && (!canvas || !canvas.getContext)) {
-    opts = canvas;
-    canvas = undefined;
-  }
-
-  if (!canvas) {
-    canvasEl = getCanvasElement();
-  }
-
-  opts = utils$2.getOptions(opts);
-  var size = (qrData.modules.size + opts.margin * 2) * opts.scale;
-
-  var ctx = canvasEl.getContext('2d');
-  var image = ctx.createImageData(size, size);
-  utils$2.qrToImageData(image.data, qrData, opts.margin, opts.scale, opts.color);
-
-  clearCanvas(ctx, canvasEl, size);
-  ctx.putImageData(image, 0, 0);
-
-  return canvasEl
-};
-
-exports.renderToDataURL = function renderToDataURL (qrData, canvas, options) {
-  var opts = options;
-
-  if (typeof opts === 'undefined' && (!canvas || !canvas.getContext)) {
-    opts = canvas;
-    canvas = undefined;
-  }
-
-  if (!opts) opts = {};
-
-  var canvasEl = exports.render(qrData, canvas, opts);
-
-  var type = opts.type || 'image/png';
-  var rendererOpts = opts.rendererOpts || {};
-
-  return canvasEl.toDataURL(type, rendererOpts.quality)
-};
-});
-
-var canvas_1 = canvas.render;
-var canvas_2 = canvas.renderToDataURL;
-
-// node_modules/qrcode/lib/renderer/svg-render.js
-
-
-function getColorAttrib (color) {
-  return 'fill="rgb(' + [color.r, color.g, color.b].join(',') + ')" ' +
-    'fill-opacity="' + (color.a / 255).toFixed(2) + '"'
-}
-
-var render = function render (qrData, options) {
-  var opts = utils$2.getOptions(options);
-  var size = qrData.modules.size;
-  var data = qrData.modules.data;
-  var qrcodesize = (size + opts.margin * 2) * opts.scale;
-
-  var xmlStr = '<?xml version="1.0" encoding="utf-8"?>\n';
-  xmlStr += '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n';
-
-  xmlStr += '<svg version="1.1" baseProfile="full"';
-  xmlStr += ' width="' + qrcodesize + '" height="' + qrcodesize + '"';
-  xmlStr += ' viewBox="0 0 ' + qrcodesize + ' ' + qrcodesize + '"';
-  xmlStr += ' xmlns="http://www.w3.org/2000/svg"';
-  xmlStr += ' xmlns:xlink="http://www.w3.org/1999/xlink"';
-  xmlStr += ' xmlns:ev="http://www.w3.org/2001/xml-events">\n';
-
-  xmlStr += '<rect x="0" y="0" width="' + qrcodesize + '" height="' + qrcodesize + '" ' + getColorAttrib(opts.color.light) + ' />\n';
-  xmlStr += '<defs><rect id="p" width="' + opts.scale + '" height="' + opts.scale + '" /></defs>\n';
-  xmlStr += '<g ' + getColorAttrib(opts.color.dark) + '>\n';
-
-  for (var i = 0; i < size; i++) {
-    for (var j = 0; j < size; j++) {
-      if (!data[i * size + j]) continue
-
-      var x = (opts.margin + j) * opts.scale;
-      var y = (opts.margin + i) * opts.scale;
-      xmlStr += '<use x="' + x + '" y="' + y + '" xlink:href="#p" />\n';
-    }
-  }
-
-  xmlStr += '</g>\n';
-  xmlStr += '</svg>';
-
-  return xmlStr
-};
-
-var svgRender = {
-	render: render
-};
-
-//  commonjs-proxy:/Users/dtai/work/hanzo/el-controls/node_modules/qrcode/lib/core/qrcode.js
-
-//  commonjs-proxy:/Users/dtai/work/hanzo/el-controls/node_modules/qrcode/lib/renderer/canvas.js
-
-//  commonjs-proxy:/Users/dtai/work/hanzo/el-controls/node_modules/qrcode/lib/renderer/svg-render.js
-
-// node_modules/qrcode/lib/browser.js
-
-
-
-
-function renderCanvas (renderFunc, canvas$$1, text, opts, cb) {
-  var argsNum = arguments.length - 1;
-  if (argsNum < 2) {
-    throw new Error('Too few arguments provided')
-  }
-
-  if (argsNum === 2) {
-    cb = text;
-    text = canvas$$1;
-    canvas$$1 = opts = undefined;
-  } else if (argsNum === 3) {
-    if (canvas$$1.getContext && typeof cb === 'undefined') {
-      cb = opts;
-      opts = undefined;
-    } else {
-      cb = opts;
-      opts = text;
-      text = canvas$$1;
-      canvas$$1 = undefined;
-    }
-  }
-
-  if (typeof cb !== 'function') {
-    throw new Error('Callback required as last argument')
-  }
-
-  try {
-    var data = qrcode$2.create(text, opts);
-    cb(null, renderFunc(data, canvas$$1, opts));
-  } catch (e) {
-    cb(e);
-  }
-}
-
-var create$1 = qrcode$2.create;
-var toCanvas = renderCanvas.bind(null, canvas.render);
-var toDataURL = renderCanvas.bind(null, canvas.renderToDataURL);
-
-// only svg for now.
-var toString_1 = renderCanvas.bind(null, function (data, _, opts) {
-  return svgRender.render(data, opts)
-});
-
-var browser$1 = {
-	create: create$1,
-	toCanvas: toCanvas,
-	toDataURL: toDataURL,
-	toString: toString_1
-};
 
 // src/controls/qrcode.coffee
 var QRCode;
@@ -14440,22 +14776,22 @@ var qrcode = QRCode = (function(superClass) {
 
   QRCode.prototype.errorCorrectionLevel = 'M';
 
-  QRCode.prototype.scale = 10;
+  QRCode.prototype.scale = 4;
 
-  QRCode.prototype.margin = 10;
+  QRCode.prototype.margin = 4;
 
   QRCode.prototype.init = function() {
     if (!this.text) {
       QRCode.__super__.init.apply(this, arguments);
     }
-    return this.on('update', function() {
+    return this.on('updated', function() {
       var canvas;
       canvas = this.root.children[0];
-      return browser$1.toCanvas(canvas, this.getText(), {
+      return qrcode$1.toCanvas(canvas, this.getText(), {
         version: this.version,
         errorCorrectionLevel: this.errorCorrectionLevel,
-        scale: scale,
-        margin: margin
+        scale: this.scale,
+        margin: this.margin
       }, function(error) {
         if (error) {
           console.error(error);
@@ -14617,5 +14953,5 @@ exports.TextBox = TextBox$1;
 
 return exports;
 
-}({},buffer));
+}({}));
 //# sourceMappingURL=elcontrols.js.map
