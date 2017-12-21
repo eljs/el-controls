@@ -5,7 +5,7 @@
 &.input.input
 .input.input
   width: 100%
-  display: table
+  display: block
   margin-top: $themeElementPadding
 
   .labeled
@@ -35,6 +35,7 @@
   margin-top: ($themeElementPadding * 0.5)
   font-size: .75em
   line-height: 1em
+  width: 100%
 
 .error
   color: $themeErrorColor
@@ -80,7 +81,7 @@ input[type=password]
 textarea
   outline: none
   height: $themeElementHeight * 3
-  border: $inputBorderWidth solid $borderColor1
+  border: $themeInputBorderWidth solid $borderColor1
   border-radius: $themeBorderRadius
 
 input[type=text]
@@ -123,6 +124,7 @@ select
   &:disabled ~ .select-indicator
     opacity: .5
 
+// outlined boxes
 &.outlined
   input[type=text]
   input[type=password]
@@ -130,6 +132,7 @@ select
     border: $themeInputBorderWidth solid
     border-radius: $themeBorderRadius
 
+// copy
 .copy-text
   position: absolute
   right: 0
@@ -145,5 +148,30 @@ select
 .labeled ~ .copy-text
   top: $themeElementHeight * .875
 
+// currency
+.currency-container
+  display: flex
+
+.currency-amount
+  padding-right: $themeElementPadding * .25
+
 .right-aligned
   text-align: right
+
+.currency-code
+  display: flex
+  justify-content: flex-end
+  flex-direction: column
+
+  .currency-code-text
+    height: $themeElementHeight
+    line-height: $themeElementHeight
+    border-bottom: $themeInputBorderWidth solid
+    border-color: $themeBorderColor
+    border-width: $themeInputBorderWidth
+    transition: border-color $themeTransitionTime ease-in-out, color $themeTransitionTime ease-in-out
+
+.valid ~ .currency-code .currency-code-text
+  border-color: $themeGoodColor
+.invalid ~ .currency-code .currency-code-text
+  border-color: $themeErrorColor
