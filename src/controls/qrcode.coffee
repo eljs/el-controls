@@ -28,21 +28,26 @@ export default class QRCode extends Text
   # margin of white area around qr code in pixels
   margin: 4
 
+  events:
+    updated: ->
+      @onUpdated()
+    mount: ->
+      @onUpdated()
+
   init: ->
     if !@text
       super
 
-    @on 'updated', ->
-      canvas = @root.children[0]
-      qrcode.toCanvas canvas, @getText(),
-        version: @version
-        errorCorrectionLevel: @errorCorrectionLevel
-        scale: @scale
-        margin: @margin
-      , (error)->
-        if error
-          console.error error
-        console.log 'success!'
+  onUpdated: ->
+    canvas = @root.children[0]
+    qrcode.toCanvas canvas, @getText(),
+      version: @version
+      errorCorrectionLevel: @errorCorrectionLevel
+      scale: @scale
+      margin: @margin
+    , (error)->
+      if error
+        console.error error
 
   getText: ->
     return valueOrCall(@text) || @input.ref.get(input.name)
