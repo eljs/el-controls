@@ -41,10 +41,10 @@ export default class QRCode extends Text
   onUpdated: ->
     canvas = @root.children[0]
     qrcode.toCanvas canvas, @getText(),
-      version: @version
+      version: parseInt @version, 10
       errorCorrectionLevel: @errorCorrectionLevel
-      scale: @scale
-      margin: @margin
+      scale: parseInt @scale, 10
+      margin: parseInt @margin, 10
     , (error)->
       if error
         console.error error
