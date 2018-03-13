@@ -1,6 +1,7 @@
 import './utils/patches'
 
 export {
+  Captcha
   CheckBox
   Control
   Copy

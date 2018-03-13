@@ -1,3 +1,4 @@
+import Captcha       from './control'
 import CheckBox      from './checkbox'
 import Control       from './control'
 import Copy          from './copy'
@@ -11,6 +12,7 @@ import Text          from './text'
 import TextBox       from './textbox'
 
 export {
+  Captcha
   CheckBox
   Control
   Copy
