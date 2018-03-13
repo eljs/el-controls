@@ -1,7 +1,7 @@
-import Control from './control'
+import El       from 'el.js/src'
 
 # requires <script src='//www.google.com/recaptcha/api.js?render=explicit'/>
-export default class ReCaptcha extends Control
+export default class ReCaptcha extends El.View
   tag:  'recaptcha'
   html: ''
 
@@ -12,8 +12,6 @@ export default class ReCaptcha extends Control
   theme: 'light'
 
   init: ->
-    super
-
     requestAnimationFrame =>
       grecaptcha.render @root,
         sitekey: @recaptcha
