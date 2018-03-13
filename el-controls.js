@@ -1566,7 +1566,7 @@ function startsWith(str, value) {
  * @returns { Object } - the initial object
  */
 function defineProperty(el, key, value, options) {
-  Object.defineProperty(el, key, extend$2({
+  Object.defineProperty(el, key, extend$1({
     value,
     enumerable: false,
     writable: false,
@@ -1599,7 +1599,7 @@ const getPropDescriptor = (o, k) => Object.getOwnPropertyDescriptor(o, k);
  * console.log(obj) => {bar: 'bar', foo: 'bar'}
  *
  */
-function extend$2(src) {
+function extend$1(src) {
   let obj;
   let i = 1;
   const args = arguments;
@@ -1625,11 +1625,11 @@ var misc = Object.freeze({
 	defineProperty: defineProperty,
 	uid: uid,
 	getPropDescriptor: getPropDescriptor,
-	extend: extend$2
+	extend: extend$1
 });
 
 // node_modules/riot/lib/settings.js
-var settings$1 = extend$2(Object.create(brackets.settings), {
+var settings$1 = extend$1(Object.create(brackets.settings), {
   skipAnonymousTags: true,
   // handle the auto updates on any DOM event
   autoUpdate: true
@@ -2181,7 +2181,7 @@ function _each(dom, parent, expr) {
         if (expr.key && !isObject$$1)
           return !!tmpl(ifExpr, mkitem(expr, item, i, parent))
 
-        return !!tmpl(ifExpr, extend$2(Object.create(parent), item))
+        return !!tmpl(ifExpr, extend$1(Object.create(parent), item))
       });
     }
 
@@ -2675,8 +2675,8 @@ function mixin$1(name, mix, g) {
 
   // Setter
   store[name] = isFunction$2(mix) ?
-    extend$2(mix.prototype, store[name] || {}) && mix :
-    extend$2(store[name] || {}, mix);
+    extend$1(mix.prototype, store[name] || {}) && mix :
+    extend$1(store[name] || {}, mix);
 }
 
 /**
@@ -2760,7 +2760,7 @@ function setMountState(value) {
  */
 function createTag(impl = {}, conf = {}, innerHTML) {
   const tag = conf.context || {};
-  const opts = extend$2({}, conf.opts);
+  const opts = extend$1({}, conf.opts);
   const parent = conf.parent;
   const isLoop = conf.isLoop;
   const isAnonymous = !!conf.isAnonymous;
@@ -2811,7 +2811,7 @@ function createTag(impl = {}, conf = {}, innerHTML) {
   // it could be handy to use it also to improve the virtual dom rendering speed
   defineProperty(tag, '_riot_id', uid()); // base 1 allows test !t._riot_id
   defineProperty(tag, 'root', root);
-  extend$2(tag, { opts }, item);
+  extend$1(tag, { opts }, item);
   // protect the "tags" and "refs" property from being overridden
   defineProperty(tag, 'parent', parent || null);
   defineProperty(tag, 'tags', {});
@@ -2834,8 +2834,8 @@ function createTag(impl = {}, conf = {}, innerHTML) {
     const canTrigger = tag.isMounted && !skipAnonymous;
 
     // inherit properties from the parent tag
-    if (isAnonymous && parent) extend$2(tag, parent);
-    extend$2(tag, data);
+    if (isAnonymous && parent) extend$1(tag, parent);
+    extend$1(tag, data);
 
     updateOpts.apply(tag, [isLoop, parent, isAnonymous, nextOpts, instAttrs]);
 
@@ -2847,7 +2847,7 @@ function createTag(impl = {}, conf = {}, innerHTML) {
       return tag
     }
 
-    extend$2(opts, nextOpts);
+    extend$1(opts, nextOpts);
 
     if (canTrigger) tag.trigger('update', data);
     updateAllExpressions.call(tag, expressions);
@@ -3222,7 +3222,7 @@ function mountTo(root, tagName, opts, ctx) {
   const context = ctx || (implClass ? Object.create(implClass.prototype) : {});
   // cache the inner HTML to fix #855
   const innerHTML = root._innerHTML = root._innerHTML || root.innerHTML;
-  const conf = extend$2({ root, opts, context }, { parent: opts ? opts.parent : null });
+  const conf = extend$1({ root, opts, context }, { parent: opts ? opts.parent : null });
   let tag;
 
   if (impl && root) tag = createTag(impl, conf, innerHTML);
@@ -3286,7 +3286,7 @@ function makeVirtual(src, target) {
  * @param { Tag } - temporary tag context containing all the parent properties
  */
 function inheritParentProps() {
-  if (this.parent) return extend$2(Object.create(this), this.parent)
+  if (this.parent) return extend$1(Object.create(this), this.parent)
   return this
 }
 
@@ -3380,7 +3380,7 @@ const util = {
 
 
 
-var riot$1 = extend$2({}, core, {
+var riot$1 = extend$1({}, core, {
   observable: observable$1,
   settings,
   util,
@@ -4047,11 +4047,11 @@ var inputify$1 = inputify;
 
 // node_modules/el.js/src/views/form.coffee
 var Form;
-var extend$3 = function(child, parent) { for (var key in parent) { if (hasProp$2.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$2 = {}.hasOwnProperty;
+var extend$2 = function(child, parent) { for (var key in parent) { if (hasProp$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$1 = {}.hasOwnProperty;
 
 Form = (function(superClass) {
-  extend$3(Form, superClass);
+  extend$2(Form, superClass);
 
   function Form() {
     return Form.__super__.constructor.apply(this, arguments);
@@ -4111,11 +4111,11 @@ var Form$1 = Form;
 
 // node_modules/el.js/src/views/input.coffee
 var Input;
-var extend$4 = function(child, parent) { for (var key in parent) { if (hasProp$3.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$3 = {}.hasOwnProperty;
+var extend$3 = function(child, parent) { for (var key in parent) { if (hasProp$2.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$2 = {}.hasOwnProperty;
 
 Input = (function(superClass) {
-  extend$4(Input, superClass);
+  extend$3(Input, superClass);
 
   function Input() {
     return Input.__super__.constructor.apply(this, arguments);
@@ -5884,15 +5884,15 @@ var valueOrCall = function(valueOrFunc) {
 var Control;
 var _controlId;
 var scrolling;
-var extend$1 = function(child, parent) { for (var key in parent) { if (hasProp$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$1 = {}.hasOwnProperty;
+var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp = {}.hasOwnProperty;
 
 scrolling = false;
 
 _controlId = 0;
 
 var Control$1 = Control = (function(superClass) {
-  extend$1(Control, superClass);
+  extend(Control, superClass);
 
   function Control() {
     return Control.__super__.constructor.apply(this, arguments);
@@ -5973,11 +5973,11 @@ var html = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, v
 
 // src/controls/checkbox.coffee
 var CheckBox;
-var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp = {}.hasOwnProperty;
+var extend$4 = function(child, parent) { for (var key in parent) { if (hasProp$3.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$3 = {}.hasOwnProperty;
 
 var checkbox = CheckBox = (function(superClass) {
-  extend(CheckBox, superClass);
+  extend$4(CheckBox, superClass);
 
   function CheckBox() {
     return CheckBox.__super__.constructor.apply(this, arguments);
@@ -14799,10 +14799,10 @@ var qrcode = QRCode = (function(superClass) {
     var canvas;
     canvas = this.root.children[0];
     return qrcode$1.toCanvas(canvas, this.getText(), {
-      version: this.version,
+      version: parseInt(this.version, 10),
       errorCorrectionLevel: this.errorCorrectionLevel,
-      scale: this.scale,
-      margin: this.margin
+      scale: parseInt(this.scale, 10),
+      margin: parseInt(this.margin, 10)
     }, function(error) {
       if (error) {
         return console.error(error);
@@ -14948,6 +14948,7 @@ var TextBox$1 = TextBox;
 // src/index.coffee
 
 exports.Events = Events$1;
+exports.Captcha = Control$1;
 exports.CheckBox = checkbox;
 exports.Control = Control$1;
 exports.Copy = copy;
