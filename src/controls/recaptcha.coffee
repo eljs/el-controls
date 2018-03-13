@@ -1,5 +1,6 @@
 import Control from './control'
 
+# requires <script src='//www.google.com/recaptcha/api.js?render=explicit'/>
 export default class ReCaptcha extends Control
   tag:  'recaptcha'
   html: ''
