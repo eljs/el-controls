@@ -1,7 +1,6 @@
 import './utils/patches'
 
 export {
-  Captcha
   CheckBox
   Control
   Copy
@@ -9,6 +8,7 @@ export {
   Currency
   Dropdown
   QRCode
+  ReCaptcha
   Select
   StateSelect
   Text
