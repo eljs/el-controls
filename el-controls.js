@@ -388,7 +388,7 @@ var frameDuration;
 var id;
 var last;
 var queue;
-var requestAnimationFrame;
+var requestAnimationFrame$1;
 
 frameDuration = 1000 / 60;
 
@@ -398,7 +398,7 @@ last = 0;
 
 queue = [];
 
-var raf = requestAnimationFrame = function(callback) {
+var raf = requestAnimationFrame$1 = function(callback) {
   var next, now_;
   if (queue.length === 0) {
     now_ = browser();
@@ -1566,7 +1566,7 @@ function startsWith(str, value) {
  * @returns { Object } - the initial object
  */
 function defineProperty(el, key, value, options) {
-  Object.defineProperty(el, key, extend$1({
+  Object.defineProperty(el, key, extend$2({
     value,
     enumerable: false,
     writable: false,
@@ -1599,7 +1599,7 @@ const getPropDescriptor = (o, k) => Object.getOwnPropertyDescriptor(o, k);
  * console.log(obj) => {bar: 'bar', foo: 'bar'}
  *
  */
-function extend$1(src) {
+function extend$2(src) {
   let obj;
   let i = 1;
   const args = arguments;
@@ -1625,11 +1625,11 @@ var misc = Object.freeze({
 	defineProperty: defineProperty,
 	uid: uid,
 	getPropDescriptor: getPropDescriptor,
-	extend: extend$1
+	extend: extend$2
 });
 
 // node_modules/riot/lib/settings.js
-var settings$1 = extend$1(Object.create(brackets.settings), {
+var settings$1 = extend$2(Object.create(brackets.settings), {
   skipAnonymousTags: true,
   // handle the auto updates on any DOM event
   autoUpdate: true
@@ -2181,7 +2181,7 @@ function _each(dom, parent, expr) {
         if (expr.key && !isObject$$1)
           return !!tmpl(ifExpr, mkitem(expr, item, i, parent))
 
-        return !!tmpl(ifExpr, extend$1(Object.create(parent), item))
+        return !!tmpl(ifExpr, extend$2(Object.create(parent), item))
       });
     }
 
@@ -2675,8 +2675,8 @@ function mixin$1(name, mix, g) {
 
   // Setter
   store[name] = isFunction$2(mix) ?
-    extend$1(mix.prototype, store[name] || {}) && mix :
-    extend$1(store[name] || {}, mix);
+    extend$2(mix.prototype, store[name] || {}) && mix :
+    extend$2(store[name] || {}, mix);
 }
 
 /**
@@ -2760,7 +2760,7 @@ function setMountState(value) {
  */
 function createTag(impl = {}, conf = {}, innerHTML) {
   const tag = conf.context || {};
-  const opts = extend$1({}, conf.opts);
+  const opts = extend$2({}, conf.opts);
   const parent = conf.parent;
   const isLoop = conf.isLoop;
   const isAnonymous = !!conf.isAnonymous;
@@ -2811,7 +2811,7 @@ function createTag(impl = {}, conf = {}, innerHTML) {
   // it could be handy to use it also to improve the virtual dom rendering speed
   defineProperty(tag, '_riot_id', uid()); // base 1 allows test !t._riot_id
   defineProperty(tag, 'root', root);
-  extend$1(tag, { opts }, item);
+  extend$2(tag, { opts }, item);
   // protect the "tags" and "refs" property from being overridden
   defineProperty(tag, 'parent', parent || null);
   defineProperty(tag, 'tags', {});
@@ -2834,8 +2834,8 @@ function createTag(impl = {}, conf = {}, innerHTML) {
     const canTrigger = tag.isMounted && !skipAnonymous;
 
     // inherit properties from the parent tag
-    if (isAnonymous && parent) extend$1(tag, parent);
-    extend$1(tag, data);
+    if (isAnonymous && parent) extend$2(tag, parent);
+    extend$2(tag, data);
 
     updateOpts.apply(tag, [isLoop, parent, isAnonymous, nextOpts, instAttrs]);
 
@@ -2847,7 +2847,7 @@ function createTag(impl = {}, conf = {}, innerHTML) {
       return tag
     }
 
-    extend$1(opts, nextOpts);
+    extend$2(opts, nextOpts);
 
     if (canTrigger) tag.trigger('update', data);
     updateAllExpressions.call(tag, expressions);
@@ -3222,7 +3222,7 @@ function mountTo(root, tagName, opts, ctx) {
   const context = ctx || (implClass ? Object.create(implClass.prototype) : {});
   // cache the inner HTML to fix #855
   const innerHTML = root._innerHTML = root._innerHTML || root.innerHTML;
-  const conf = extend$1({ root, opts, context }, { parent: opts ? opts.parent : null });
+  const conf = extend$2({ root, opts, context }, { parent: opts ? opts.parent : null });
   let tag;
 
   if (impl && root) tag = createTag(impl, conf, innerHTML);
@@ -3286,7 +3286,7 @@ function makeVirtual(src, target) {
  * @param { Tag } - temporary tag context containing all the parent properties
  */
 function inheritParentProps() {
-  if (this.parent) return extend$1(Object.create(this), this.parent)
+  if (this.parent) return extend$2(Object.create(this), this.parent)
   return this
 }
 
@@ -3380,7 +3380,7 @@ const util = {
 
 
 
-var riot$1 = extend$1({}, core, {
+var riot$1 = extend$2({}, core, {
   observable: observable$1,
   settings,
   util,
@@ -4047,11 +4047,11 @@ var inputify$1 = inputify;
 
 // node_modules/el.js/src/views/form.coffee
 var Form;
-var extend$2 = function(child, parent) { for (var key in parent) { if (hasProp$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$1 = {}.hasOwnProperty;
+var extend$3 = function(child, parent) { for (var key in parent) { if (hasProp$2.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$2 = {}.hasOwnProperty;
 
 Form = (function(superClass) {
-  extend$2(Form, superClass);
+  extend$3(Form, superClass);
 
   function Form() {
     return Form.__super__.constructor.apply(this, arguments);
@@ -4111,11 +4111,11 @@ var Form$1 = Form;
 
 // node_modules/el.js/src/views/input.coffee
 var Input;
-var extend$3 = function(child, parent) { for (var key in parent) { if (hasProp$2.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$2 = {}.hasOwnProperty;
+var extend$4 = function(child, parent) { for (var key in parent) { if (hasProp$3.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$3 = {}.hasOwnProperty;
 
 Input = (function(superClass) {
-  extend$3(Input, superClass);
+  extend$4(Input, superClass);
 
   function Input() {
     return Input.__super__.constructor.apply(this, arguments);
@@ -4286,7 +4286,7 @@ var __assign = (undefined && undefined.__assign) || Object.assign || function(t)
 var root = typeof window !== 'undefined'
     ? window
     : typeof global !== 'undefined' ? global : undefined;
-var requestAnimationFrame$1 = root.requestAnimationFrame ||
+var requestAnimationFrame$2 = root.requestAnimationFrame ||
     (function (fn) { return root.setTimeout(fn, 16); });
 var cancelAnimationFrame$1 = root.cancelAnimationFrame ||
     (function (id) { return root.clearTimeout(id); });
@@ -4340,7 +4340,7 @@ var _tweens = [];
 var isStarted = false;
 var _autoPlay = false;
 var _tick;
-var _ticker = requestAnimationFrame$1;
+var _ticker = requestAnimationFrame$2;
 var _stopTicker = cancelAnimationFrame$1;
 var emptyFrame = 0;
 var powerModeThrottle = 120;
@@ -5884,15 +5884,15 @@ var valueOrCall = function(valueOrFunc) {
 var Control;
 var _controlId;
 var scrolling;
-var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp = {}.hasOwnProperty;
+var extend$1 = function(child, parent) { for (var key in parent) { if (hasProp$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$1 = {}.hasOwnProperty;
 
 scrolling = false;
 
 _controlId = 0;
 
 var Control$1 = Control = (function(superClass) {
-  extend(Control, superClass);
+  extend$1(Control, superClass);
 
   function Control() {
     return Control.__super__.constructor.apply(this, arguments);
@@ -5973,11 +5973,11 @@ var html = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, v
 
 // src/controls/checkbox.coffee
 var CheckBox;
-var extend$4 = function(child, parent) { for (var key in parent) { if (hasProp$3.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$3 = {}.hasOwnProperty;
+var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp = {}.hasOwnProperty;
 
 var checkbox = CheckBox = (function(superClass) {
-  extend$4(CheckBox, superClass);
+  extend(CheckBox, superClass);
 
   function CheckBox() {
     return CheckBox.__super__.constructor.apply(this, arguments);
@@ -14826,13 +14826,52 @@ var qrcode = QRCode = (function(superClass) {
 
 QRCode.register();
 
-// src/controls/state-select.coffee
-var StateSelect;
+// src/controls/recaptcha.coffee
+var ReCaptcha;
 var extend$13 = function(child, parent) { for (var key in parent) { if (hasProp$11.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 var hasProp$11 = {}.hasOwnProperty;
 
+var recaptcha = ReCaptcha = (function(superClass) {
+  extend$13(ReCaptcha, superClass);
+
+  function ReCaptcha() {
+    return ReCaptcha.__super__.constructor.apply(this, arguments);
+  }
+
+  ReCaptcha.prototype.tag = 'recaptcha';
+
+  ReCaptcha.prototype.html = '';
+
+  ReCaptcha.prototype.theme = 'light';
+
+  ReCaptcha.prototype.init = function() {
+    ReCaptcha.__super__.init.apply(this, arguments);
+    return requestAnimationFrame((function(_this) {
+      return function() {
+        return grecaptcha.render(_this.root, {
+          sitekey: _this.recaptcha,
+          theme: _this.theme,
+          callback: function(res) {
+            return _this.data.set('user.g-recaptcha-response', res);
+          }
+        });
+      };
+    })(this));
+  };
+
+  return ReCaptcha;
+
+})(Control$1);
+
+ReCaptcha.register();
+
+// src/controls/state-select.coffee
+var StateSelect;
+var extend$14 = function(child, parent) { for (var key in parent) { if (hasProp$12.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$12 = {}.hasOwnProperty;
+
 var stateSelect = StateSelect = (function(superClass) {
-  extend$13(StateSelect, superClass);
+  extend$14(StateSelect, superClass);
 
   function StateSelect() {
     return StateSelect.__super__.constructor.apply(this, arguments);
@@ -14907,11 +14946,11 @@ var html$7 = "\n<yield from=\"input\">\n  <textarea class=\"{invalid: errorMessa
 
 // src/controls/textbox.coffee
 var TextBox;
-var extend$14 = function(child, parent) { for (var key in parent) { if (hasProp$12.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$12 = {}.hasOwnProperty;
+var extend$15 = function(child, parent) { for (var key in parent) { if (hasProp$13.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$13 = {}.hasOwnProperty;
 
 TextBox = (function(superClass) {
-  extend$14(TextBox, superClass);
+  extend$15(TextBox, superClass);
 
   function TextBox() {
     return TextBox.__super__.constructor.apply(this, arguments);
@@ -14948,7 +14987,6 @@ var TextBox$1 = TextBox;
 // src/index.coffee
 
 exports.Events = Events$1;
-exports.Captcha = Control$1;
 exports.CheckBox = checkbox;
 exports.Control = Control$1;
 exports.Copy = copy;
@@ -14956,6 +14994,7 @@ exports.CountrySelect = countrySelect;
 exports.Currency = currency;
 exports.Dropdown = dropdown;
 exports.QRCode = qrcode;
+exports.ReCaptcha = recaptcha;
 exports.Select = Select$1;
 exports.StateSelect = stateSelect;
 exports.Text = Text$1;

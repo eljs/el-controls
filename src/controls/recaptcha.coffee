@@ -22,6 +22,3 @@ export default class ReCaptcha extends Control
           @data.set 'user.g-recaptcha-response', res
 
 ReCaptcha.register()
-
-export default ReCaptcha
-
