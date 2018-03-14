@@ -228,6 +228,9 @@
 .input .invalid ~ .currency-code .currency-code-text{
   border-color:#f22469;
 }
+.input recaptcha{
+  display:block;
+}
 .input.input.input .invalid,
 .input .input.input .invalid{
   border-color:#f22469;
