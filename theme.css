@@ -228,9 +228,6 @@
 .input .invalid ~ .currency-code .currency-code-text{
   border-color:#f22469;
 }
-.input recaptcha{
-  display:block;
-}
 .input.input.input .invalid,
 .input .input.input .invalid{
   border-color:#f22469;
@@ -609,4 +606,7 @@
 }
 .selectize-control{
   height:2em;
+}
+recaptcha{
+  display:block;
 }/*# sourceMappingURL=theme.css.map */
