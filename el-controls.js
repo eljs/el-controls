@@ -14845,23 +14845,34 @@ var recaptcha = ReCaptcha = (function(superClass) {
   ReCaptcha.prototype.theme = 'light';
 
   ReCaptcha.prototype.init = function() {
-    ReCaptcha.__super__.init.apply(this, arguments);
-    return requestAnimationFrame((function(_this) {
+    var tryRecaptcha;
+    if (!this.sitekey) {
+      console.error('recaptcha: no sitekey found');
+      return;
+    }
+    tryRecaptcha = (function(_this) {
       return function() {
-        return grecaptcha.render(_this.root, {
-          sitekey: _this.recaptcha,
-          theme: _this.theme,
-          callback: function(res) {
-            return _this.data.set('user.g-recaptcha-response', res);
+        return requestAnimationFrame(function() {
+          try {
+            return grecaptcha.render(_this.root, {
+              sitekey: _this.sitekey,
+              theme: _this.theme,
+              callback: function(res) {
+                return _this.data.set('user.g-recaptcha-response', res);
+              }
+            });
+          } catch (error) {
+            return tryRecaptcha();
           }
         });
       };
-    })(this));
+    })(this);
+    return tryRecaptcha();
   };
 
   return ReCaptcha;
 
-})(Control$1);
+})(El$1.View);
 
 ReCaptcha.register();
 

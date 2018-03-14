@@ -12,11 +12,21 @@ export default class ReCaptcha extends El.View
   theme: 'light'
 
   init: ->
-    requestAnimationFrame =>
-      grecaptcha.render @root,
-        sitekey: @recaptcha
-        theme:   @theme
-        callback: (res) =>
-          @data.set 'user.g-recaptcha-response', res
+    if !@sitekey
+      console.error 'recaptcha: no sitekey found'
+      return
+
+    tryRecaptcha = =>
+      requestAnimationFrame =>
+        try
+          grecaptcha.render @root,
+            sitekey: @sitekey
+            theme:   @theme
+            callback: (res) =>
+              @data.set 'user.g-recaptcha-response', res
+        catch e
+          tryRecaptcha()
+
+    tryRecaptcha()
 
 ReCaptcha.register()
