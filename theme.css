@@ -161,8 +161,7 @@
   top:1em;
   right:0.375em;
   font-size:0.75em;
-  -webkit-transform:translateY(-50%);
-          transform:translateY(-50%);
+  transform:translateY(-50%);
   pointer-events:none;
   display:block;
 }
@@ -182,21 +181,18 @@
   position:absolute;
   right:0;
   top:50%;
-  -webkit-transform:translateY(-50%);
-          transform:translateY(-50%);
+  transform:translateY(-50%);
 }
 .input .copy-text{
   position:absolute;
   right:0;
   top:1em;
-  -webkit-transform:translateY(-50%);
-          transform:translateY(-50%);
+  transform:translateY(-50%);
 }
 .input .labeled ~ .copy-text{
   top:1.75em;
 }
 .input .currency-container{
-  display:-webkit-box;
   display:flex;
 }
 .input .currency-amount{
@@ -206,13 +202,9 @@
   text-align:right;
 }
 .input .currency-code{
-  display:-webkit-box;
   display:flex;
-  -webkit-box-pack:end;
-          justify-content:flex-end;
-  -webkit-box-orient:vertical;
-  -webkit-box-direction:normal;
-          flex-direction:column;
+  justify-content:flex-end;
+  flex-direction:column;
 }
 .input .currency-code .currency-code-text{
   height:2em;
@@ -277,13 +269,11 @@
 }
 .checkbox [type="checkbox"]:not(:checked) + label:after{
   opacity:0;
-  -webkit-transform:scale(0);
-          transform:scale(0);
+  transform:scale(0);
 }
 .checkbox [type="checkbox"]:checked + label:after{
   opacity:1;
-  -webkit-transform:scale(1);
-          transform:scale(1);
+  transform:scale(1);
 }
 .checkbox [type="checkbox"]:disabled:not(:checked) + label:before,
 .checkbox [type="checkbox"]:disabled:checked + label:before{
