@@ -5,6 +5,7 @@ import CountrySelect from './country-select'
 import Currency      from './currency'
 import Dropdown      from './dropdown'
 import QRCode        from './qrcode'
+import ReadOnly      from './readonly'
 import ReCaptcha     from './recaptcha'
 import Select        from './selection'
 import StateSelect   from './state-select'
@@ -18,8 +19,9 @@ export {
   CountrySelect
   Currency
   Dropdown
-  ReCaptcha
   QRCode
+  ReadOnly
+  ReCaptcha
   Select
   StateSelect
   Text

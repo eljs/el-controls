@@ -1,9 +1,9 @@
-import Text from './text'
+import ReadOnly from './readonly'
 import html from '../../templates/controls/copy'
 
 import { valueOrCall } from '../utils/valueOrCall'
 
-export default class Copy extends Text
+export default class Copy extends ReadOnly
   tag: 'copy'
   html: html
 
@@ -14,16 +14,7 @@ export default class Copy extends Text
   copied: false
 
   init: ->
-    if !@text
-      super
-
-  getText: ->
-    return valueOrCall(@text) || @input.ref.get(input.name)
-
-  # readonly
-  change:  ->
-  _change: ->
-  getName: ->
+    super
 
   copy: (e)->
     text = @getText()
