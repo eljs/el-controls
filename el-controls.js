@@ -6051,11 +6051,11 @@ var html$1 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage,
 
 // src/controls/text.coffee
 var Text;
-var extend$6 = function(child, parent) { for (var key in parent) { if (hasProp$5.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$5 = {}.hasOwnProperty;
+var extend$7 = function(child, parent) { for (var key in parent) { if (hasProp$6.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$6 = {}.hasOwnProperty;
 
 var Text$1 = Text = (function(superClass) {
-  extend$6(Text, superClass);
+  extend$7(Text, superClass);
 
   function Text() {
     return Text.__super__.constructor.apply(this, arguments);
@@ -6104,6 +6104,46 @@ var Text$1 = Text = (function(superClass) {
 
 Text.register();
 
+// src/controls/readonly.coffee
+var ReadOnly;
+var extend$6 = function(child, parent) { for (var key in parent) { if (hasProp$5.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$5 = {}.hasOwnProperty;
+
+var ReadOnly$1 = ReadOnly = (function(superClass) {
+  extend$6(ReadOnly, superClass);
+
+  function ReadOnly() {
+    return ReadOnly.__super__.constructor.apply(this, arguments);
+  }
+
+  ReadOnly.prototype.tag = 'readonly';
+
+  ReadOnly.prototype.readonly = true;
+
+  ReadOnly.prototype.text = '';
+
+  ReadOnly.prototype.init = function() {
+    if (!this.text) {
+      return ReadOnly.__super__.init.apply(this, arguments);
+    }
+  };
+
+  ReadOnly.prototype.getText = function() {
+    return valueOrCall(this.text) || this.input.ref.get(input.name);
+  };
+
+  ReadOnly.prototype.change = function() {};
+
+  ReadOnly.prototype._change = function() {};
+
+  ReadOnly.prototype.getName = function() {};
+
+  return ReadOnly;
+
+})(Text$1);
+
+ReadOnly.register();
+
 // templates/controls/copy.pug
 var html$2 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" type=\"{ type }\" onclick=\"{ copy }\" riot-value=\"{ getText() }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"true\" placeholder=\"{ placeholder }\">\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: true }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield from=\"copy-text\">\n  <div class=\"copy-text\">{ copied ? 'Copied' : '&#128203;' }</div>\n</yield>\n<yield></yield>";
 
@@ -6128,20 +6168,8 @@ var copy = Copy = (function(superClass) {
   Copy.prototype.copied = false;
 
   Copy.prototype.init = function() {
-    if (!this.text) {
-      return Copy.__super__.init.apply(this, arguments);
-    }
+    return Copy.__super__.init.apply(this, arguments);
   };
-
-  Copy.prototype.getText = function() {
-    return valueOrCall(this.text) || this.input.ref.get(input.name);
-  };
-
-  Copy.prototype.change = function() {};
-
-  Copy.prototype._change = function() {};
-
-  Copy.prototype.getName = function() {};
 
   Copy.prototype.copy = function(e) {
     var err, msg, successful, text, textArea;
@@ -6177,7 +6205,7 @@ var copy = Copy = (function(superClass) {
 
   return Copy;
 
-})(Text$1);
+})(ReadOnly$1);
 
 Copy.register();
 
@@ -6186,11 +6214,11 @@ var html$3 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage
 
 // src/controls/selection.coffee
 var Select;
-var extend$8 = function(child, parent) { for (var key in parent) { if (hasProp$7.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$7 = {}.hasOwnProperty;
+var extend$9 = function(child, parent) { for (var key in parent) { if (hasProp$8.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$8 = {}.hasOwnProperty;
 
 var Select$1 = Select = (function(superClass) {
-  extend$8(Select, superClass);
+  extend$9(Select, superClass);
 
   function Select() {
     return Select.__super__.constructor.apply(this, arguments);
@@ -6250,11 +6278,11 @@ Select.register();
 
 // src/controls/country-select.coffee
 var CountrySelect;
-var extend$7 = function(child, parent) { for (var key in parent) { if (hasProp$6.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$6 = {}.hasOwnProperty;
+var extend$8 = function(child, parent) { for (var key in parent) { if (hasProp$7.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$7 = {}.hasOwnProperty;
 
 var countrySelect = CountrySelect = (function(superClass) {
-  extend$7(CountrySelect, superClass);
+  extend$8(CountrySelect, superClass);
 
   function CountrySelect() {
     return CountrySelect.__super__.constructor.apply(this, arguments);
@@ -6497,11 +6525,11 @@ var renderJSONCurrencyFromUI = function(code, uiCurrency) {
 
 // src/controls/currency.coffee
 var Currency;
-var extend$9 = function(child, parent) { for (var key in parent) { if (hasProp$8.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$8 = {}.hasOwnProperty;
+var extend$10 = function(child, parent) { for (var key in parent) { if (hasProp$9.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$9 = {}.hasOwnProperty;
 
 var currency = Currency = (function(superClass) {
-  extend$9(Currency, superClass);
+  extend$10(Currency, superClass);
 
   function Currency() {
     return Currency.__super__.constructor.apply(this, arguments);
@@ -7994,7 +8022,7 @@ function cmp(a, b) {
     return 0;
 }
 
-function extend$11(a, b) {
+function extend$12(a, b) {
     var i, n, k, object;
     for (i = 1, n = arguments.length; i < n; i++) {
         object = arguments[i];
@@ -8332,7 +8360,7 @@ Sifter.prototype.getSortFunction = function(search, options) {
 Sifter.prototype.prepareSearch = function(query, options) {
     if (typeof query === 'object') return query;
 
-    options = extend$11({}, options);
+    options = extend$12({}, options);
 
     var optionFields     = options.fields;
     var optionSort       = options.sort;
@@ -11369,15 +11397,15 @@ var html$5 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage
 var Select$2;
 var coolDown;
 var isABrokenBrowser;
-var extend$10 = function(child, parent) { for (var key in parent) { if (hasProp$9.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$9 = {}.hasOwnProperty;
+var extend$11 = function(child, parent) { for (var key in parent) { if (hasProp$10.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$10 = {}.hasOwnProperty;
 
 isABrokenBrowser = window.navigator.userAgent.indexOf('MSIE') > 0 || window.navigator.userAgent.indexOf('Trident') > 0;
 
 coolDown = -1;
 
 var dropdown = Select$2 = (function(superClass) {
-  extend$10(Select, superClass);
+  extend$11(Select, superClass);
 
   function Select() {
     return Select.__super__.constructor.apply(this, arguments);
@@ -14756,11 +14784,11 @@ module.exports = Array.isArray || function (arr) {
 
 // src/controls/qrcode.coffee
 var QRCode;
-var extend$12 = function(child, parent) { for (var key in parent) { if (hasProp$10.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$10 = {}.hasOwnProperty;
+var extend$13 = function(child, parent) { for (var key in parent) { if (hasProp$11.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$11 = {}.hasOwnProperty;
 
 var qrcode = QRCode = (function(superClass) {
-  extend$12(QRCode, superClass);
+  extend$13(QRCode, superClass);
 
   function QRCode() {
     return QRCode.__super__.constructor.apply(this, arguments);
@@ -14790,9 +14818,7 @@ var qrcode = QRCode = (function(superClass) {
   };
 
   QRCode.prototype.init = function() {
-    if (!this.text) {
-      return QRCode.__super__.init.apply(this, arguments);
-    }
+    return QRCode.__super__.init.apply(this, arguments);
   };
 
   QRCode.prototype.onUpdated = function() {
@@ -14810,29 +14836,19 @@ var qrcode = QRCode = (function(superClass) {
     });
   };
 
-  QRCode.prototype.getText = function() {
-    return valueOrCall(this.text) || this.input.ref.get(input.name);
-  };
-
-  QRCode.prototype.change = function() {};
-
-  QRCode.prototype._change = function() {};
-
-  QRCode.prototype.getName = function() {};
-
   return QRCode;
 
-})(Text$1);
+})(ReadOnly$1);
 
 QRCode.register();
 
 // src/controls/recaptcha.coffee
 var ReCaptcha;
-var extend$13 = function(child, parent) { for (var key in parent) { if (hasProp$11.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$11 = {}.hasOwnProperty;
+var extend$14 = function(child, parent) { for (var key in parent) { if (hasProp$12.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$12 = {}.hasOwnProperty;
 
 var recaptcha = ReCaptcha = (function(superClass) {
-  extend$13(ReCaptcha, superClass);
+  extend$14(ReCaptcha, superClass);
 
   function ReCaptcha() {
     return ReCaptcha.__super__.constructor.apply(this, arguments);
@@ -14878,11 +14894,11 @@ ReCaptcha.register();
 
 // src/controls/state-select.coffee
 var StateSelect;
-var extend$14 = function(child, parent) { for (var key in parent) { if (hasProp$12.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$12 = {}.hasOwnProperty;
+var extend$15 = function(child, parent) { for (var key in parent) { if (hasProp$13.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$13 = {}.hasOwnProperty;
 
 var stateSelect = StateSelect = (function(superClass) {
-  extend$14(StateSelect, superClass);
+  extend$15(StateSelect, superClass);
 
   function StateSelect() {
     return StateSelect.__super__.constructor.apply(this, arguments);
@@ -14957,11 +14973,11 @@ var html$7 = "\n<yield from=\"input\">\n  <textarea class=\"{invalid: errorMessa
 
 // src/controls/textbox.coffee
 var TextBox;
-var extend$15 = function(child, parent) { for (var key in parent) { if (hasProp$13.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-var hasProp$13 = {}.hasOwnProperty;
+var extend$16 = function(child, parent) { for (var key in parent) { if (hasProp$14.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+var hasProp$14 = {}.hasOwnProperty;
 
 TextBox = (function(superClass) {
-  extend$15(TextBox, superClass);
+  extend$16(TextBox, superClass);
 
   function TextBox() {
     return TextBox.__super__.constructor.apply(this, arguments);
@@ -15005,6 +15021,7 @@ exports.CountrySelect = countrySelect;
 exports.Currency = currency;
 exports.Dropdown = dropdown;
 exports.QRCode = qrcode;
+exports.ReadOnly = ReadOnly$1;
 exports.ReCaptcha = recaptcha;
 exports.Select = Select$1;
 exports.StateSelect = stateSelect;
