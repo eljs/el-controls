@@ -1,10 +1,10 @@
-import Text from './text'
+import ReadOnly from './readonly'
 import html from '../../templates/controls/qrcode'
 
 import { valueOrCall } from '../utils/valueOrCall'
 import qrcode from 'qrcode/build/qrcode.js'
 
-export default class QRCode extends Text
+export default class QRCode extends ReadOnly
   tag: 'qrcode'
   html: html
 
@@ -35,8 +35,7 @@ export default class QRCode extends Text
       @onUpdated()
 
   init: ->
-    if !@text
-      super
+    super
 
   onUpdated: ->
     canvas = @root.children[0]
@@ -48,13 +47,5 @@ export default class QRCode extends Text
     , (error)->
       if error
         console.error error
-
-  getText: ->
-    return valueOrCall(@text) || @input.ref.get(input.name)
-
-  # readonly
-  change:  ->
-  _change: ->
-  getName: ->
 
 QRCode.register()
