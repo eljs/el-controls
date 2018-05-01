@@ -432,6 +432,7 @@ var ElControls = (function (exports) {
 
   // src/utils/patches.coffee
 
+  // Shims/Polyfills
   if (window.Promise == null) {
     window.Promise = Promise$2;
   }
@@ -3902,10 +3903,87 @@ var ElControls = (function (exports) {
   };
 
   View = (function() {
-    View.register = function() {
-      return new this;
-    };
+    class View {
+      static register() {
+        return new this;
+      }
 
+      constructor() {
+        var newProto;
+        newProto = collapsePrototype({}, this);
+        this.beforeInit();
+        riot$1.tag(this.tag, this.html, this.css, this.attrs, function(opts) {
+          var handler, k, name, parent, proto, ref, ref1, self, v;
+          if (newProto != null) {
+            for (k in newProto) {
+              v = newProto[k];
+              if (isFunction$1(v)) {
+                ((v) => {
+                  var oldFn;
+                  if (this[k] != null) {
+                    oldFn = this[k];
+                    return this[k] = () => {
+                      oldFn.apply(this, arguments);
+                      return v.apply(this, arguments);
+                    };
+                  } else {
+                    return this[k] = () => {
+                      return v.apply(this, arguments);
+                    };
+                  }
+                })(v);
+              } else {
+                this[k] = v;
+              }
+            }
+          }
+          // Loop up the parents setting parent as the prototype so you have access to vars on it
+          // Might be terrible, might be great, who knows?
+          self = this;
+          parent = (ref = self.parent) != null ? ref : opts.parent;
+          proto = Object.getPrototypeOf(self);
+          while (parent && parent !== proto) {
+            setPrototypeOf(self, parent);
+            self = parent;
+            parent = self.parent;
+            proto = Object.getPrototypeOf(self);
+          }
+          if (opts != null) {
+            for (k in opts) {
+              v = opts[k];
+              this[k] = v;
+            }
+          }
+          if (this.events != null) {
+            ref1 = this.events;
+            for (name in ref1) {
+              handler = ref1[name];
+              ((name, handler) => {
+                if (typeof handler === 'string') {
+                  return this.on(name, () => {
+                    return this[handler].apply(this, arguments);
+                  });
+                } else {
+                  return this.on(name, () => {
+                    return handler.apply(this, arguments);
+                  });
+                }
+              })(name, handler);
+            }
+          }
+          return this.init(opts);
+        });
+      }
+
+      beforeInit() {}
+
+      init() {}
+
+      scheduleUpdate() {
+        return scheduleUpdate(this);
+      }
+
+    }
     View.prototype.tag = '';
 
     View.prototype.html = '';
@@ -3916,87 +3994,9 @@ var ElControls = (function (exports) {
 
     View.prototype.events = null;
 
-    function View() {
-      var newProto;
-      newProto = collapsePrototype({}, this);
-      this.beforeInit();
-      riot$1.tag(this.tag, this.html, this.css, this.attrs, function(opts) {
-        var fn, handler, k, name, parent, proto, ref, ref1, self, v;
-        if (newProto != null) {
-          for (k in newProto) {
-            v = newProto[k];
-            if (isFunction$1(v)) {
-              (function(_this) {
-                return (function(v) {
-                  var oldFn;
-                  if (_this[k] != null) {
-                    oldFn = _this[k];
-                    return _this[k] = function() {
-                      oldFn.apply(_this, arguments);
-                      return v.apply(_this, arguments);
-                    };
-                  } else {
-                    return _this[k] = function() {
-                      return v.apply(_this, arguments);
-                    };
-                  }
-                });
-              })(this)(v);
-            } else {
-              this[k] = v;
-            }
-          }
-        }
-        self = this;
-        parent = (ref = self.parent) != null ? ref : opts.parent;
-        proto = Object.getPrototypeOf(self);
-        while (parent && parent !== proto) {
-          setPrototypeOf(self, parent);
-          self = parent;
-          parent = self.parent;
-          proto = Object.getPrototypeOf(self);
-        }
-        if (opts != null) {
-          for (k in opts) {
-            v = opts[k];
-            this[k] = v;
-          }
-        }
-        if (this.events != null) {
-          ref1 = this.events;
-          fn = (function(_this) {
-            return function(name, handler) {
-              if (typeof handler === 'string') {
-                return _this.on(name, function() {
-                  return _this[handler].apply(_this, arguments);
-                });
-              } else {
-                return _this.on(name, function() {
-                  return handler.apply(_this, arguments);
-                });
-              }
-            };
-          })(this);
-          for (name in ref1) {
-            handler = ref1[name];
-            fn(name, handler);
-          }
-        }
-        return this.init(opts);
-      });
-    }
-
-    View.prototype.beforeInit = function() {};
-
-    View.prototype.init = function() {};
-
-    View.prototype.scheduleUpdate = function() {
-      return scheduleUpdate(this);
-    };
-
     return View;
 
-  })();
+  }).call(undefined);
 
   var View$1 = View;
 
@@ -4007,61 +4007,63 @@ var ElControls = (function (exports) {
     return (o != null) && isFunction$1(o.ref);
   };
 
-  inputify = function(data, configs) {
-    var config, fn, inputs, name, ref;
-    if (configs == null) {
-      configs = {};
-    }
+  // inputify takes a model and a configuration and returns observable values
+  //   data: an generic dictionary object that you want to generate observable properties from
+  //   configs: a mapping of model values to a middleware stack eg.
+  //       field1: middleware
+  //       where middleware is an array of (value, name, model)-> value
+  inputify = function(data, configs = {}) {
+    var config, inputs, name, ref;
     ref = data;
     if (!isRef(ref)) {
       ref = refer$1(data);
     }
     inputs = {};
-    fn = function(name, config) {
-      var fn1, i, input, len, middleware, middlewareFn, validate;
-      middleware = [];
-      if (config && config.length > 0) {
-        fn1 = function(name, middlewareFn) {
-          return middleware.push(function(pair) {
-            ref = pair[0], name = pair[1];
-            return Promise$2.resolve(pair).then(function(pair) {
-              return middlewareFn.call(pair[0], pair[0].get(pair[1]), pair[1], pair[0]);
-            }).then(function(v) {
-              ref.set(name, v);
-              return pair;
-            });
-          });
-        };
-        for (i = 0, len = config.length; i < len; i++) {
-          middlewareFn = config[i];
-          fn1(name, middlewareFn);
-        }
-      }
-      middleware.push(function(pair) {
-        ref = pair[0], name = pair[1];
-        return Promise$2.resolve(ref.get(name));
-      });
-      validate = function(ref, name) {
-        var j, len1, p;
-        p = Promise$2.resolve([ref, name]);
-        for (j = 0, len1 = middleware.length; j < len1; j++) {
-          middlewareFn = middleware[j];
-          p = p.then(middlewareFn);
-        }
-        return p;
-      };
-      input = {
-        name: name,
-        ref: ref,
-        config: config,
-        validate: validate
-      };
-      observable(input);
-      return inputs[name] = input;
-    };
     for (name in configs) {
       config = configs[name];
-      fn(name, config);
+      (function(name, config) {
+        var i, input, len, middleware, middlewareFn, validate;
+        middleware = [];
+        if (config && config.length > 0) {
+          for (i = 0, len = config.length; i < len; i++) {
+            middlewareFn = config[i];
+            (function(name, middlewareFn) {
+              return middleware.push(function(pair) {
+                [ref, name] = pair;
+                return Promise$2.resolve(pair).then(function(pair) {
+                  return middlewareFn.call(pair[0], pair[0].get(pair[1]), pair[1], pair[0]);
+                }).then(function(v) {
+                  ref.set(name, v);
+                  return pair;
+                });
+              });
+            })(name, middlewareFn);
+          }
+        }
+        middleware.push(function(pair) {
+          [ref, name] = pair;
+          // on success resolve the value in the ref
+          return Promise$2.resolve(ref.get(name));
+        });
+        validate = function(ref, name) {
+          var j, len1, p;
+          p = Promise$2.resolve([ref, name]);
+          for (j = 0, len1 = middleware.length; j < len1; j++) {
+            middlewareFn = middleware[j];
+            p = p.then(middlewareFn);
+          }
+          return p;
+        };
+        input = {
+          name: name,
+          ref: ref,
+          config: config,
+          validate: validate
+        };
+        // make the input an observable so both form and input can observe it
+        observable(input);
+        return inputs[name] = input;
+      })(name, config);
     }
     return inputs;
   };
@@ -4069,44 +4071,36 @@ var ElControls = (function (exports) {
   var inputify$1 = inputify;
 
   // node_modules/el.js/src/views/form.coffee
-  var Form,
-    extend$1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
+  var Form;
 
-  Form = (function(superClass) {
-    extend$1(Form, superClass);
-
-    function Form() {
-      return Form.__super__.constructor.apply(this, arguments);
-    }
-
-    Form.prototype.html = '<yield/>';
-
-    Form.prototype.initInputs = function() {
-      this.inputs = {};
-      if (this.configs != null) {
-        return this.inputs = inputify$1(this.data, this.configs);
-      }
-    };
-
-    Form.prototype.init = function() {
-      return this.initInputs();
-    };
-
-    Form.prototype.submit = function(e) {
-      var input, name, p, pRef, ps, ref;
-      ps = [];
-      ref = this.inputs;
-      for (name in ref) {
-        input = ref[name];
-        pRef = {};
-        input.trigger('validate', pRef);
-        if (pRef.p != null) {
-          ps.push(pRef.p);
+  Form = (function() {
+    // Supported Events:
+    //   submit - fired when form is submitted
+    class Form extends View$1 {
+      initInputs() {
+        this.inputs = {};
+        if (this.configs != null) {
+          return this.inputs = inputify$1(this.data, this.configs);
         }
       }
-      p = Promise$2.settle(ps).then((function(_this) {
-        return function(results) {
+
+      init() {
+        return this.initInputs();
+      }
+
+      submit(e) {
+        var input, name, p, pRef, ps, ref;
+        ps = [];
+        ref = this.inputs;
+        for (name in ref) {
+          input = ref[name];
+          pRef = {};
+          input.trigger('validate', pRef);
+          if (pRef.p != null) {
+            ps.push(pRef.p);
+          }
+        }
+        p = Promise$2.settle(ps).then((results) => {
           var i, len, result;
           for (i = 0, len = results.length; i < len; i++) {
             result = results[i];
@@ -4114,132 +4108,143 @@ var ElControls = (function (exports) {
               return;
             }
           }
-          return _this._submit.apply(_this, arguments);
-        };
-      })(this));
-      if (e != null) {
-        e.preventDefault();
-        e.stopPropagation();
+          return this._submit.apply(this, arguments);
+        });
+        if (e != null) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        return p;
       }
-      return p;
-    };
 
-    Form.prototype._submit = function() {};
+      _submit() {}
+
+    }
+    // input for validate
+    // configs: null
+
+    // output from validate that's used for configuring InputViews
+    // inputs: null
+
+    // ref to use for validate
+    // data: null
+
+    // default transclude contents
+    Form.prototype.html = '<yield/>';
 
     return Form;
 
-  })(View$1);
+  }).call(undefined);
 
+  // do actual submit stuff
   var Form$1 = Form;
 
   // node_modules/el.js/src/views/input.coffee
-  var Input,
-    extend$2 = function(child, parent) { for (var key in parent) { if (hasProp$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$1 = {}.hasOwnProperty;
+  var Input;
 
-  Input = (function(superClass) {
-    extend$2(Input, superClass);
+  Input = (function() {
+    // Input binds to specific fields in the data tree and automatically
+    // updates the UI from the data tree on update and updates fields in
+    // the data tree on user interaction.
+    class Input extends View$1 {
+      init() {
+        var ref1, ref2;
+        if ((this.input == null) && (this.lookup == null) && (this.bind == null)) {
+          throw new Error('No input or bind provided');
+        }
+        if ((this.input == null) && (this.inputs != null)) {
+          this.input = this.inputs[(ref1 = this.lookup) != null ? ref1 : this.bind];
+        }
+        if (this.input == null) {
+          this.input = {
+            name: (ref2 = this.lookup) != null ? ref2 : this.bind,
+            ref: this.data,
+            validate: function(ref, name) {
+              return Promise.resolve([ref, name]);
+            }
+          };
+          observable(this.input);
+        }
+        this.input.on('validate', (pRef) => {
+          return this.validate(pRef);
+        });
+        // auto refresh on update of field
+        return this.input.ref.on('set', (n, v1, v2) => {
+          if (n === this.input.name && v1 !== v2) {
+            this._change(v1, true);
+            return this.scheduleUpdate();
+          }
+        });
+      }
 
-    function Input() {
-      return Input.__super__.constructor.apply(this, arguments);
+      getValue(event) {
+        return event.target.value;
+      }
+
+      change(event) {
+        var value;
+        value = this.getValue(event);
+        return this._change(value);
+      }
+
+      _change(value, forced) {
+        var name, ref;
+        ({ref, name} = this.input);
+        if (!forced && value === ref.get(name)) {
+          return;
+        }
+        this.input.ref.set(name, value);
+        this.clearError();
+        return this.validate();
+      }
+
+      error(err) {
+        var ref1;
+        return this.errorMessage = (ref1 = err != null ? err.message : void 0) != null ? ref1 : err;
+      }
+
+      changed() {}
+
+      clearError() {
+        return this.errorMessage = '';
+      }
+
+      // support pass by reference since observable.trigger doesn't return things
+      validate(pRef) {
+        var p;
+        p = this.input.validate(this.input.ref, this.input.name).then((value) => {
+          this.changed(value);
+          this.valid = true;
+          return this.scheduleUpdate();
+        }).catch((err) => {
+          this.error(err);
+          this.valid = false;
+          this.scheduleUpdate();
+          throw err;
+        });
+        if (pRef != null) {
+          pRef.p = p;
+        }
+        return p;
+      }
+
     }
-
     Input.prototype.input = null;
 
+    // Is the input validated?
+
+    // Input state is calculated like this:
+    // initial: @value = false
+    // valid:   @value = true
+    // invald:  @value = false && @errorMessage != ''
     Input.prototype.valid = false;
 
+    // Records the error from any validation middleware if any
     Input.prototype.errorMessage = '';
-
-    Input.prototype.init = function() {
-      var ref1, ref2;
-      if ((this.input == null) && (this.lookup == null) && (this.bind == null)) {
-        throw new Error('No input or bind provided');
-      }
-      if ((this.input == null) && (this.inputs != null)) {
-        this.input = this.inputs[(ref1 = this.lookup) != null ? ref1 : this.bind];
-      }
-      if (this.input == null) {
-        this.input = {
-          name: (ref2 = this.lookup) != null ? ref2 : this.bind,
-          ref: this.data,
-          validate: function(ref, name) {
-            return Promise.resolve([ref, name]);
-          }
-        };
-        observable(this.input);
-      }
-      this.input.on('validate', (function(_this) {
-        return function(pRef) {
-          return _this.validate(pRef);
-        };
-      })(this));
-      return this.input.ref.on('set', (function(_this) {
-        return function(n, v1, v2) {
-          if (n === _this.input.name && v1 !== v2) {
-            _this._change(v1, true);
-            return _this.scheduleUpdate();
-          }
-        };
-      })(this));
-    };
-
-    Input.prototype.getValue = function(event) {
-      return event.target.value;
-    };
-
-    Input.prototype.change = function(event) {
-      var value;
-      value = this.getValue(event);
-      return this._change(value);
-    };
-
-    Input.prototype._change = function(value, forced) {
-      var name, ref, ref1;
-      ref1 = this.input, ref = ref1.ref, name = ref1.name;
-      if (!forced && value === ref.get(name)) {
-        return;
-      }
-      this.input.ref.set(name, value);
-      this.clearError();
-      return this.validate();
-    };
-
-    Input.prototype.error = function(err) {
-      var ref1;
-      return this.errorMessage = (ref1 = err != null ? err.message : void 0) != null ? ref1 : err;
-    };
-
-    Input.prototype.changed = function() {};
-
-    Input.prototype.clearError = function() {
-      return this.errorMessage = '';
-    };
-
-    Input.prototype.validate = function(pRef) {
-      var p;
-      p = this.input.validate(this.input.ref, this.input.name).then((function(_this) {
-        return function(value) {
-          _this.changed(value);
-          _this.valid = true;
-          return _this.scheduleUpdate();
-        };
-      })(this))["catch"]((function(_this) {
-        return function(err) {
-          _this.error(err);
-          _this.valid = false;
-          _this.scheduleUpdate();
-          throw err;
-        };
-      })(this));
-      if (pRef != null) {
-        pRef.p = p;
-      }
-      return p;
-    };
 
     return Input;
 
-  })(View$1);
+  }).call(undefined);
 
   var Input$1 = Input;
 
@@ -4254,9 +4259,10 @@ var ElControls = (function (exports) {
   };
 
   // node_modules/el.js/src/index.coffee
-  var El, fn, k, v;
+  var El, k, v;
 
   El = {
+    // deprecated
     Views: Views$1,
     View: Views$1.View,
     Form: Views$1.Form,
@@ -4268,16 +4274,15 @@ var ElControls = (function (exports) {
     }
   };
 
-  fn = function(k, v) {
-    if (isFunction$1(v)) {
-      return El[k] = function() {
-        return v.apply(riot$1, arguments);
-      };
-    }
-  };
   for (k in riot$1) {
     v = riot$1[k];
-    fn(k, v);
+    (function(k, v) {
+      if (isFunction$1(v)) {
+        return El[k] = function() {
+          return v.apply(riot$1, arguments);
+        };
+      }
+    })(k, v);
   }
 
   var El$1 = El;
@@ -4292,23 +4297,19 @@ var ElControls = (function (exports) {
   };
 
   // node_modules/es6-tween/src/shim.js
-  var __assign = (undefined && undefined.__assign) || Object.assign || function(t) {
-      for (var s, i = 1, n = arguments.length; i < n; i++) {
-          s = arguments[i];
-          for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-              t[p] = s[p];
-      }
-      return t;
-  };
-  var root = typeof window !== 'undefined'
+  let root =
+    typeof window !== 'undefined'
       ? window
       : typeof global !== 'undefined' ? global : undefined;
-  var requestAnimationFrame$2 = root.requestAnimationFrame ||
-      (function (fn) { return root.setTimeout(fn, 16); });
-  var cancelAnimationFrame$1 = root.cancelAnimationFrame ||
-      (function (id) { return root.clearTimeout(id); });
+  let requestAnimationFrame$2 =
+    root.requestAnimationFrame ||
+    ((fn) => root.setTimeout(fn, 16));
+  let cancelAnimationFrame$1 =
+    root.cancelAnimationFrame ||
+    ((id) => root.clearTimeout(id));
 
   // node_modules/es6-tween/src/core.js
+
   /**
    * Get browser/Node.js current time-stamp
    * @return Normalised current time-stamp in milliseconds
@@ -4316,33 +4317,36 @@ var ElControls = (function (exports) {
    * @example
    * TWEEN.now
    */
-  var now = (function () {
-      if (typeof process !== 'undefined' && process.hrtime !== undefined && (!process.versions || process.versions.electron === undefined)) {
-          return function () {
-              var time = process.hrtime();
-              // Convert [seconds, nanoseconds] to milliseconds.
-              return time[0] * 1000 + time[1] / 1000000;
-          };
-          // In a browser, use window.performance.now if it is available.
+  const now = (function () {
+    if (typeof process !== 'undefined' && process.hrtime !== undefined && (!process.versions || process.versions.electron === undefined)) {
+      return function () {
+        const time = process.hrtime();
+
+        // Convert [seconds, nanoseconds] to milliseconds.
+        return time[0] * 1000 + time[1] / 1000000
       }
-      else if (root.performance !== undefined &&
-          root.performance.now !== undefined) {
-          // This must be bound, because directly assigning this function
-          // leads to an invocation exception in Chrome.
-          return root.performance.now.bind(root.performance);
-          // Use Date.now if it is available.
+      // In a browser, use window.performance.now if it is available.
+    } else if (
+      root.performance !== undefined &&
+      root.performance.now !== undefined
+    ) {
+      // This must be bound, because directly assigning this function
+      // leads to an invocation exception in Chrome.
+      return root.performance.now.bind(root.performance)
+      // Use Date.now if it is available.
+    } else {
+      const offset =
+        root.performance &&
+        root.performance.timing &&
+        root.performance.timing.navigationStart
+          ? root.performance.timing.navigationStart
+          : Date.now();
+      return function () {
+        return Date.now() - offset
       }
-      else {
-          var offset_1 = root.performance &&
-              root.performance.timing &&
-              root.performance.timing.navigationStart
-              ? root.performance.timing.navigationStart
-              : Date.now();
-          return function () {
-              return Date.now() - offset_1;
-          };
-      }
+    }
   })();
+
   /**
    * Lightweight, effecient and modular ES6 version of tween.js
    * @copyright 2017 @dalisoft and es6-tween contributors
@@ -4352,14 +4356,15 @@ var ElControls = (function (exports) {
    * // ES6
    * const {add, remove, isRunning, autoPlay} = TWEEN
    */
-  var _tweens = [];
-  var isStarted = false;
-  var _autoPlay = false;
-  var _tick;
-  var _ticker = requestAnimationFrame$2;
-  var _stopTicker = cancelAnimationFrame$1;
-  var emptyFrame = 0;
-  var powerModeThrottle = 120;
+  const _tweens = [];
+  let isStarted = false;
+  let _autoPlay = false;
+  let _tick;
+  const _ticker = requestAnimationFrame$2;
+  const _stopTicker = cancelAnimationFrame$1;
+  let emptyFrame = 0;
+  let powerModeThrottle = 120;
+
   /**
    * Adds tween to list
    * @param {Tween} tween Tween instance
@@ -4369,26 +4374,31 @@ var ElControls = (function (exports) {
    * tween.to({x:200}, 1000)
    * TWEEN.add(tween)
    */
-  var add = function (tween) {
-      var i = _tweens.indexOf(tween);
-      if (i > -1) {
-          _tweens.splice(i, 1);
-      }
-      _tweens.push(tween);
-      emptyFrame = 0;
-      if (_autoPlay && !isStarted) {
-          _tick = _ticker(update$2);
-          isStarted = true;
-      }
+  const add = (tween) => {
+    let i = _tweens.indexOf(tween);
+
+    if (i > -1) {
+      _tweens.splice(i, 1);
+    }
+
+    _tweens.push(tween);
+
+    emptyFrame = 0;
+
+    if (_autoPlay && !isStarted) {
+      _tick = _ticker(update$2);
+      isStarted = true;
+    }
   };
+
   /**
    * Runs update loop automaticlly
    * @param {Boolean} state State of auto-run of update loop
    * @example TWEEN.autoPlay(true)
    * @memberof TWEEN
    */
-  var autoPlay = function (state) {
-      _autoPlay = state;
+  const autoPlay = (state) => {
+    _autoPlay = state;
   };
   /**
    * Removes tween from list
@@ -4397,12 +4407,13 @@ var ElControls = (function (exports) {
    * @example
    * TWEEN.remove(tween)
    */
-  var remove$1 = function (tween) {
-      var i = _tweens.indexOf(tween);
-      if (i !== -1) {
-          _tweens.splice(i, 1);
-      }
+  const remove$1 = (tween) => {
+    const i = _tweens.indexOf(tween);
+    if (i !== -1) {
+      _tweens.splice(i, 1);
+    }
   };
+
   /**
    * Updates global tweens by given time
    * @param {number=} time Timestamp
@@ -4411,26 +4422,31 @@ var ElControls = (function (exports) {
    * @example
    * TWEEN.update(500)
    */
-  var update$2 = function (time, preserve) {
-      time = time !== undefined ? time : now();
-      if (_autoPlay && isStarted) {
-          _tick = _ticker(update$2);
-      }
-      if (!_tweens.length) {
-          emptyFrame++;
-      }
-      if (emptyFrame > powerModeThrottle) {
-          _stopTicker(_tick);
-          isStarted = false;
-          emptyFrame = 0;
-          return false;
-      }
-      var i = 0;
-      while (i < _tweens.length) {
-          _tweens[i++].update(time, preserve);
-      }
-      return true;
+
+  const update$2 = (time = now(), preserve) => {
+    if (_autoPlay && isStarted) {
+      _tick = _ticker(update$2);
+    }
+
+    if (!_tweens.length) {
+      emptyFrame++;
+    }
+
+    if (emptyFrame > powerModeThrottle) {
+      _stopTicker(_tick);
+      isStarted = false;
+      emptyFrame = 0;
+      return false
+    }
+
+    let i = 0;
+    while (i < _tweens.length) {
+      _tweens[i++].update(time, preserve);
+    }
+
+    return true
   };
+
   /**
    * The plugins store object
    * @namespace TWEEN.Plugins
@@ -4442,7 +4458,7 @@ var ElControls = (function (exports) {
    *
    * @static
    */
-  var Plugins = {};
+  const Plugins = {};
 
   // node_modules/es6-tween/src/Easing.js
   /**
@@ -4453,476 +4469,539 @@ var ElControls = (function (exports) {
    *
    * // then set via new Tween({x:0}).to({x:100}, 1000).easing(Easing.Quadratic.InOut).start()
    */
-  var Easing = {
-      Linear: {
-          None: function (k) {
-              return k;
-          }
-      },
-      Quadratic: {
-          In: function (k) {
-              return k * k;
-          },
-          Out: function (k) {
-              return k * (2 - k);
-          },
-          InOut: function (k) {
-              if ((k *= 2) < 1) {
-                  return 0.5 * k * k;
-              }
-              return -0.5 * (--k * (k - 2) - 1);
-          }
-      },
-      Cubic: {
-          In: function (k) {
-              return k * k * k;
-          },
-          Out: function (k) {
-              return --k * k * k + 1;
-          },
-          InOut: function (k) {
-              if ((k *= 2) < 1) {
-                  return 0.5 * k * k * k;
-              }
-              return 0.5 * ((k -= 2) * k * k + 2);
-          }
-      },
-      Quartic: {
-          In: function (k) {
-              return k * k * k * k;
-          },
-          Out: function (k) {
-              return 1 - --k * k * k * k;
-          },
-          InOut: function (k) {
-              if ((k *= 2) < 1) {
-                  return 0.5 * k * k * k * k;
-              }
-              return -0.5 * ((k -= 2) * k * k * k - 2);
-          }
-      },
-      Quintic: {
-          In: function (k) {
-              return k * k * k * k * k;
-          },
-          Out: function (k) {
-              return --k * k * k * k * k + 1;
-          },
-          InOut: function (k) {
-              if ((k *= 2) < 1) {
-                  return 0.5 * k * k * k * k * k;
-              }
-              return 0.5 * ((k -= 2) * k * k * k * k + 2);
-          }
-      },
-      Sinusoidal: {
-          In: function (k) {
-              return 1 - Math.cos(k * Math.PI / 2);
-          },
-          Out: function (k) {
-              return Math.sin(k * Math.PI / 2);
-          },
-          InOut: function (k) {
-              return 0.5 * (1 - Math.cos(Math.PI * k));
-          }
-      },
-      Exponential: {
-          In: function (k) {
-              return k === 0 ? 0 : Math.pow(1024, k - 1);
-          },
-          Out: function (k) {
-              return k === 1 ? 1 : 1 - Math.pow(2, -10 * k);
-          },
-          InOut: function (k) {
-              if (k === 0) {
-                  return 0;
-              }
-              if (k === 1) {
-                  return 1;
-              }
-              if ((k *= 2) < 1) {
-                  return 0.5 * Math.pow(1024, k - 1);
-              }
-              return 0.5 * (-Math.pow(2, -10 * (k - 1)) + 2);
-          }
-      },
-      Circular: {
-          In: function (k) {
-              return 1 - Math.sqrt(1 - k * k);
-          },
-          Out: function (k) {
-              return Math.sqrt(1 - --k * k);
-          },
-          InOut: function (k) {
-              if ((k *= 2) < 1) {
-                  return -0.5 * (Math.sqrt(1 - k * k) - 1);
-              }
-              return 0.5 * (Math.sqrt(1 - (k -= 2) * k) + 1);
-          }
-      },
-      Elastic: {
-          In: function (k) {
-              if (k === 0) {
-                  return 0;
-              }
-              if (k === 1) {
-                  return 1;
-              }
-              return -Math.pow(2, 10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI);
-          },
-          Out: function (k) {
-              if (k === 0) {
-                  return 0;
-              }
-              if (k === 1) {
-                  return 1;
-              }
-              return Math.pow(2, -10 * k) * Math.sin((k - 0.1) * 5 * Math.PI) + 1;
-          },
-          InOut: function (k) {
-              if (k === 0) {
-                  return 0;
-              }
-              if (k === 1) {
-                  return 1;
-              }
-              k *= 2;
-              if (k < 1) {
-                  return (-0.5 * Math.pow(2, 10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI));
-              }
-              return (0.5 * Math.pow(2, -10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI) + 1);
-          }
-      },
-      Back: {
-          In: function (k) {
-              var s = 1.70158;
-              return k * k * ((s + 1) * k - s);
-          },
-          Out: function (k) {
-              var s = 1.70158;
-              return --k * k * ((s + 1) * k + s) + 1;
-          },
-          InOut: function (k) {
-              var s = 1.70158 * 1.525;
-              if ((k *= 2) < 1) {
-                  return 0.5 * (k * k * ((s + 1) * k - s));
-              }
-              return 0.5 * ((k -= 2) * k * ((s + 1) * k + s) + 2);
-          }
-      },
-      Bounce: {
-          In: function (k) {
-              return 1 - Easing.Bounce.Out(1 - k);
-          },
-          Out: function (k) {
-              if (k < 1 / 2.75) {
-                  return 7.5625 * k * k;
-              }
-              else if (k < 2 / 2.75) {
-                  return 7.5625 * (k -= 1.5 / 2.75) * k + 0.75;
-              }
-              else if (k < 2.5 / 2.75) {
-                  return 7.5625 * (k -= 2.25 / 2.75) * k + 0.9375;
-              }
-              else {
-                  return 7.5625 * (k -= 2.625 / 2.75) * k + 0.984375;
-              }
-          },
-          InOut: function (k) {
-              if (k < 0.5) {
-                  return Easing.Bounce.In(k * 2) * 0.5;
-              }
-              return Easing.Bounce.Out(k * 2 - 1) * 0.5 + 0.5;
-          }
-      },
-      Stepped: {
-          steps: function (steps) { return function (k) { return ((k * steps) | 0) / steps; }; }
+  const Easing = {
+    Linear: {
+      None (k) {
+        return k
       }
+    },
+
+    Quadratic: {
+      In (k) {
+        return k * k
+      },
+
+      Out (k) {
+        return k * (2 - k)
+      },
+
+      InOut (k) {
+        if ((k *= 2) < 1) {
+          return 0.5 * k * k
+        }
+
+        return -0.5 * (--k * (k - 2) - 1)
+      }
+    },
+
+    Cubic: {
+      In (k) {
+        return k * k * k
+      },
+
+      Out (k) {
+        return --k * k * k + 1
+      },
+
+      InOut (k) {
+        if ((k *= 2) < 1) {
+          return 0.5 * k * k * k
+        }
+
+        return 0.5 * ((k -= 2) * k * k + 2)
+      }
+    },
+
+    Quartic: {
+      In (k) {
+        return k * k * k * k
+      },
+
+      Out (k) {
+        return 1 - --k * k * k * k
+      },
+
+      InOut (k) {
+        if ((k *= 2) < 1) {
+          return 0.5 * k * k * k * k
+        }
+
+        return -0.5 * ((k -= 2) * k * k * k - 2)
+      }
+    },
+
+    Quintic: {
+      In (k) {
+        return k * k * k * k * k
+      },
+
+      Out (k) {
+        return --k * k * k * k * k + 1
+      },
+
+      InOut (k) {
+        if ((k *= 2) < 1) {
+          return 0.5 * k * k * k * k * k
+        }
+
+        return 0.5 * ((k -= 2) * k * k * k * k + 2)
+      }
+    },
+
+    Sinusoidal: {
+      In (k) {
+        return 1 - Math.cos(k * Math.PI / 2)
+      },
+
+      Out (k) {
+        return Math.sin(k * Math.PI / 2)
+      },
+
+      InOut (k) {
+        return 0.5 * (1 - Math.cos(Math.PI * k))
+      }
+    },
+
+    Exponential: {
+      In (k) {
+        return k === 0 ? 0 : Math.pow(1024, k - 1)
+      },
+
+      Out (k) {
+        return k === 1 ? 1 : 1 - Math.pow(2, -10 * k)
+      },
+
+      InOut (k) {
+        if (k === 0) {
+          return 0
+        }
+
+        if (k === 1) {
+          return 1
+        }
+
+        if ((k *= 2) < 1) {
+          return 0.5 * Math.pow(1024, k - 1)
+        }
+
+        return 0.5 * (-Math.pow(2, -10 * (k - 1)) + 2)
+      }
+    },
+
+    Circular: {
+      In (k) {
+        return 1 - Math.sqrt(1 - k * k)
+      },
+
+      Out (k) {
+        return Math.sqrt(1 - --k * k)
+      },
+
+      InOut (k) {
+        if ((k *= 2) < 1) {
+          return -0.5 * (Math.sqrt(1 - k * k) - 1)
+        }
+
+        return 0.5 * (Math.sqrt(1 - (k -= 2) * k) + 1)
+      }
+    },
+
+    Elastic: {
+      In (k) {
+        if (k === 0) {
+          return 0
+        }
+
+        if (k === 1) {
+          return 1
+        }
+
+        return -Math.pow(2, 10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI)
+      },
+
+      Out (k) {
+        if (k === 0) {
+          return 0
+        }
+
+        if (k === 1) {
+          return 1
+        }
+
+        return Math.pow(2, -10 * k) * Math.sin((k - 0.1) * 5 * Math.PI) + 1
+      },
+
+      InOut (k) {
+        if (k === 0) {
+          return 0
+        }
+
+        if (k === 1) {
+          return 1
+        }
+
+        k *= 2;
+
+        if (k < 1) {
+          return (
+            -0.5 * Math.pow(2, 10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI)
+          )
+        }
+
+        return (
+          0.5 * Math.pow(2, -10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI) + 1
+        )
+      }
+    },
+
+    Back: {
+      In (k) {
+        const s = 1.70158;
+
+        return k * k * ((s + 1) * k - s)
+      },
+
+      Out (k) {
+        const s = 1.70158;
+
+        return --k * k * ((s + 1) * k + s) + 1
+      },
+
+      InOut (k) {
+        const s = 1.70158 * 1.525;
+
+        if ((k *= 2) < 1) {
+          return 0.5 * (k * k * ((s + 1) * k - s))
+        }
+
+        return 0.5 * ((k -= 2) * k * ((s + 1) * k + s) + 2)
+      }
+    },
+
+    Bounce: {
+      In (k) {
+        return 1 - Easing.Bounce.Out(1 - k)
+      },
+
+      Out (k) {
+        if (k < 1 / 2.75) {
+          return 7.5625 * k * k
+        } else if (k < 2 / 2.75) {
+          return 7.5625 * (k -= 1.5 / 2.75) * k + 0.75
+        } else if (k < 2.5 / 2.75) {
+          return 7.5625 * (k -= 2.25 / 2.75) * k + 0.9375
+        } else {
+          return 7.5625 * (k -= 2.625 / 2.75) * k + 0.984375
+        }
+      },
+
+      InOut (k) {
+        if (k < 0.5) {
+          return Easing.Bounce.In(k * 2) * 0.5
+        }
+
+        return Easing.Bounce.Out(k * 2 - 1) * 0.5 + 0.5
+      }
+    },
+
+    Stepped: {
+      steps: steps => k => ((k * steps) | 0) / steps
+    }
   };
 
   // node_modules/es6-tween/src/constants.js
   // Frame lag-fix constants
-  var FRAME_MS = 50 / 3;
-  var TOO_LONG_FRAME_MS = 250;
-  var CHAINED_TWEENS = '_chainedTweens';
+  const FRAME_MS = 50 / 3;
+  const TOO_LONG_FRAME_MS = 250;
+
+  const CHAINED_TWEENS = '_chainedTweens';
+
   // Event System
-  var EVENT_CALLBACK = 'Callback';
-  var EVENT_UPDATE = 'update';
-  var EVENT_COMPLETE = 'complete';
-  var EVENT_START = 'start';
-  var EVENT_REPEAT = 'repeat';
-  var EVENT_REVERSE = 'reverse';
-  var EVENT_PAUSE = 'pause';
-  var EVENT_PLAY = 'play';
-  var EVENT_RESTART = 'restart';
-  var EVENT_STOP = 'stop';
-  var EVENT_SEEK = 'seek';
+  const EVENT_CALLBACK = 'Callback';
+  const EVENT_UPDATE = 'update';
+  const EVENT_COMPLETE = 'complete';
+  const EVENT_START = 'start';
+  const EVENT_REPEAT = 'repeat';
+  const EVENT_REVERSE = 'reverse';
+  const EVENT_PAUSE = 'pause';
+  const EVENT_PLAY = 'play';
+  const EVENT_RESTART = 'restart';
+  const EVENT_STOP = 'stop';
+  const EVENT_SEEK = 'seek';
+
   // For String tweening stuffs
-  var STRING_PROP = 'STRING_PROP';
+  const STRING_PROP = 'STRING_PROP';
   // Also RegExp's for string tweening
-  var NUM_REGEX = /\s+|([A-Za-z?().,{}:""[\]#\%]+)|([-+]=+)?([-+]+)?(?:\d+\.?\d*|\.?\d+)(?:[eE][-+]=?\d+)?/g;
+  const NUM_REGEX = /\s+|([A-Za-z?().,{}:""[\]#%]+)|([-+]=+)?([-+]+)?(?:\d+\.?\d*|\.?\d+)(?:[eE][-+]=?\d+)?/g;
+
   // Copies everything, duplicates, no shallow-copy
-  function deepCopy(source) {
-      if ((source && source.nodeType) || source === undefined || typeof source !== 'object') {
-          return source;
+  function deepCopy (source) {
+    if ((source && source.nodeType) || source === undefined || typeof source !== 'object') {
+      return source
+    } else if (Array.isArray(source)) {
+      return [].concat(source)
+    } else if (typeof source === 'object') {
+      let target = {};
+      for (let prop in source) {
+        target[prop] = deepCopy(source[prop]);
       }
-      else if (Array.isArray(source)) {
-          return [].concat(source);
-      }
-      else if (typeof source === 'object') {
-          var target = {};
-          for (var prop in source) {
-              target[prop] = deepCopy(source[prop]);
-          }
-          return target;
-      }
-      return source;
+      return target
+    }
+    return source
   }
-  var isNaNForST = function (v) {
-      return isNaN(+v) || ((v[0] === '+' || v[0] === '-') && v[1] === '=') || v === '' || v === ' ';
+
+  const isNaNForST = v =>
+    isNaN(+v) || ((v[0] === '+' || v[0] === '-') && v[1] === '=') || v === '' || v === ' ';
+
+  const hexColor = /^#([0-9a-f]{6}|[0-9a-f]{3})$/i;
+  const hex2rgb = (all, hex) => {
+    let r;
+    let g;
+    let b;
+    if (hex.length === 3) {
+      r = hex[0];
+      g = hex[1];
+      b = hex[2];
+      hex = r + r + g + g + b + b;
+    }
+    let color = parseInt(hex, 16);
+    r = color >> 16 & 255;
+    g = color >> 8 & 255;
+    b = color & 255;
+    return 'rgb(' + r + ',' + g + ',' + b + ')'
   };
-  var hexColor = /^#([0-9a-f]{6}|[0-9a-f]{3})$/i;
-  var hex2rgb = function (all, hex) {
-      var r;
-      var g;
-      var b;
-      if (hex.length === 3) {
-          r = hex[0];
-          g = hex[1];
-          b = hex[2];
-          hex = r + r + g + g + b + b;
-      }
-      var color = parseInt(hex, 16);
-      r = color >> 16 & 255;
-      g = color >> 8 & 255;
-      b = color & 255;
-      return "rgb(" + r + "," + g + "," + b + ")";
-  };
-  function decomposeString(fromValue) {
-      return typeof fromValue !== 'string' ? fromValue : fromValue.replace(hexColor, hex2rgb).match(NUM_REGEX).map(function (v) { return (isNaNForST(v) ? v : +v); });
+
+  function decomposeString (fromValue) {
+    return typeof fromValue !== 'string' ? fromValue : fromValue.replace(hexColor, hex2rgb).match(NUM_REGEX).map(v => (isNaNForST(v) ? v : +v))
   }
+
   // Decompose value, now for only `string` that required
-  function decompose(prop, obj, from, to, stringBuffer) {
-      var fromValue = from[prop];
-      var toValue = to[prop];
-      if (typeof fromValue === 'string' || typeof toValue === 'string') {
-          var fromValue1 = Array.isArray(fromValue) && fromValue[0] === STRING_PROP ? fromValue : decomposeString(fromValue);
-          var toValue1 = Array.isArray(toValue) && toValue[0] === STRING_PROP ? toValue : decomposeString(toValue);
-          var i = 1;
-          while (i < fromValue1.length) {
-              if (fromValue1[i] === toValue1[i] && typeof fromValue1[i - 1] === 'string') {
-                  fromValue1.splice(i - 1, 2, fromValue1[i - 1] + fromValue1[i]);
-                  toValue1.splice(i - 1, 2, toValue1[i - 1] + toValue1[i]);
-              }
-              else {
-                  i++;
-              }
-          }
-          i = 0;
-          if (fromValue1[0] === STRING_PROP) {
-              fromValue1.shift();
-          }
-          if (toValue1[0] === STRING_PROP) {
-              toValue1.shift();
-          }
-          var fromValue2 = { isString: true, length: fromValue1.length };
-          var toValue2 = { isString: true, length: toValue1.length };
-          while (i < fromValue2.length) {
-              fromValue2[i] = fromValue1[i];
-              toValue2[i] = toValue1[i];
-              i++;
-          }
-          from[prop] = fromValue2;
-          to[prop] = toValue2;
-          return true;
+  function decompose (prop, obj, from, to, stringBuffer) {
+    const fromValue = from[prop];
+    const toValue = to[prop];
+
+    if (typeof fromValue === 'string' || typeof toValue === 'string') {
+      let fromValue1 = Array.isArray(fromValue) && fromValue[0] === STRING_PROP ? fromValue : decomposeString(fromValue);
+      let toValue1 = Array.isArray(toValue) && toValue[0] === STRING_PROP ? toValue : decomposeString(toValue);
+
+      let i = 1;
+      while (i < fromValue1.length) {
+        if (fromValue1[i] === toValue1[i] && typeof fromValue1[i - 1] === 'string') {
+          fromValue1.splice(i - 1, 2, fromValue1[i - 1] + fromValue1[i]);
+          toValue1.splice(i - 1, 2, toValue1[i - 1] + toValue1[i]);
+        } else {
+          i++;
+        }
       }
-      else if (typeof fromValue === 'object' && typeof toValue === 'object') {
-          if (Array.isArray(fromValue)) {
-              return fromValue.map(function (v, i) {
-                  return decompose(i, obj[prop], fromValue, toValue);
-              });
-          }
-          else {
-              for (var prop2 in toValue) {
-                  decompose(prop2, obj[prop], fromValue, toValue);
-              }
-          }
-          return true;
+
+      i = 0;
+
+      if (fromValue1[0] === STRING_PROP) {
+        fromValue1.shift();
       }
-      return false;
+      if (toValue1[0] === STRING_PROP) {
+        toValue1.shift();
+      }
+
+      let fromValue2 = {
+        isString: true,
+        length: fromValue1.length
+      };
+      let toValue2 = {
+        isString: true,
+        length: toValue1.length
+      };
+
+      while (i < fromValue2.length) {
+        fromValue2[i] = fromValue1[i];
+        toValue2[i] = toValue1[i];
+        i++;
+      }
+
+      from[prop] = fromValue2;
+      to[prop] = toValue2;
+      return true
+    } else if (typeof fromValue === 'object' && typeof toValue === 'object') {
+      if (Array.isArray(fromValue)) {
+        return fromValue.map((v, i) =>
+          decompose(i, obj[prop], fromValue, toValue)
+        )
+      } else {
+        for (let prop2 in toValue) {
+          decompose(prop2, obj[prop], fromValue, toValue);
+        }
+      }
+      return true
+    }
+    return false
   }
+
   // Recompose value
-  var DECIMAL = Math.pow(10, 4);
-  var RGB = 'rgb(';
-  var RGBA = 'rgba(';
-  var isRGBColor = function (v, i, r) {
-      if (r === void 0) { r = RGB; }
-      return typeof v[i] === 'number' &&
-          (v[i - 1] === r || v[i - 3] === r || v[i - 5] === r);
-  };
-  function recompose(prop, obj, from, to, t, originalT, stringBuffer) {
-      var fromValue = stringBuffer ? from : from[prop];
-      var toValue = stringBuffer ? to : to[prop];
-      if (toValue === undefined) {
-          return fromValue;
+  const DECIMAL = Math.pow(10, 4);
+  const RGB = 'rgb(';
+  const RGBA = 'rgba(';
+
+  const isRGBColor = (v, i, r = RGB) =>
+    typeof v[i] === 'number' &&
+    (v[i - 1] === r || v[i - 3] === r || v[i - 5] === r);
+  function recompose (prop, obj, from, to, t, originalT, stringBuffer) {
+    const fromValue = stringBuffer ? from : from[prop];
+    const toValue = stringBuffer ? to : to[prop];
+    if (toValue === undefined) {
+      return fromValue
+    }
+    if (
+      fromValue === undefined ||
+      typeof fromValue === 'string' ||
+      fromValue === toValue
+    ) {
+      return toValue
+    } else if (typeof fromValue === 'object' && typeof toValue === 'object') {
+      if (!fromValue || !toValue) {
+        return obj[prop]
       }
-      if (fromValue === undefined ||
-          typeof fromValue === 'string' ||
-          fromValue === toValue) {
-          return toValue;
-      }
-      else if (typeof fromValue === 'object' && typeof toValue === 'object') {
-          if (!fromValue || !toValue) {
-              return obj[prop];
+      if (typeof fromValue === 'object' && !!fromValue && fromValue.isString) {
+        let STRING_BUFFER = '';
+        for (let i = 0, len = fromValue.length; i < len; i++) {
+          const isRelative = typeof fromValue[i] === 'number' && typeof toValue[i] === 'string' && toValue[i][1] === '=';
+          let currentValue =
+            typeof fromValue[i] !== 'number'
+              ? fromValue[i]
+              : (((isRelative
+                ? fromValue[i] +
+                  parseFloat(toValue[i][0] + toValue[i].substr(2)) * t
+                : fromValue[i] + (toValue[i] - fromValue[i]) * t) *
+                DECIMAL) |
+              0) /
+            DECIMAL;
+          if (isRGBColor(fromValue, i) || isRGBColor(fromValue, i, RGBA)) {
+            currentValue |= 0;
           }
-          if (typeof fromValue === 'object' && !!fromValue && fromValue.isString) {
-              var STRING_BUFFER = '';
-              for (var i = 0, len = fromValue.length; i < len; i++) {
-                  var isRelative = typeof fromValue[i] === 'number' && typeof toValue[i] === 'string' && toValue[i][1] === '=';
-                  var currentValue = typeof fromValue[i] !== 'number'
-                      ? fromValue[i]
-                      : (((isRelative
-                          ? fromValue[i] +
-                              parseFloat(toValue[i][0] + toValue[i].substr(2)) * t
-                          : fromValue[i] + (toValue[i] - fromValue[i]) * t) *
-                          DECIMAL) |
-                          0) /
-                          DECIMAL;
-                  if (isRGBColor(fromValue, i) || isRGBColor(fromValue, i, RGBA)) {
-                      currentValue |= 0;
-                  }
-                  STRING_BUFFER += currentValue;
-                  if (isRelative && originalT === 1) {
-                      fromValue[i] =
-                          fromValue[i] +
-                              parseFloat(toValue[i][0] + toValue[i].substr(2));
-                  }
-              }
-              if (!stringBuffer) {
-                  obj[prop] = STRING_BUFFER;
-              }
-              return STRING_BUFFER;
-          }
-          else if (Array.isArray(fromValue) && fromValue[0] !== STRING_PROP) {
-              for (var i = 0, len = fromValue.length; i < len; i++) {
-                  if (fromValue[i] === toValue[i]) {
-                      continue;
-                  }
-                  recompose(i, obj[prop], fromValue, toValue, t, originalT);
-              }
-          }
-          else if (typeof fromValue === 'object' && !!fromValue && !fromValue.isString) {
-              for (var i in fromValue) {
-                  if (fromValue[i] === toValue[i]) {
-                      continue;
-                  }
-                  recompose(i, obj[prop], fromValue, toValue, t, originalT);
-              }
-          }
-      }
-      else if (typeof fromValue === 'number') {
-          var isRelative = typeof toValue === 'string';
-          obj[prop] =
-              (((isRelative
-                  ? fromValue + parseFloat(toValue[0] + toValue.substr(2)) * t
-                  : fromValue + (toValue - fromValue) * t) *
-                  DECIMAL) |
-                  0) /
-                  DECIMAL;
+          STRING_BUFFER += currentValue;
           if (isRelative && originalT === 1) {
-              from[prop] = obj[prop];
+            fromValue[i] =
+              fromValue[i] +
+              parseFloat(toValue[i][0] + toValue[i].substr(2));
           }
+        }
+        if (!stringBuffer) {
+          obj[prop] = STRING_BUFFER;
+        }
+        return STRING_BUFFER
+      } else if (Array.isArray(fromValue) && fromValue[0] !== STRING_PROP) {
+        for (let i = 0, len = fromValue.length; i < len; i++) {
+          if (fromValue[i] === toValue[i]) {
+            continue
+          }
+          recompose(i, obj[prop], fromValue, toValue, t, originalT);
+        }
+      } else if (typeof fromValue === 'object' && !!fromValue && !fromValue.isString) {
+        for (let i in fromValue) {
+          if (fromValue[i] === toValue[i]) {
+            continue
+          }
+          recompose(i, obj[prop], fromValue, toValue, t, originalT);
+        }
       }
-      else if (typeof toValue === 'function') {
-          obj[prop] = toValue(t);
+    } else if (typeof fromValue === 'number') {
+      const isRelative = typeof toValue === 'string';
+      obj[prop] =
+        (((isRelative
+          ? fromValue + parseFloat(toValue[0] + toValue.substr(2)) * t
+          : fromValue + (toValue - fromValue) * t) *
+            DECIMAL) |
+          0) /
+        DECIMAL;
+      if (isRelative && originalT === 1) {
+        from[prop] = obj[prop];
       }
-      return obj[prop];
+    } else if (typeof toValue === 'function') {
+      obj[prop] = toValue(t);
+    }
+    return obj[prop]
   }
+
   // Dot notation => Object structure converter
   // example
   // {'scale.x.y.z':'VALUE'} => {scale:{x:{y:{z:'VALUE'}}}}
   // Only works for 3-level parsing, after 3-level, parsing dot-notation not works as it's not affects
-  var propRegExp = /([.\[])/g;
-  var replaceBrace = /\]/g;
-  var propExtract = function (obj, property) {
-      var value = obj[property];
-      var props = property.replace(replaceBrace, '').split(propRegExp);
-      var propsLastIndex = props.length - 1;
-      var lastArr = Array.isArray(obj);
-      var lastObj = typeof obj === 'object' && !lastArr;
-      if (lastObj) {
-          obj[property] = null;
-          delete obj[property];
+  const propRegExp = /([.[])/g;
+  const replaceBrace = /\]/g;
+  const propExtract = function (obj, property) {
+    const value = obj[property];
+    const props = property.replace(replaceBrace, '').split(propRegExp);
+    const propsLastIndex = props.length - 1;
+    let lastArr = Array.isArray(obj);
+    let lastObj = typeof obj === 'object' && !lastArr;
+    if (lastObj) {
+      obj[property] = null;
+      delete obj[property];
+    } else if (lastArr) {
+      obj.splice(property, 1);
+    }
+    return props.reduce((nested, prop, index) => {
+      if (lastArr) {
+        if (prop !== '.' && prop !== '[') {
+          prop *= 1;
+        }
       }
-      else if (lastArr) {
-          obj.splice(property, 1);
+      let nextProp = props[index + 1];
+      let nextIsArray = nextProp === '[';
+      if (prop === '.' || prop === '[') {
+        if (prop === '.') {
+          lastObj = true;
+          lastArr = false;
+        } else if (prop === '[') {
+          lastObj = false;
+          lastArr = true;
+        }
+        return nested
+      } else if (nested[prop] === undefined) {
+        if (lastArr || lastObj) {
+          nested[prop] =
+            index === propsLastIndex
+              ? value
+              : lastArr || nextIsArray ? [] : lastObj ? {} : null;
+          lastObj = lastArr = false;
+          return nested[prop]
+        }
+      } else if (nested[prop] !== undefined) {
+        if (index === propsLastIndex) {
+          nested[prop] = value;
+        }
+        return nested[prop]
       }
-      return props.reduce(function (nested, prop, index) {
-          if (lastArr) {
-              if (prop !== '.' && prop !== '[') {
-                  prop *= 1;
-              }
-          }
-          var nextProp = props[index + 1];
-          var nextIsArray = nextProp === '[';
-          if (prop === '.' || prop === '[') {
-              if (prop === '.') {
-                  lastObj = true;
-                  lastArr = false;
-              }
-              else if (prop === '[') {
-                  lastObj = false;
-                  lastArr = true;
-              }
-              return nested;
-          }
-          else if (nested[prop] === undefined) {
-              if (lastArr || lastObj) {
-                  nested[prop] =
-                      index === propsLastIndex
-                          ? value
-                          : lastArr || nextIsArray ? [] : lastObj ? {} : null;
-                  lastObj = lastArr = false;
-                  return nested[prop];
-              }
-          }
-          else if (nested[prop] !== undefined) {
-              if (index === propsLastIndex) {
-                  nested[prop] = value;
-              }
-              return nested[prop];
-          }
-          return nested;
-      }, obj);
+      return nested
+    }, obj)
   };
-  var SET_NESTED = function (nested) {
-      if (typeof nested === 'object' && !!nested) {
-          for (var prop in nested) {
-              if (prop.indexOf('.') !== -1 || prop.indexOf('[') !== -1) {
-                  propExtract(nested, prop);
+
+  const SET_NESTED = function (nested) {
+    if (typeof nested === 'object' && !!nested) {
+      for (let prop in nested) {
+        if (prop.indexOf('.') !== -1 || prop.indexOf('[') !== -1) {
+          propExtract(nested, prop);
+        } else if (typeof nested[prop] === 'object' && !!nested[prop]) {
+          let nested2 = nested[prop];
+          for (let prop2 in nested2) {
+            if (prop2.indexOf('.') !== -1 || prop2.indexOf('[') !== -1) {
+              propExtract(nested2, prop2);
+            } else if (typeof nested2[prop2] === 'object' && !!nested2[prop2]) {
+              let nested3 = nested2[prop2];
+              for (let prop3 in nested3) {
+                if (prop3.indexOf('.') !== -1 || prop3.indexOf('[') !== -1) {
+                  propExtract(nested3, prop3);
+                }
               }
-              else if (typeof nested[prop] === 'object' && !!nested[prop]) {
-                  var nested2 = nested[prop];
-                  for (var prop2 in nested2) {
-                      if (prop2.indexOf('.') !== -1 || prop2.indexOf('[') !== -1) {
-                          propExtract(nested2, prop2);
-                      }
-                      else if (typeof nested2[prop2] === 'object' && !!nested2[prop2]) {
-                          var nested3 = nested2[prop2];
-                          for (var prop3 in nested3) {
-                              if (prop3.indexOf('.') !== -1 || prop3.indexOf('[') !== -1) {
-                                  propExtract(nested3, prop3);
-                              }
-                          }
-                      }
-                  }
-              }
+            }
           }
+        }
       }
-      return nested;
+    }
+    return nested
   };
 
   // node_modules/es6-tween/src/Interpolation.js
+
   /**
    * List of full Interpolation
    * @namespace TWEEN.Interpolation
@@ -4933,268 +5012,317 @@ var ElControls = (function (exports) {
    * new Tween({x:0}).to({x:[0, 4, 8, 12, 15, 20, 30, 40, 20, 40, 10, 50]}, 1000).interpolation(bezier).start()
    * @memberof TWEEN
    */
-  var Interpolation = {
-      Linear: function (v, k, value) {
-          var m = v.length - 1;
-          var f = m * k;
-          var i = Math.floor(f);
-          var fn = Interpolation.Utils.Linear;
-          if (k < 0) {
-              return fn(v[0], v[1], f, value);
-          }
-          if (k > 1) {
-              return fn(v[m], v[m - 1], m - f, value);
-          }
-          return fn(v[i], v[i + 1 > m ? m : i + 1], f - i, value);
-      },
-      Bezier: function (v, k, value) {
-          var b = Interpolation.Utils.Reset(value);
-          var n = v.length - 1;
-          var pw = Math.pow;
-          var fn = Interpolation.Utils.Bernstein;
-          var isBArray = Array.isArray(b);
-          for (var i = 0; i <= n; i++) {
-              if (typeof b === 'number') {
-                  b += pw(1 - k, n - i) * pw(k, i) * v[i] * fn(n, i);
-              }
-              else if (isBArray) {
-                  for (var p = 0, len = b.length; p < len; p++) {
-                      if (typeof b[p] === 'number') {
-                          b[p] += pw(1 - k, n - i) * pw(k, i) * v[i][p] * fn(n, i);
-                      }
-                      else {
-                          b[p] = v[i][p];
-                      }
-                  }
-              }
-              else if (typeof b === 'object') {
-                  for (var p in b) {
-                      if (typeof b[p] === 'number') {
-                          b[p] += pw(1 - k, n - i) * pw(k, i) * v[i][p] * fn(n, i);
-                      }
-                      else {
-                          b[p] = v[i][p];
-                      }
-                  }
-              }
-              else if (typeof b === 'string') {
-                  var STRING_BUFFER = '', idx = Math.round(n * k), pidx = idx - 1 < 0 ? 0 : idx - 1, vCurr = v[idx], vPrev = v[pidx];
-                  for (var ks = 1, len = vCurr.length; ks < len; ks++) {
-                      STRING_BUFFER += vCurr[ks];
-                  }
-                  return STRING_BUFFER;
-              }
-          }
-          return b;
-      },
-      CatmullRom: function (v, k, value) {
-          var m = v.length - 1;
-          var f = m * k;
-          var i = Math.floor(f);
-          var fn = Interpolation.Utils.CatmullRom;
-          if (v[0] === v[m]) {
-              if (k < 0) {
-                  i = Math.floor((f = m * (1 + k)));
-              }
-              return fn(v[(i - 1 + m) % m], v[i], v[(i + 1) % m], v[(i + 2) % m], f - i, value);
-          }
-          else {
-              if (k < 0) {
-                  return fn(v[1], v[1], v[0], v[0], -k, value);
-              }
-              if (k > 1) {
-                  return fn(v[m - 1], v[m - 1], v[m], v[m], (k | 0) - k, value);
-              }
-              return fn(v[i ? i - 1 : 0], v[i], v[m < i + 1 ? m : i + 1], v[m < i + 2 ? m : i + 2], f - i, value);
-          }
-      },
-      Utils: {
-          Linear: function (p0, p1, t, v) {
-              if (typeof p0 === 'string') {
-                  return p1;
-              }
-              else if (typeof p0 === 'number') {
-                  return typeof p0 === 'function' ? p0(t) : p0 + (p1 - p0) * t;
-              }
-              else if (typeof p0 === 'object') {
-                  if (p0.length !== undefined) {
-                      if (p0[0] === STRING_PROP) {
-                          var STRING_BUFFER = '';
-                          for (var i = 1, len = p0.length; i < len; i++) {
-                              var currentValue = typeof p0[i] === 'number' ? p0[i] + (p1[i] - p0[i]) * t : p1[i];
-                              if (isRGBColor(p0, i) || isRGBColor(p0, i, RGBA)) {
-                                  currentValue |= 0;
-                              }
-                              STRING_BUFFER += currentValue;
-                          }
-                          return STRING_BUFFER;
-                      }
-                      for (var p = 0, len = v.length; p < len; p++) {
-                          v[p] = Interpolation.Utils.Linear(p0[p], p1[p], t, v[p]);
-                      }
-                  }
-                  else {
-                      for (var p in v) {
-                          v[p] = Interpolation.Utils.Linear(p0[p], p1[p], t, v[p]);
-                      }
-                  }
-                  return v;
-              }
-          },
-          Reset: function (value) {
-              if (Array.isArray(value)) {
-                  for (var i = 0, len = value.length; i < len; i++) {
-                      value[i] = Interpolation.Utils.Reset(value[i]);
-                  }
-                  return value;
-              }
-              else if (typeof value === 'object') {
-                  for (var i in value) {
-                      value[i] = Interpolation.Utils.Reset(value[i]);
-                  }
-                  return value;
-              }
-              else if (typeof value === 'number') {
-                  return 0;
-              }
-              return value;
-          },
-          Bernstein: function (n, i) {
-              var fc = Interpolation.Utils.Factorial;
-              return fc(n) / fc(i) / fc(n - i);
-          },
-          Factorial: (function () {
-              var a = [1];
-              return function (n) {
-                  var s = 1;
-                  if (a[n]) {
-                      return a[n];
-                  }
-                  for (var i = n; i > 1; i--) {
-                      s *= i;
-                  }
-                  a[n] = s;
-                  return s;
-              };
-          })(),
-          CatmullRom: function (p0, p1, p2, p3, t, v) {
-              if (typeof p0 === 'string') {
-                  return p1;
-              }
-              else if (typeof p0 === 'number') {
-                  var v0 = (p2 - p0) * 0.5;
-                  var v1 = (p3 - p1) * 0.5;
-                  var t2 = t * t;
-                  var t3 = t * t2;
-                  return ((2 * p1 - 2 * p2 + v0 + v1) * t3 +
-                      (-3 * p1 + 3 * p2 - 2 * v0 - v1) * t2 +
-                      v0 * t +
-                      p1);
-              }
-              else if (typeof p0 === 'object') {
-                  if (p0.length !== undefined) {
-                      if (p0[0] === STRING_PROP) {
-                          var STRING_BUFFER = '';
-                          for (var i = 1, len = p0.length; i < len; i++) {
-                              var currentValue = typeof p0[i] === 'number'
-                                  ? Interpolation.Utils.CatmullRom(p0[i], p1[i], p2[i], p3[i], t)
-                                  : p3[i];
-                              if (isRGBColor(p0, i) || isRGBColor(p0, i, RGBA)) {
-                                  currentValue |= 0;
-                              }
-                              STRING_BUFFER += currentValue;
-                          }
-                          return STRING_BUFFER;
-                      }
-                      for (var p = 0, len = v.length; p < len; p++) {
-                          v[p] = Interpolation.Utils.CatmullRom(p0[p], p1[p], p2[p], p3[p], t, v[p]);
-                      }
-                  }
-                  else {
-                      for (var p in v) {
-                          v[p] = Interpolation.Utils.CatmullRom(p0[p], p1[p], p2[p], p3[p], t, v[p]);
-                      }
-                  }
-                  return v;
-              }
-          }
+  const Interpolation = {
+    Linear (v, k, value) {
+      const m = v.length - 1;
+      const f = m * k;
+      const i = Math.floor(f);
+      const fn = Interpolation.Utils.Linear;
+      if (k < 0) {
+        return fn(v[0], v[1], f, value)
       }
+      if (k > 1) {
+        return fn(v[m], v[m - 1], m - f, value)
+      }
+      return fn(v[i], v[i + 1 > m ? m : i + 1], f - i, value)
+    },
+
+    Bezier (v, k, value) {
+      let b = Interpolation.Utils.Reset(value);
+      let n = v.length - 1;
+      let pw = Math.pow;
+      let fn = Interpolation.Utils.Bernstein;
+
+      let isBArray = Array.isArray(b);
+
+      for (let i = 0; i <= n; i++) {
+        if (typeof b === 'number') {
+          b += pw(1 - k, n - i) * pw(k, i) * v[i] * fn(n, i);
+        } else if (isBArray) {
+          for (let p = 0, len = b.length; p < len; p++) {
+            if (typeof b[p] === 'number') {
+              b[p] += pw(1 - k, n - i) * pw(k, i) * v[i][p] * fn(n, i);
+            } else {
+              b[p] = v[i][p];
+            }
+          }
+        } else if (typeof b === 'object') {
+          for (let p in b) {
+            if (typeof b[p] === 'number') {
+              b[p] += pw(1 - k, n - i) * pw(k, i) * v[i][p] * fn(n, i);
+            } else {
+              b[p] = v[i][p];
+            }
+          }
+        } else if (typeof b === 'string') {
+          let STRING_BUFFER = '';
+          let idx = Math.round(n * k);
+          let vCurr = v[idx];
+          for (let ks = 1, len = vCurr.length; ks < len; ks++) {
+            STRING_BUFFER += vCurr[ks];
+          }
+          return STRING_BUFFER
+        }
+      }
+
+      return b
+    },
+
+    CatmullRom (v, k, value) {
+      const m = v.length - 1;
+      let f = m * k;
+      let i = Math.floor(f);
+      const fn = Interpolation.Utils.CatmullRom;
+
+      if (v[0] === v[m]) {
+        if (k < 0) {
+          i = Math.floor((f = m * (1 + k)));
+        }
+
+        return fn(
+          v[(i - 1 + m) % m],
+          v[i],
+          v[(i + 1) % m],
+          v[(i + 2) % m],
+          f - i,
+          value
+        )
+      } else {
+        if (k < 0) {
+          return fn(v[1], v[1], v[0], v[0], -k, value)
+        }
+
+        if (k > 1) {
+          return fn(v[m - 1], v[m - 1], v[m], v[m], (k | 0) - k, value)
+        }
+
+        return fn(
+          v[i ? i - 1 : 0],
+          v[i],
+          v[m < i + 1 ? m : i + 1],
+          v[m < i + 2 ? m : i + 2],
+          f - i,
+          value
+        )
+      }
+    },
+
+    Utils: {
+      Linear (p0, p1, t, v) {
+        if (typeof p0 === 'string') {
+          return p1
+        } else if (typeof p0 === 'number') {
+          return typeof p0 === 'function' ? p0(t) : p0 + (p1 - p0) * t
+        } else if (typeof p0 === 'object') {
+          if (p0.length !== undefined) {
+            if (p0[0] === STRING_PROP) {
+              let STRING_BUFFER = '';
+              for (let i = 1, len = p0.length; i < len; i++) {
+                let currentValue =
+                  typeof p0[i] === 'number' ? p0[i] + (p1[i] - p0[i]) * t : p1[i];
+                if (isRGBColor(p0, i) || isRGBColor(p0, i, RGBA)) {
+                  currentValue |= 0;
+                }
+                STRING_BUFFER += currentValue;
+              }
+              return STRING_BUFFER
+            }
+            for (let p = 0, len = v.length; p < len; p++) {
+              v[p] = Interpolation.Utils.Linear(p0[p], p1[p], t, v[p]);
+            }
+          } else {
+            for (const p in v) {
+              v[p] = Interpolation.Utils.Linear(p0[p], p1[p], t, v[p]);
+            }
+          }
+          return v
+        }
+      },
+
+      Reset (value) {
+        if (Array.isArray(value)) {
+          for (let i = 0, len = value.length; i < len; i++) {
+            value[i] = Interpolation.Utils.Reset(value[i]);
+          }
+          return value
+        } else if (typeof value === 'object') {
+          for (let i in value) {
+            value[i] = Interpolation.Utils.Reset(value[i]);
+          }
+          return value
+        } else if (typeof value === 'number') {
+          return 0
+        }
+        return value
+      },
+
+      Bernstein (n, i) {
+        const fc = Interpolation.Utils.Factorial;
+
+        return fc(n) / fc(i) / fc(n - i)
+      },
+
+      Factorial: (function () {
+        const a = [1];
+
+        return n => {
+          let s = 1;
+
+          if (a[n]) {
+            return a[n]
+          }
+
+          for (let i = n; i > 1; i--) {
+            s *= i;
+          }
+
+          a[n] = s;
+          return s
+        }
+      })(),
+
+      CatmullRom (p0, p1, p2, p3, t, v) {
+        if (typeof p0 === 'string') {
+          return p1
+        } else if (typeof p0 === 'number') {
+          const v0 = (p2 - p0) * 0.5;
+          const v1 = (p3 - p1) * 0.5;
+          const t2 = t * t;
+          const t3 = t * t2;
+
+          return (
+            (2 * p1 - 2 * p2 + v0 + v1) * t3 +
+            (-3 * p1 + 3 * p2 - 2 * v0 - v1) * t2 +
+            v0 * t +
+            p1
+          )
+        } else if (typeof p0 === 'object') {
+          if (p0.length !== undefined) {
+            if (p0[0] === STRING_PROP) {
+              let STRING_BUFFER = '';
+              for (let i = 1, len = p0.length; i < len; i++) {
+                let currentValue =
+                  typeof p0[i] === 'number'
+                    ? Interpolation.Utils.CatmullRom(
+                      p0[i],
+                      p1[i],
+                      p2[i],
+                      p3[i],
+                      t
+                    )
+                    : p3[i];
+                if (isRGBColor(p0, i) || isRGBColor(p0, i, RGBA)) {
+                  currentValue |= 0;
+                }
+                STRING_BUFFER += currentValue;
+              }
+              return STRING_BUFFER
+            }
+            for (let p = 0, len = v.length; p < len; p++) {
+              v[p] = Interpolation.Utils.CatmullRom(
+                p0[p],
+                p1[p],
+                p2[p],
+                p3[p],
+                t,
+                v[p]
+              );
+            }
+          } else {
+            for (const p in v) {
+              v[p] = Interpolation.Utils.CatmullRom(
+                p0[p],
+                p1[p],
+                p2[p],
+                p3[p],
+                t,
+                v[p]
+              );
+            }
+          }
+          return v
+        }
+      }
+    }
   };
 
   // node_modules/es6-tween/src/NodeCache.js
-  var __assign$1 = (undefined && undefined.__assign) || Object.assign || function(t) {
-      for (var s, i = 1, n = arguments.length; i < n; i++) {
-          s = arguments[i];
-          for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-              t[p] = s[p];
-      }
-      return t;
-  };
-  var Store = {};
+
+  const Store = {};
   function NodeCache (node, object, tween) {
-      if (!node || !node.nodeType) {
-          return object;
-      }
-      var ID = node.queueID || 'q_' + Date.now();
-      if (!node.queueID) {
-          node.queueID = ID;
-      }
-      var storeID = Store[ID];
-      if (storeID) {
-          if (storeID.object === object &&
-              node === storeID.tween.node &&
-              tween._startTime === storeID.tween._startTime) {
-              remove$1(storeID.tween);
+    if (!node || !node.nodeType) {
+      return object
+    }
+    const ID = node.queueID || 'q_' + Date.now();
+    if (!node.queueID) {
+      node.queueID = ID;
+    }
+    const storeID = Store[ID];
+    if (storeID) {
+      if (
+        storeID.object === object &&
+        node === storeID.tween.node &&
+        tween._startTime === storeID.tween._startTime
+      ) {
+        remove$1(storeID.tween);
+      } else if (typeof object === 'object' && !!object && !!storeID.object) {
+        for (let prop in object) {
+          if (prop in storeID.object) {
+            if (tween._startTime === storeID.tween._startTime) {
+              delete storeID.object[prop];
+            } else {
+              storeID.propNormaliseRequired = true;
+            }
           }
-          else if (typeof object === 'object' && !!object && !!storeID.object) {
-              for (var prop in object) {
-                  if (prop in storeID.object) {
-                      if (tween._startTime === storeID.tween._startTime) {
-                          delete storeID.object[prop];
-                      }
-                      else {
-                          storeID.propNormaliseRequired = true;
-                      }
-                  }
-              }
-              storeID.object = __assign$1({}, storeID.object, object);
-          }
-          return storeID.object;
+        }
+        storeID.object = { ...storeID.object,
+          ...object
+        };
       }
-      if (typeof object === 'object' && !!object) {
-          Store[ID] = { tween: tween, object: object, propNormaliseRequired: false };
-          return Store[ID].object;
-      }
-      return object;
+      return storeID.object
+    }
+
+    if (typeof object === 'object' && !!object) {
+      Store[ID] = {
+        tween,
+        object,
+        propNormaliseRequired: false
+      };
+      return Store[ID].object
+    }
+
+    return object
   }
 
   // node_modules/es6-tween/src/selector.js
   function Selector (selector, collection) {
-      if (collection) {
-          return !selector
-              ? null
-              : selector === window || selector === document
-                  ? [selector]
-                  : typeof selector === 'string'
-                      ? !!document.querySelectorAll && document.querySelectorAll(selector)
-                      : Array.isArray(selector)
-                          ? selector
-                          : selector.nodeType ? [selector] : [];
-      }
+    if (collection) {
       return !selector
-          ? null
-          : selector === window || selector === document
+        ? null
+        : selector === window || selector === document
+          ? [selector]
+          : typeof selector === 'string'
+            ? !!document.querySelectorAll && document.querySelectorAll(selector)
+            : Array.isArray(selector)
               ? selector
-              : typeof selector === 'string'
-                  ? !!document.querySelector && document.querySelector(selector)
-                  : Array.isArray(selector)
-                      ? selector[0]
-                      : selector.nodeType ? selector : null;
+              : selector.nodeType ? [selector] : []
+    }
+    return !selector
+      ? null
+      : selector === window || selector === document
+        ? selector
+        : typeof selector === 'string'
+          ? !!document.querySelector && document.querySelector(selector)
+          : Array.isArray(selector)
+            ? selector[0]
+            : selector.nodeType ? selector : null
   }
 
   // node_modules/es6-tween/src/Tween.js
-  var _id = 0; // Unique ID
-  var defaultEasing = Easing.Linear.None;
+
+  let _id = 0; // Unique ID
+  const defaultEasing = Easing.Linear.None;
+
   /**
    * Tween main constructor
    * @constructor
@@ -5204,694 +5332,838 @@ var ElControls = (function (exports) {
    * @param {Object=} object If Node Element is using, second argument is used for Tween initial object
    * @example let tween = new Tween(myNode, {width:'100px'}).to({width:'300px'}, 2000).start()
    */
-  var Tween = /** @class */ (function () {
-      function Tween(node, object) {
-          this._chainedTweensCount = 0;
-          this.id = _id++;
-          if (!!node && typeof node === 'object' && !object && !node.nodeType) {
-              object = this.object = node;
-              node = null;
-          }
-          else if (!!node &&
-              (node.nodeType || node.length || typeof node === 'string')) {
-              node = this.node = Selector(node);
-              object = this.object = NodeCache(node, object, this);
-          }
-          this._valuesEnd = null;
-          this._valuesStart = {};
-          this._duration = 1000;
-          this._easingFunction = defaultEasing;
-          this._easingReverse = defaultEasing;
-          this._interpolationFunction = Interpolation.Linear;
-          this._startTime = 0;
-          this._initTime = 0;
-          this._delayTime = 0;
-          this._repeat = 0;
-          this._r = 0;
-          this._isPlaying = false;
-          this._yoyo = false;
-          this._reversed = false;
-          this._onStartCallbackFired = false;
-          this._pausedTime = null;
-          this._isFinite = true;
-          this._maxListener = 15;
-          this._prevTime = null;
-          return this;
+  class Tween {
+    /**
+     * Easier way to call the Tween
+     * @param {Element} node DOM Element
+     * @param {object} object - Initial value
+     * @param {object} to - Target value
+     * @param {object} params - Options of tweens
+     * @example Tween.fromTo(node, {x:0}, {x:200}, {duration:1000})
+     * @memberof TWEEN.Tween
+     * @static
+     */
+    static fromTo (node, object, to, params = {}) {
+      params.quickRender = params.quickRender ? params.quickRender : !to;
+      const tween = new Tween(node, object).to(to, params);
+      if (params.quickRender) {
+        tween.render().update(tween._startTime);
+        tween._rendered = false;
+        tween._onStartCallbackFired = false;
       }
-      /**
-       * Easier way to call the Tween
-       * @param {Element} node DOM Element
-       * @param {object} object - Initial value
-       * @param {object} to - Target value
-       * @param {object} params - Options of tweens
-       * @example Tween.fromTo(node, {x:0}, {x:200}, {duration:1000})
-       * @memberof TWEEN.Tween
-       * @static
-       */
-      Tween.fromTo = function (node, object, to, params) {
-          if (params === void 0) { params = {}; }
-          params.quickRender = params.quickRender ? params.quickRender : !to;
-          var tween = new Tween(node, object).to(to, params);
-          if (params.quickRender) {
-              tween.render().update(tween._startTime);
-              tween._rendered = false;
-              tween._onStartCallbackFired = false;
-          }
-          return tween;
-      };
-      /**
-       * Easier way calling constructor only applies the `to` value, useful for CSS Animation
-       * @param {Element} node DOM Element
-       * @param {object} to - Target value
-       * @param {object} params - Options of tweens
-       * @example Tween.to(node, {x:200}, {duration:1000})
-       * @memberof TWEEN.Tween
-       * @static
-       */
-      Tween.to = function (node, to, params) {
-          return Tween.fromTo(node, null, to, params);
-      };
-      /**
-       * Easier way calling constructor only applies the `from` value, useful for CSS Animation
-       * @param {Element} node DOM Element
-       * @param {object} from - Initial value
-       * @param {object} params - Options of tweens
-       * @example Tween.from(node, {x:200}, {duration:1000})
-       * @memberof TWEEN.Tween
-       * @static
-       */
-      Tween.from = function (node, from, params) {
-          return Tween.fromTo(node, from, null, params);
-      };
-      /**
-       * Sets max `event` listener's count to Events system
-       * @param {number} count - Event listener's count
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.setMaxListener = function (count) {
-          if (count === void 0) { count = 15; }
-          this._maxListener = count;
-          return this;
-      };
-      /**
-       * Adds `event` to Events system
-       * @param {string} event - Event listener name
-       * @param {Function} callback - Event listener callback
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.on = function (event, callback) {
-          var _maxListener = this._maxListener;
-          var callbackName = event + EVENT_CALLBACK;
-          for (var i = 0; i < _maxListener; i++) {
-              var callbackId = callbackName + i;
-              if (!this[callbackId]) {
-                  this[callbackId] = callback;
-                  break;
-              }
-          }
-          return this;
-      };
-      /**
-       * Adds `event` to Events system.
-       * Removes itself after fired once
-       * @param {string} event - Event listener name
-       * @param {Function} callback - Event listener callback
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.once = function (event, callback) {
-          var _this = this;
-          var _maxListener = this._maxListener;
-          var callbackName = event + EVENT_CALLBACK;
-          var _loop_1 = function (i) {
-              var callbackId = callbackName + i;
-              if (!this_1[callbackId]) {
-                  this_1[callbackId] = function () {
-                      var args = [];
-                      for (var _i = 0; _i < arguments.length; _i++) {
-                          args[_i] = arguments[_i];
-                      }
-                      callback.apply(_this, args);
-                      _this[callbackId] = null;
-                  };
-                  return "break";
-              }
+      return tween
+    }
+    /**
+     * Easier way calling constructor only applies the `to` value, useful for CSS Animation
+     * @param {Element} node DOM Element
+     * @param {object} to - Target value
+     * @param {object} params - Options of tweens
+     * @example Tween.to(node, {x:200}, {duration:1000})
+     * @memberof TWEEN.Tween
+     * @static
+     */
+    static to (node, to, params) {
+      return Tween.fromTo(node, null, to, params)
+    }
+    /**
+     * Easier way calling constructor only applies the `from` value, useful for CSS Animation
+     * @param {Element} node DOM Element
+     * @param {object} from - Initial value
+     * @param {object} params - Options of tweens
+     * @example Tween.from(node, {x:200}, {duration:1000})
+     * @memberof TWEEN.Tween
+     * @static
+     */
+    static from (node, from, params) {
+      return Tween.fromTo(node, from, null, params)
+    }
+    constructor (node, object) {
+      this.id = _id++;
+      if (!!node && typeof node === 'object' && !object && !node.nodeType) {
+        object = this.object = node;
+        node = null;
+      } else if (!!node &&
+        (node.nodeType || node.length || typeof node === 'string')
+      ) {
+        node = this.node = Selector(node);
+        object = this.object = NodeCache(node, object, this);
+      }
+      this._valuesEnd = null;
+      this._valuesStart = {};
+
+      this._duration = 1000;
+      this._easingFunction = defaultEasing;
+      this._easingReverse = defaultEasing;
+      this._interpolationFunction = Interpolation.Linear;
+
+      this._startTime = 0;
+      this._initTime = 0;
+      this._delayTime = 0;
+      this._repeat = 0;
+      this._r = 0;
+      this._isPlaying = false;
+      this._yoyo = false;
+      this._reversed = false;
+
+      this._onStartCallbackFired = false;
+      this._pausedTime = null;
+      this._isFinite = true;
+      this._maxListener = 15;
+      this._chainedTweensCount = 0;
+      this._prevTime = null;
+
+      return this
+    }
+
+    /**
+     * Sets max `event` listener's count to Events system
+     * @param {number} count - Event listener's count
+     * @memberof TWEEN.Tween
+     */
+    setMaxListener (count = 15) {
+      this._maxListener = count;
+      return this
+    }
+
+    /**
+     * Adds `event` to Events system
+     * @param {string} event - Event listener name
+     * @param {Function} callback - Event listener callback
+     * @memberof TWEEN.Tween
+     */
+    on (event, callback) {
+      const {
+        _maxListener
+      } = this;
+      const callbackName = event + EVENT_CALLBACK;
+      for (let i = 0; i < _maxListener; i++) {
+        const callbackId = callbackName + i;
+        if (!this[callbackId]) {
+          this[callbackId] = callback;
+          break
+        }
+      }
+      return this
+    }
+
+    /**
+     * Adds `event` to Events system.
+     * Removes itself after fired once
+     * @param {string} event - Event listener name
+     * @param {Function} callback - Event listener callback
+     * @memberof TWEEN.Tween
+     */
+    once (event, callback) {
+      const {
+        _maxListener
+      } = this;
+      const callbackName = event + EVENT_CALLBACK;
+      for (let i = 0; i < _maxListener; i++) {
+        const callbackId = callbackName + i;
+        if (!this[callbackId]) {
+          this[callbackId] = (...args) => {
+            callback.apply(this, args);
+            this[callbackId] = null;
           };
-          var this_1 = this;
-          for (var i = 0; i < _maxListener; i++) {
-              var state_1 = _loop_1(i);
-              if (state_1 === "break")
-                  break;
+          break
+        }
+      }
+      return this
+    }
+
+    /**
+     * Removes `event` from Events system
+     * @param {string} event - Event listener name
+     * @param {Function} callback - Event listener callback
+     * @memberof TWEEN.Tween
+     */
+    off (event, callback) {
+      const {
+        _maxListener
+      } = this;
+      const callbackName = event + EVENT_CALLBACK;
+      for (let i = 0; i < _maxListener; i++) {
+        const callbackId = callbackName + i;
+        if (this[callbackId] === callback) {
+          this[callbackId] = null;
+        }
+      }
+      return this
+    }
+
+    /**
+     * Emits/Fired/Trigger `event` from Events system listeners
+     * @param {string} event - Event listener name
+     * @memberof TWEEN.Tween
+     */
+    emit (event, arg1, arg2, arg3, arg4) {
+      const {
+        _maxListener
+      } = this;
+      const callbackName = event + EVENT_CALLBACK;
+
+      if (!this[callbackName + 0]) {
+        return this
+      }
+      for (let i = 0; i < _maxListener; i++) {
+        const callbackId = callbackName + i;
+        if (this[callbackId]) {
+          this[callbackId](arg1, arg2, arg3, arg4);
+        }
+      }
+      return this
+    }
+
+    /**
+     * @return {boolean} State of playing of tween
+     * @example tween.isPlaying() // returns `true` if tween in progress
+     * @memberof TWEEN.Tween
+     */
+    isPlaying () {
+      return this._isPlaying
+    }
+
+    /**
+     * @return {boolean} State of started of tween
+     * @example tween.isStarted() // returns `true` if tween in started
+     * @memberof TWEEN.Tween
+     */
+    isStarted () {
+      return this._onStartCallbackFired
+    }
+
+    /**
+     * Reverses the tween state/direction
+     * @example tween.reverse()
+     * @param {boolean=} state Set state of current reverse
+     * @memberof TWEEN.Tween
+     */
+    reverse (state) {
+      const {
+        _reversed
+      } = this;
+
+      this._reversed = state !== undefined ? state : !_reversed;
+
+      return this
+    }
+
+    /**
+     * @return {boolean} State of reversed
+     * @example tween.reversed() // returns `true` if tween in reversed state
+     * @memberof TWEEN.Tween
+     */
+    reversed () {
+      return this._reversed
+    }
+
+    /**
+     * Pauses tween
+     * @example tween.pause()
+     * @memberof TWEEN.Tween
+     */
+    pause () {
+      if (!this._isPlaying) {
+        return this
+      }
+
+      this._isPlaying = false;
+
+      remove$1(this);
+      this._pausedTime = now();
+
+      return this.emit(EVENT_PAUSE, this.object)
+    }
+
+    /**
+     * Play/Resume the tween
+     * @example tween.play()
+     * @memberof TWEEN.Tween
+     */
+    play () {
+      if (this._isPlaying) {
+        return this
+      }
+
+      this._isPlaying = true;
+
+      this._startTime += now() - this._pausedTime;
+      this._initTime = this._startTime;
+      add(this);
+      this._pausedTime = now();
+
+      return this.emit(EVENT_PLAY, this.object)
+    }
+
+    /**
+     * Restarts tween from initial value
+     * @param {boolean=} noDelay If this param is set to `true`, restarts tween without `delay`
+     * @example tween.restart()
+     * @memberof TWEEN.Tween
+     */
+    restart (noDelay) {
+      this._repeat = this._r;
+      this.reassignValues();
+
+      add(this);
+
+      return this.emit(EVENT_RESTART, this.object)
+    }
+
+    /**
+     * Seek tween value by `time`. Note: Not works as excepted. PR are welcome
+     * @param {Time} time Tween update time
+     * @param {boolean=} keepPlaying When this param is set to `false`, tween pausing after seek
+     * @example tween.seek(500)
+     * @memberof TWEEN.Tween
+     * @deprecated Not works as excepted, so we deprecated this method
+     */
+    seek (time, keepPlaying) {
+      const {
+        _duration,
+        _initTime,
+        _startTime,
+        _reversed
+      } = this;
+
+      let updateTime = _initTime + time;
+      this._isPlaying = true;
+
+      if (updateTime < _startTime && _startTime >= _initTime) {
+        this._startTime -= _duration;
+        this._reversed = !_reversed;
+      }
+
+      this.update(time, false);
+
+      this.emit(EVENT_SEEK, time, this.object);
+
+      return keepPlaying ? this : this.pause()
+    }
+
+    /**
+     * Sets tween duration
+     * @param {number} amount Duration is milliseconds
+     * @example tween.duration(2000)
+     * @memberof TWEEN.Tween
+     */
+    duration (amount) {
+      this._duration =
+        typeof amount === 'function' ? amount(this._duration) : amount;
+
+      return this
+    }
+
+    /**
+     * Sets target value and duration
+     * @param {object} properties Target value (to value)
+     * @param {number|Object=} [duration=1000] Duration of tween
+     * @example let tween = new Tween({x:0}).to({x:100}, 2000)
+     * @memberof TWEEN.Tween
+     */
+    to (properties, duration = 1000, maybeUsed) {
+      this._valuesEnd = properties;
+
+      if (typeof duration === 'number' || typeof duration === 'function') {
+        this._duration =
+          typeof duration === 'function' ? duration(this._duration) : duration;
+      } else if (typeof duration === 'object') {
+        for (const prop in duration) {
+          if (typeof this[prop] === 'function') {
+            const [
+              arg1 = null,
+              arg2 = null,
+              arg3 = null,
+              arg4 = null
+            ] = Array.isArray(duration[prop]) ? duration[prop] : [duration[prop]];
+            this[prop](arg1, arg2, arg3, arg4);
           }
-          return this;
-      };
-      /**
-       * Removes `event` from Events system
-       * @param {string} event - Event listener name
-       * @param {Function} callback - Event listener callback
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.off = function (event, callback) {
-          var _maxListener = this._maxListener;
-          var callbackName = event + EVENT_CALLBACK;
-          for (var i = 0; i < _maxListener; i++) {
-              var callbackId = callbackName + i;
-              if (this[callbackId] === callback) {
-                  this[callbackId] = null;
+        }
+      }
+
+      return this
+    }
+
+    /**
+     * Renders and computes value at first render
+     * @private
+     * @memberof TWEEN.Tween
+     */
+    render () {
+      if (this._rendered) {
+        return this
+      }
+      let {
+        _valuesStart,
+        _valuesEnd,
+        object,
+        node,
+        InitialValues
+      } = this;
+
+      SET_NESTED(object);
+      SET_NESTED(_valuesEnd);
+
+      if (node && node.queueID && Store[node.queueID]) {
+        const prevTweenByNode = Store[node.queueID];
+        if (
+          prevTweenByNode.propNormaliseRequired &&
+          prevTweenByNode.tween !== this
+        ) {
+          for (const property in _valuesEnd) {
+            if (prevTweenByNode.tween._valuesEnd[property] !== undefined) ;
+          }
+          prevTweenByNode.normalisedProp = true;
+          prevTweenByNode.propNormaliseRequired = false;
+        }
+      }
+
+      if (node && InitialValues) {
+        if (!object || Object.keys(object).length === 0) {
+          object = this.object = NodeCache(
+            node,
+            InitialValues(node, _valuesEnd),
+            this
+          );
+        } else if (!_valuesEnd || Object.keys(_valuesEnd).length === 0) {
+          _valuesEnd = this._valuesEnd = InitialValues(node, object);
+        }
+      }
+      for (const property in _valuesEnd) {
+        let start = object && object[property] && deepCopy(object[property]);
+        let end = _valuesEnd[property];
+        if (Plugins[property] && Plugins[property].init) {
+          Plugins[property].init.call(this, start, end, property, object);
+          if (start === undefined && _valuesStart[property]) {
+            start = _valuesStart[property];
+          }
+          if (Plugins[property].skipProcess) {
+            continue
+          }
+        }
+        if (
+          (typeof start === 'number' && isNaN(start)) ||
+          start === null ||
+          end === null ||
+          start === false ||
+          end === false ||
+          start === undefined ||
+          end === undefined ||
+          start === end
+        ) {
+          continue
+        }
+        if (Array.isArray(end) && !Array.isArray(start)) {
+          end.unshift(start);
+          for (let i = 0, len = end.length; i < len; i++) {
+            if (typeof end[i] === 'string') {
+              let arrayOfStrings = decomposeString(end[i]);
+              let stringObject = {
+                length: arrayOfStrings.length,
+                isString: true
+              };
+              for (let ii = 0, len2 = arrayOfStrings.length; ii < len2; ii++) {
+                stringObject[ii] = arrayOfStrings[ii];
               }
+              end[i] = stringObject;
+            }
           }
-          return this;
-      };
-      /**
-       * Emits/Fired/Trigger `event` from Events system listeners
-       * @param {string} event - Event listener name
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.emit = function (event, arg1, arg2, arg3, arg4) {
-          var _maxListener = this._maxListener;
-          var callbackName = event + EVENT_CALLBACK;
-          if (!this[callbackName + 0]) {
-              return this;
+        }
+        _valuesStart[property] = start;
+        if (typeof start === 'number' && typeof end === 'string' && end[1] === '=') {
+          continue
+        }
+        decompose(property, object, _valuesStart, _valuesEnd);
+      }
+
+      if (Tween.Renderer && this.node && Tween.Renderer.init) {
+        Tween.Renderer.init.call(this, object, _valuesStart, _valuesEnd);
+        this.__render = true;
+      }
+
+      return this
+    }
+
+    /**
+     * Start the tweening
+     * @param {number|string} time setting manual time instead of Current browser timestamp or like `+1000` relative to current timestamp
+     * @example tween.start()
+     * @memberof TWEEN.Tween
+     */
+    start (time) {
+      this._startTime =
+        time !== undefined
+          ? typeof time === 'string' ? now() + parseFloat(time) : time
+          : now();
+      this._startTime += this._delayTime;
+      this._initTime = this._prevTime = this._startTime;
+
+      this._onStartCallbackFired = false;
+      this._rendered = false;
+      this._isPlaying = true;
+
+      add(this);
+
+      return this
+    }
+
+    /**
+     * Stops the tween
+     * @example tween.stop()
+     * @memberof TWEEN.Tween
+     */
+    stop () {
+      let {
+        _isPlaying,
+        _isFinite,
+        object,
+        _startTime,
+        _duration,
+        _r,
+        _yoyo,
+        _reversed
+      } = this;
+
+      if (!_isPlaying) {
+        return this
+      }
+
+      let atStart = _isFinite ? (_r + 1) % 2 === 1 : !_reversed;
+
+      this._reversed = false;
+
+      if (_yoyo && atStart) {
+        this.update(_startTime);
+      } else {
+        this.update(_startTime + _duration);
+      }
+      remove$1(this);
+
+      return this.emit(EVENT_STOP, object)
+    }
+
+    /**
+     * Set delay of tween
+     * @param {number} amount Sets tween delay / wait duration
+     * @example tween.delay(500)
+     * @memberof TWEEN.Tween
+     */
+    delay (amount) {
+      this._delayTime =
+        typeof amount === 'function' ? amount(this._delayTime) : amount;
+
+      return this
+    }
+
+    /**
+     * Chained tweens
+     * @param {any} arguments Arguments list
+     * @example tween.chainedTweens(tween1, tween2)
+     * @memberof TWEEN.Tween
+     */
+    chainedTweens () {
+      this._chainedTweensCount = arguments.length;
+      if (!this._chainedTweensCount) {
+        return this
+      }
+      for (let i = 0, len = this._chainedTweensCount; i < len; i++) {
+        this[CHAINED_TWEENS + i] = arguments[i];
+      }
+
+      return this
+    }
+
+    /**
+     * Sets how times tween is repeating
+     * @param {amount} amount the times of repeat
+     * @example tween.repeat(5)
+     * @memberof TWEEN.Tween
+     */
+    repeat (amount) {
+      this._repeat = !this._duration
+        ? 0
+        : typeof amount === 'function' ? amount(this._repeat) : amount;
+      this._r = this._repeat;
+      this._isFinite = isFinite(amount);
+
+      return this
+    }
+
+    /**
+     * Set delay of each repeat alternate of tween
+     * @param {number} amount Sets tween repeat alternate delay / repeat alternate wait duration
+     * @example tween.reverseDelay(500)
+     * @memberof TWEEN.Tween
+     */
+    reverseDelay (amount) {
+      this._reverseDelayTime =
+        typeof amount === 'function' ? amount(this._reverseDelayTime) : amount;
+
+      return this
+    }
+
+    /**
+     * Set `yoyo` state (enables reverse in repeat)
+     * @param {boolean} state Enables alternate direction for repeat
+     * @param {Function=} _easingReverse Easing function in reverse direction
+     * @example tween.yoyo(true)
+     * @memberof TWEEN.Tween
+     */
+    yoyo (state, _easingReverse) {
+      this._yoyo =
+        typeof state === 'function'
+          ? state(this._yoyo)
+          : state === null ? this._yoyo : state;
+      if (!state) {
+        this._reversed = false;
+      }
+      this._easingReverse = _easingReverse || null;
+
+      return this
+    }
+
+    /**
+     * Set easing
+     * @param {Function} _easingFunction Easing function, applies in non-reverse direction if Tween#yoyo second argument is applied
+     * @example tween.easing(Easing.Elastic.InOut)
+     * @memberof TWEEN.Tween
+     */
+    easing (_easingFunction) {
+      this._easingFunction = _easingFunction;
+
+      return this
+    }
+
+    /**
+     * Set interpolation
+     * @param {Function} _interpolationFunction Interpolation function
+     * @example tween.interpolation(Interpolation.Bezier)
+     * @memberof TWEEN.Tween
+     */
+    interpolation (_interpolationFunction) {
+      if (typeof _interpolationFunction === 'function') {
+        this._interpolationFunction = _interpolationFunction;
+      }
+
+      return this
+    }
+
+    /**
+     * Reassigns value for rare-case like Tween#restart or for Timeline
+     * @private
+     * @memberof TWEEN.Tween
+     */
+    reassignValues (time) {
+      const {
+        _valuesStart,
+        object,
+        _delayTime
+      } = this;
+
+      this._isPlaying = true;
+      this._startTime = time !== undefined ? time : now();
+      this._startTime += _delayTime;
+      this._reversed = false;
+      add(this);
+
+      for (const property in _valuesStart) {
+        const start = _valuesStart[property];
+
+        object[property] = start;
+      }
+
+      return this
+    }
+
+    /**
+     * Updates initial object to target value by given `time`
+     * @param {Time} time Current time
+     * @param {boolean=} preserve Prevents from removing tween from store
+     * @param {boolean=} forceTime Forces to be frame rendered, even mismatching time
+     * @example tween.update(100)
+     * @memberof TWEEN.Tween
+     */
+    update (time, preserve, forceTime) {
+      let {
+        _onStartCallbackFired,
+        _easingFunction,
+        _interpolationFunction,
+        _easingReverse,
+        _repeat,
+        _delayTime,
+        _reverseDelayTime,
+        _yoyo,
+        _reversed,
+        _startTime,
+        _prevTime,
+        _duration,
+        _valuesStart,
+        _valuesEnd,
+        object,
+        _isFinite,
+        _isPlaying,
+        __render,
+        _chainedTweensCount
+      } = this;
+
+      let elapsed;
+      let currentEasing;
+      let property;
+      let propCount = 0;
+
+      if (!_duration) {
+        elapsed = 1;
+        _repeat = 0;
+      } else {
+        time = time !== undefined ? time : now();
+
+        let delta = time - _prevTime;
+        this._prevTime = time;
+        if (delta > TOO_LONG_FRAME_MS) {
+          time -= delta - FRAME_MS;
+        }
+
+        if (!_isPlaying || (time < _startTime && !forceTime)) {
+          return true
+        }
+
+        elapsed = (time - _startTime) / _duration;
+        elapsed = elapsed > 1 ? 1 : elapsed;
+        elapsed = _reversed ? 1 - elapsed : elapsed;
+      }
+
+      if (!_onStartCallbackFired) {
+        if (!this._rendered) {
+          this.render();
+          this._rendered = true;
+        }
+
+        this.emit(EVENT_START, object);
+
+        this._onStartCallbackFired = true;
+      }
+
+      currentEasing = _reversed
+        ? _easingReverse || _easingFunction
+        : _easingFunction;
+
+      if (!object) {
+        return true
+      }
+
+      for (property in _valuesEnd) {
+        const start = _valuesStart[property];
+        if (
+          (start === undefined || start === null) &&
+          !(Plugins[property] && Plugins[property].update)
+        ) {
+          continue
+        }
+        const end = _valuesEnd[property];
+        const value = currentEasing[property]
+          ? currentEasing[property](elapsed)
+          : typeof currentEasing === 'function'
+            ? currentEasing(elapsed)
+            : defaultEasing(elapsed);
+        const _interpolationFunctionCall = _interpolationFunction[property]
+          ? _interpolationFunction[property]
+          : typeof _interpolationFunction === 'function'
+            ? _interpolationFunction
+            : Interpolation.Linear;
+
+        if (typeof end === 'number') {
+          object[property] =
+            (((start + (end - start) * value) * DECIMAL) | 0) / DECIMAL;
+        } else if (Array.isArray(end) && !Array.isArray(start)) {
+          object[property] = _interpolationFunctionCall(
+            end,
+            value,
+            object[property]
+          );
+        } else if (end && end.update) {
+          end.update(value);
+        } else if (typeof end === 'function') {
+          object[property] = end(value);
+        } else if (typeof end === 'string' && typeof start === 'number') {
+          object[property] = start + parseFloat(end[0] + end.substr(2)) * value;
+        } else {
+          recompose(property, object, _valuesStart, _valuesEnd, value, elapsed);
+        }
+        if (Plugins[property] && Plugins[property].update) {
+          Plugins[property].update.call(
+            this,
+            object[property],
+            start,
+            end,
+            value,
+            elapsed,
+            property
+          );
+        }
+        propCount++;
+      }
+
+      if (!propCount) {
+        remove$1(this);
+        return false
+      }
+
+      if (__render && Tween.Renderer && Tween.Renderer.update) {
+        Tween.Renderer.update.call(this, object, elapsed);
+      }
+
+      this.emit(EVENT_UPDATE, object, elapsed, time);
+
+      if (elapsed === 1 || (_reversed && elapsed === 0)) {
+        if (_repeat > 0 && _duration > 0) {
+          if (_isFinite) {
+            this._repeat--;
           }
-          for (var i = 0; i < _maxListener; i++) {
-              var callbackId = callbackName + i;
-              if (this[callbackId]) {
-                  this[callbackId](arg1, arg2, arg3, arg4);
+
+          if (_yoyo) {
+            this._reversed = !_reversed;
+          } else {
+            for (property in _valuesEnd) {
+              let end = _valuesEnd[property];
+              if (typeof end === 'string' && typeof _valuesStart[property] === 'number') {
+                _valuesStart[property] += parseFloat(end[0] + end.substr(2));
               }
+            }
           }
-          return this;
-      };
-      /**
-       * @return {boolean} State of playing of tween
-       * @example tween.isPlaying() // returns `true` if tween in progress
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.isPlaying = function () {
-          return this._isPlaying;
-      };
-      /**
-       * @return {boolean} State of started of tween
-       * @example tween.isStarted() // returns `true` if tween in started
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.isStarted = function () {
-          return this._onStartCallbackFired;
-      };
-      /**
-       * Reverses the tween state/direction
-       * @example tween.reverse()
-       * @param {boolean=} state Set state of current reverse
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.reverse = function (state) {
-          var _reversed = this._reversed;
-          this._reversed = state !== undefined ? state : !_reversed;
-          return this;
-      };
-      /**
-       * @return {boolean} State of reversed
-       * @example tween.reversed() // returns `true` if tween in reversed state
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.reversed = function () {
-          return this._reversed;
-      };
-      /**
-       * Pauses tween
-       * @example tween.pause()
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.pause = function () {
-          if (!this._isPlaying) {
-              return this;
+
+          this.emit(_yoyo && !_reversed ? EVENT_REVERSE : EVENT_REPEAT, object);
+
+          if (_reversed && _reverseDelayTime) {
+            this._startTime = time - _reverseDelayTime;
+          } else {
+            this._startTime = time + _delayTime;
           }
-          this._isPlaying = false;
-          remove$1(this);
-          this._pausedTime = now();
-          return this.emit(EVENT_PAUSE, this.object);
-      };
-      /**
-       * Play/Resume the tween
-       * @example tween.play()
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.play = function () {
-          if (this._isPlaying) {
-              return this;
+
+          return true
+        } else {
+          if (!preserve) {
+            this._isPlaying = false;
+            remove$1(this);
+            _id--;
           }
-          this._isPlaying = true;
-          this._startTime += now() - this._pausedTime;
-          this._initTime = this._startTime;
-          add(this);
-          this._pausedTime = now();
-          return this.emit(EVENT_PLAY, this.object);
-      };
-      /**
-       * Restarts tween from initial value
-       * @param {boolean=} noDelay If this param is set to `true`, restarts tween without `delay`
-       * @example tween.restart()
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.restart = function (noDelay) {
+          this.emit(EVENT_COMPLETE, object);
           this._repeat = this._r;
-          this.reassignValues();
-          add(this);
-          return this.emit(EVENT_RESTART, this.object);
-      };
-      /**
-       * Seek tween value by `time`. Note: Not works as excepted. PR are welcome
-       * @param {Time} time Tween update time
-       * @param {boolean=} keepPlaying When this param is set to `false`, tween pausing after seek
-       * @example tween.seek(500)
-       * @memberof TWEEN.Tween
-       * @deprecated Not works as excepted, so we deprecated this method
-       */
-      Tween.prototype.seek = function (time, keepPlaying) {
-          var _a = this, _duration = _a._duration, _repeat = _a._repeat, _initTime = _a._initTime, _startTime = _a._startTime, _delayTime = _a._delayTime, _reversed = _a._reversed;
-          var updateTime = _initTime + time;
-          this._isPlaying = true;
-          if (updateTime < _startTime && _startTime >= _initTime) {
-              this._startTime -= _duration;
-              this._reversed = !_reversed;
+
+          if (_chainedTweensCount) {
+            for (let i = 0; i < _chainedTweensCount; i++) {
+              this[CHAINED_TWEENS + i].start(time + _duration);
+            }
           }
-          this.update(time, false);
-          this.emit(EVENT_SEEK, time, this.object);
-          return keepPlaying ? this : this.pause();
-      };
-      /**
-       * Sets tween duration
-       * @param {number} amount Duration is milliseconds
-       * @example tween.duration(2000)
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.duration = function (amount) {
-          this._duration =
-              typeof amount === 'function' ? amount(this._duration) : amount;
-          return this;
-      };
-      /**
-       * Sets target value and duration
-       * @param {object} properties Target value (to value)
-       * @param {number|Object=} [duration=1000] Duration of tween
-       * @example let tween = new Tween({x:0}).to({x:100}, 2000)
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.to = function (properties, duration, maybeUsed) {
-          if (duration === void 0) { duration = 1000; }
-          this._valuesEnd = properties;
-          if (typeof duration === 'number' || typeof duration === 'function') {
-              this._duration =
-                  typeof duration === 'function' ? duration(this._duration) : duration;
-          }
-          else if (typeof duration === 'object') {
-              for (var prop in duration) {
-                  if (typeof this[prop] === 'function') {
-                      var _a = Array.isArray(duration[prop]) ? duration[prop] : [duration[prop]], _b = _a[0], arg1 = _b === void 0 ? null : _b, _c = _a[1], arg2 = _c === void 0 ? null : _c, _d = _a[2], arg3 = _d === void 0 ? null : _d, _e = _a[3], arg4 = _e === void 0 ? null : _e;
-                      this[prop](arg1, arg2, arg3, arg4);
-                  }
-              }
-          }
-          return this;
-      };
-      /**
-       * Renders and computes value at first render
-       * @private
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.render = function () {
-          if (this._rendered) {
-              return this;
-          }
-          var _a = this, _valuesStart = _a._valuesStart, _valuesEnd = _a._valuesEnd, object = _a.object, node = _a.node, InitialValues = _a.InitialValues, _easingFunction = _a._easingFunction;
-          SET_NESTED(object);
-          SET_NESTED(_valuesEnd);
-          if (node && node.queueID && Store[node.queueID]) {
-              var prevTweenByNode = Store[node.queueID];
-              if (prevTweenByNode.propNormaliseRequired &&
-                  prevTweenByNode.tween !== this) {
-                  for (var property in _valuesEnd) {
-                      if (prevTweenByNode.tween._valuesEnd[property] !== undefined) {
-                          //delete prevTweenByNode.tween._valuesEnd[property];
-                      }
-                  }
-                  prevTweenByNode.normalisedProp = true;
-                  prevTweenByNode.propNormaliseRequired = false;
-              }
-          }
-          if (node && InitialValues) {
-              if (!object || Object.keys(object).length === 0) {
-                  object = this.object = NodeCache(node, InitialValues(node, _valuesEnd), this);
-              }
-              else if (!_valuesEnd || Object.keys(_valuesEnd).length === 0) {
-                  _valuesEnd = this._valuesEnd = InitialValues(node, object);
-              }
-          }
-          for (var property in _valuesEnd) {
-              var start = object && object[property] && deepCopy(object[property]);
-              var end = _valuesEnd[property];
-              if (Plugins[property] && Plugins[property].init) {
-                  Plugins[property].init.call(this, start, end, property, object);
-                  if (start === undefined && _valuesStart[property]) {
-                      start = _valuesStart[property];
-                  }
-                  if (Plugins[property].skipProcess) {
-                      continue;
-                  }
-              }
-              if ((typeof start === 'number' && isNaN(start)) ||
-                  start === null ||
-                  end === null ||
-                  start === false ||
-                  end === false ||
-                  start === undefined ||
-                  end === undefined ||
-                  start === end) {
-                  continue;
-              }
-              if (Array.isArray(end) && !Array.isArray(start)) {
-                  end.unshift(start);
-                  for (var i = 0, len = end.length; i < len; i++) {
-                      if (typeof end[i] === 'string') {
-                          var arrayOfStrings = decomposeString(end[i]);
-                          var stringObject = { length: arrayOfStrings.length, isString: true };
-                          for (var ii = 0, len2 = arrayOfStrings.length; ii < len2; ii++) {
-                              stringObject[ii] = arrayOfStrings[ii];
-                          }
-                          end[i] = stringObject;
-                      }
-                  }
-              }
-              _valuesStart[property] = start;
-              if (typeof start === 'number' && typeof end === 'string' && end[1] === '=') {
-                  continue;
-              }
-              decompose(property, object, _valuesStart, _valuesEnd);
-          }
-          if (Tween.Renderer && this.node && Tween.Renderer.init) {
-              Tween.Renderer.init.call(this, object, _valuesStart, _valuesEnd);
-              this.__render = true;
-          }
-          return this;
-      };
-      /**
-       * Start the tweening
-       * @param {number|string} time setting manual time instead of Current browser timestamp or like `+1000` relative to current timestamp
-       * @example tween.start()
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.start = function (time) {
-          this._startTime =
-              time !== undefined
-                  ? typeof time === 'string' ? now() + parseFloat(time) : time
-                  : now();
-          this._startTime += this._delayTime;
-          this._initTime = this._prevTime = this._startTime;
-          this._onStartCallbackFired = false;
-          this._rendered = false;
-          this._isPlaying = true;
-          add(this);
-          return this;
-      };
-      /**
-       * Stops the tween
-       * @example tween.stop()
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.stop = function () {
-          var _a = this, _isPlaying = _a._isPlaying, _isFinite = _a._isFinite, object = _a.object, _startTime = _a._startTime, _delayTime = _a._delayTime, _duration = _a._duration, _r = _a._r, _yoyo = _a._yoyo, _reversed = _a._reversed;
-          if (!_isPlaying) {
-              return this;
-          }
-          var atStart = _isFinite ? (_r + 1) % 2 === 1 : !_reversed;
-          this._reversed = false;
-          if (_yoyo && atStart) {
-              this.update(_startTime);
-          }
-          else {
-              this.update(_startTime + _duration);
-          }
-          remove$1(this);
-          return this.emit(EVENT_STOP, object);
-      };
-      /**
-       * Set delay of tween
-       * @param {number} amount Sets tween delay / wait duration
-       * @example tween.delay(500)
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.delay = function (amount) {
-          this._delayTime =
-              typeof amount === 'function' ? amount(this._delayTime) : amount;
-          return this;
-      };
-      /**
-       * Chained tweens
-       * @param {any} arguments Arguments list
-       * @example tween.chainedTweens(tween1, tween2)
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.chainedTweens = function () {
-          this._chainedTweensCount = arguments.length;
-          if (!this._chainedTweensCount) {
-              return this;
-          }
-          for (var i = 0, len = this._chainedTweensCount; i < len; i++) {
-              this[CHAINED_TWEENS + i] = arguments[i];
-          }
-          return this;
-      };
-      /**
-       * Sets how times tween is repeating
-       * @param {amount} amount the times of repeat
-       * @example tween.repeat(5)
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.repeat = function (amount) {
-          this._repeat = !this._duration
-              ? 0
-              : typeof amount === 'function' ? amount(this._repeat) : amount;
-          this._r = this._repeat;
-          this._isFinite = isFinite(amount);
-          return this;
-      };
-      /**
-       * Set delay of each repeat alternate of tween
-       * @param {number} amount Sets tween repeat alternate delay / repeat alternate wait duration
-       * @example tween.reverseDelay(500)
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.reverseDelay = function (amount) {
-          this._reverseDelayTime =
-              typeof amount === 'function' ? amount(this._reverseDelayTime) : amount;
-          return this;
-      };
-      /**
-       * Set `yoyo` state (enables reverse in repeat)
-       * @param {boolean} state Enables alternate direction for repeat
-       * @param {Function=} _easingReverse Easing function in reverse direction
-       * @example tween.yoyo(true)
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.yoyo = function (state, _easingReverse) {
-          this._yoyo =
-              typeof state === 'function'
-                  ? state(this._yoyo)
-                  : state === null ? this._yoyo : state;
-          if (!state) {
-              this._reversed = false;
-          }
-          this._easingReverse = _easingReverse || null;
-          return this;
-      };
-      /**
-       * Set easing
-       * @param {Function} _easingFunction Easing function, applies in non-reverse direction if Tween#yoyo second argument is applied
-       * @example tween.easing(Easing.Elastic.InOut)
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.easing = function (_easingFunction) {
-          this._easingFunction = _easingFunction;
-          return this;
-      };
-      /**
-       * Set interpolation
-       * @param {Function} _interpolationFunction Interpolation function
-       * @example tween.interpolation(Interpolation.Bezier)
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.interpolation = function (_interpolationFunction) {
-          if (typeof _interpolationFunction === 'function') {
-              this._interpolationFunction = _interpolationFunction;
-          }
-          return this;
-      };
-      /**
-       * Reassigns value for rare-case like Tween#restart or for Timeline
-       * @private
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.reassignValues = function (time) {
-          var _a = this, _valuesStart = _a._valuesStart, object = _a.object, _delayTime = _a._delayTime;
-          this._isPlaying = true;
-          this._startTime = time !== undefined ? time : now();
-          this._startTime += _delayTime;
-          this._reversed = false;
-          add(this);
-          for (var property in _valuesStart) {
-              var start = _valuesStart[property];
-              object[property] = start;
-          }
-          return this;
-      };
-      /**
-       * Updates initial object to target value by given `time`
-       * @param {Time} time Current time
-       * @param {boolean=} preserve Prevents from removing tween from store
-       * @param {boolean=} forceTime Forces to be frame rendered, even mismatching time
-       * @example tween.update(100)
-       * @memberof TWEEN.Tween
-       */
-      Tween.prototype.update = function (time, preserve, forceTime) {
-          var _a = this, _onStartCallbackFired = _a._onStartCallbackFired, _easingFunction = _a._easingFunction, _interpolationFunction = _a._interpolationFunction, _easingReverse = _a._easingReverse, _repeat = _a._repeat, _delayTime = _a._delayTime, _reverseDelayTime = _a._reverseDelayTime, _yoyo = _a._yoyo, _reversed = _a._reversed, _startTime = _a._startTime, _prevTime = _a._prevTime, _duration = _a._duration, _valuesStart = _a._valuesStart, _valuesEnd = _a._valuesEnd, object = _a.object, _isFinite = _a._isFinite, _isPlaying = _a._isPlaying, __render = _a.__render, _chainedTweensCount = _a._chainedTweensCount;
-          var elapsed;
-          var currentEasing;
-          var property;
-          var propCount = 0;
-          if (!_duration) {
-              elapsed = 1;
-              _repeat = 0;
-          }
-          else {
-              time = time !== undefined ? time : now();
-              var delta = time - _prevTime;
-              this._prevTime = time;
-              if (delta > TOO_LONG_FRAME_MS) {
-                  time -= delta - FRAME_MS;
-              }
-              if (!_isPlaying || (time < _startTime && !forceTime)) {
-                  return true;
-              }
-              elapsed = (time - _startTime) / _duration;
-              elapsed = elapsed > 1 ? 1 : elapsed;
-              elapsed = _reversed ? 1 - elapsed : elapsed;
-          }
-          if (!_onStartCallbackFired) {
-              if (!this._rendered) {
-                  this.render();
-                  this._rendered = true;
-              }
-              this.emit(EVENT_START, object);
-              this._onStartCallbackFired = true;
-          }
-          currentEasing = _reversed
-              ? _easingReverse || _easingFunction
-              : _easingFunction;
-          if (!object) {
-              return true;
-          }
-          for (property in _valuesEnd) {
-              var start = _valuesStart[property];
-              if ((start === undefined || start === null) &&
-                  !(Plugins[property] && Plugins[property].update)) {
-                  continue;
-              }
-              var end = _valuesEnd[property];
-              var value = currentEasing[property]
-                  ? currentEasing[property](elapsed)
-                  : typeof currentEasing === 'function'
-                      ? currentEasing(elapsed)
-                      : defaultEasing(elapsed);
-              var _interpolationFunctionCall = _interpolationFunction[property]
-                  ? _interpolationFunction[property]
-                  : typeof _interpolationFunction === 'function'
-                      ? _interpolationFunction
-                      : Interpolation.Linear;
-              if (typeof end === 'number') {
-                  object[property] =
-                      (((start + (end - start) * value) * DECIMAL) | 0) / DECIMAL;
-              }
-              else if (Array.isArray(end) && !Array.isArray(start)) {
-                  object[property] = _interpolationFunctionCall(end, value, object[property]);
-              }
-              else if (end && end.update) {
-                  end.update(value);
-              }
-              else if (typeof end === 'function') {
-                  object[property] = end(value);
-              }
-              else if (typeof end === 'string' && typeof start === 'number') {
-                  object[property] = start + parseFloat(end[0] + end.substr(2)) * value;
-              }
-              else {
-                  recompose(property, object, _valuesStart, _valuesEnd, value, elapsed);
-              }
-              if (Plugins[property] && Plugins[property].update) {
-                  Plugins[property].update.call(this, object[property], start, end, value, elapsed, property);
-              }
-              propCount++;
-          }
-          if (!propCount) {
-              remove$1(this);
-              return false;
-          }
-          if (__render && Tween.Renderer && Tween.Renderer.update) {
-              Tween.Renderer.update.call(this, object, elapsed);
-          }
-          this.emit(EVENT_UPDATE, object, elapsed, time);
-          if (elapsed === 1 || (_reversed && elapsed === 0)) {
-              if (_repeat > 0 && _duration > 0) {
-                  if (_isFinite) {
-                      this._repeat--;
-                  }
-                  if (_yoyo) {
-                      this._reversed = !_reversed;
-                  }
-                  else {
-                      for (property in _valuesEnd) {
-                          var end = _valuesEnd[property];
-                          if (typeof end === 'string' && typeof _valuesStart[property] === 'number') {
-                              _valuesStart[property] += parseFloat(end[0] + end.substr(2));
-                          }
-                      }
-                  }
-                  this.emit(_yoyo && !_reversed ? EVENT_REVERSE : EVENT_REPEAT, object);
-                  if (_reversed && _reverseDelayTime) {
-                      this._startTime = time - _reverseDelayTime;
-                  }
-                  else {
-                      this._startTime = time + _delayTime;
-                  }
-                  return true;
-              }
-              else {
-                  if (!preserve) {
-                      this._isPlaying = false;
-                      remove$1(this);
-                      _id--;
-                  }
-                  this.emit(EVENT_COMPLETE, object);
-                  this._repeat = this._r;
-                  if (_chainedTweensCount) {
-                      for (var i = 0; i < _chainedTweensCount; i++) {
-                          this[CHAINED_TWEENS + i].start(time + _duration);
-                      }
-                  }
-                  return false;
-              }
-          }
-          return true;
-      };
-      return Tween;
-  }());
+
+          return false
+        }
+      }
+
+      return true
+    }
+  }
 
   // node_modules/es6-tween/src/Interpolator.js
-  var __assign$2 = (undefined && undefined.__assign) || Object.assign || function(t) {
-      for (var s, i = 1, n = arguments.length; i < n; i++) {
-          s = arguments[i];
-          for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-              t[p] = s[p];
-      }
-      return t;
-  };
 
   // node_modules/es6-tween/src/index.js
 
@@ -5904,121 +6176,113 @@ var ElControls = (function (exports) {
   };
 
   // src/controls/control.coffee
-  var Control, _controlId, scrolling,
-    extend$3 = function(child, parent) { for (var key in parent) { if (hasProp$2.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$2 = {}.hasOwnProperty;
+  var Control, _controlId, scrolling;
 
   scrolling = false;
 
   _controlId = 0;
 
-  var Control$1 = Control = (function(superClass) {
-    extend$3(Control, superClass);
+  var Control$1 = Control = (function() {
+    class Control extends El$1.Input {
+      init() {
+        super.init();
+        return this._controlId = _controlId++;
+      }
 
-    function Control() {
-      return Control.__super__.constructor.apply(this, arguments);
+      getId() {
+        return this.tag + '-' + this._controlId;
+      }
+
+      getName() {
+        var ref;
+        return (ref = valueOrCall(this.name)) != null ? ref : this.input.name.replace(/\\./g, '-');
+      }
+
+      getValue(event) {
+        var ref;
+        return (ref = event.target.value) != null ? ref.trim() : void 0;
+      }
+
+      error(err) {
+        var elTop, rect, t, wTop;
+        if (err instanceof DOMException) {
+          console.log('WARNING: Error in riot dom manipulation ignored:', err);
+          return;
+        }
+        super.error();
+        rect = this.root.getBoundingClientRect();
+        elTop = rect.top - window.innerHeight / 2;
+        wTop = window.pageYOffset;
+        if (!scrolling && elTop <= wTop) {
+          scrolling = true;
+          autoPlay(true);
+          t = new Tween({
+            x: wTop
+          }).to({
+            x: wTop + elTop
+          }, 500, Easing.Cubic).on('update', function({x}) {
+            return window.scrollTo(window.pageXOffset, x);
+          }).on('complete', function() {
+            scrolling = false;
+            return autoPlay(false);
+          }).start();
+        }
+        return this.mediator.trigger(Events$1.ChangeFailed, this.input.name, this.input.ref.get(this.input.name));
+      }
+
+      change() {
+        super.change();
+        return this.mediator.trigger(Events$1.Change, this.input.name, this.input.ref.get(this.input.name));
+      }
+
+      changed(value) {
+        this.mediator.trigger(Events$1.ChangeSuccess, this.input.name, value);
+        return El$1.scheduleUpdate();
+      }
+
+      value() {
+        return this.input.ref(this.input.name);
+      }
+
     }
-
     Control.prototype._controlId = 0;
 
     Control.prototype.name = null;
 
-    Control.prototype.init = function() {
-      Control.__super__.init.apply(this, arguments);
-      return this._controlId = _controlId++;
-    };
-
-    Control.prototype.getId = function() {
-      return this.tag + '-' + this._controlId;
-    };
-
-    Control.prototype.getName = function() {
-      var ref;
-      return (ref = valueOrCall(this.name)) != null ? ref : this.input.name.replace(/\\./g, '-');
-    };
-
-    Control.prototype.getValue = function(event) {
-      var ref;
-      return (ref = event.target.value) != null ? ref.trim() : void 0;
-    };
-
-    Control.prototype.error = function(err) {
-      var elTop, rect, t, wTop;
-      if (err instanceof DOMException) {
-        console.log('WARNING: Error in riot dom manipulation ignored:', err);
-        return;
-      }
-      Control.__super__.error.apply(this, arguments);
-      rect = this.root.getBoundingClientRect();
-      elTop = rect.top - window.innerHeight / 2;
-      wTop = window.pageYOffset;
-      if (!scrolling && elTop <= wTop) {
-        scrolling = true;
-        autoPlay(true);
-        t = new Tween({
-          x: wTop
-        }).to({
-          x: wTop + elTop
-        }, 500, Easing.Cubic).on('update', function(arg) {
-          var x;
-          x = arg.x;
-          return window.scrollTo(window.pageXOffset, x);
-        }).on('complete', function() {
-          scrolling = false;
-          return autoPlay(false);
-        }).start();
-      }
-      return this.mediator.trigger(Events$1.ChangeFailed, this.input.name, this.input.ref.get(this.input.name));
-    };
-
-    Control.prototype.change = function() {
-      Control.__super__.change.apply(this, arguments);
-      return this.mediator.trigger(Events$1.Change, this.input.name, this.input.ref.get(this.input.name));
-    };
-
-    Control.prototype.changed = function(value) {
-      this.mediator.trigger(Events$1.ChangeSuccess, this.input.name, value);
-      return El$1.scheduleUpdate();
-    };
-
-    Control.prototype.value = function() {
-      return this.input.ref(this.input.name);
-    };
-
     return Control;
 
-  })(El$1.Input);
+  }).call(undefined);
 
   // templates/controls/checkbox.pug
   var html = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" type=\"checkbox\" onchange=\"{ change }\" onblur=\"{ change }\" checked=\"{ input.ref.get(input.name) }\">\n</yield>\n<yield></yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>";
 
   // src/controls/checkbox.coffee
-  var CheckBox,
-    extend$4 = function(child, parent) { for (var key in parent) { if (hasProp$3.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$3 = {}.hasOwnProperty;
+  var CheckBox;
 
-  var checkbox = CheckBox = (function(superClass) {
-    extend$4(CheckBox, superClass);
+  var checkbox = CheckBox = (function() {
+    class CheckBox extends Control$1 {
+      getValue(event) {
+        return event.target.checked;
+      }
 
-    function CheckBox() {
-      return CheckBox.__super__.constructor.apply(this, arguments);
     }
-
     CheckBox.prototype.tag = 'checkbox';
 
     CheckBox.prototype.html = html;
 
-    CheckBox.prototype.getValue = function(event) {
-      return event.target.checked;
-    };
-
     return CheckBox;
 
-  })(Control$1);
+  }).call(undefined);
 
   CheckBox.register();
 
   // src/utils/placeholder.coffee
+  // contains parts of Input Placeholder Polyfill
+  // MIT Licensed
+  // Created by Christopher Rolfe
+
+  // When the input value is the same as the placeholder clear it
+
   var exports$1, hidePlaceholderOnFocus, unfocusOnAnElement;
 
   hidePlaceholderOnFocus = function(event) {
@@ -6028,6 +6292,9 @@ var ElControls = (function (exports) {
       return target.value = '';
     }
   };
+
+
+  // When the input has an empty value put the placeholder back in
 
   unfocusOnAnElement = function(event) {
     var target;
@@ -6042,6 +6309,7 @@ var ElControls = (function (exports) {
   if (document.createElement("input").placeholder == null) {
     exports$1 = function(input) {
       var ref;
+      //jquery case
       input = (ref = input[0]) != null ? ref : input;
       if (input._placeholdered != null) {
         return;
@@ -6053,6 +6321,9 @@ var ElControls = (function (exports) {
       if (!input.value) {
         input.value = input.getAttribute('placeholder');
       }
+      // Attach event listeners for click and blur
+      // Click so that we can clear the placeholder if we need to
+      // Blur to re-add it if needed
       if (input.addEventListener) {
         input.addEventListener('click', hidePlaceholderOnFocus, false);
         return input.addEventListener('blur', unfocusOnAnElement, false);
@@ -6069,17 +6340,22 @@ var ElControls = (function (exports) {
   var html$1 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\" placeholder=\"{ placeholder }\">\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: input.ref.get(input.name) || placeholder }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
   // src/controls/text.coffee
-  var Text,
-    extend$5 = function(child, parent) { for (var key in parent) { if (hasProp$4.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$4 = {}.hasOwnProperty;
+  var Text;
 
-  var Text$1 = Text = (function(superClass) {
-    extend$5(Text, superClass);
+  var Text$1 = Text = (function() {
+    class Text extends Control$1 {
+      init() {
+        super.init();
+        return this.on('mounted', () => {
+          var el;
+          el = this.root.getElementsByTagName(this.formElement)[0];
+          if (this.type !== 'password') {
+            return placeholder(el);
+          }
+        });
+      }
 
-    function Text() {
-      return Text.__super__.constructor.apply(this, arguments);
     }
-
     Text.prototype.tag = 'text';
 
     Text.prototype.html = html$1;
@@ -6104,62 +6380,45 @@ var ElControls = (function (exports) {
 
     Text.prototype.instructions = null;
 
-    Text.prototype.init = function() {
-      Text.__super__.init.apply(this, arguments);
-      return this.on('mounted', (function(_this) {
-        return function() {
-          var el;
-          el = _this.root.getElementsByTagName(_this.formElement)[0];
-          if (_this.type !== 'password') {
-            return placeholder(el);
-          }
-        };
-      })(this));
-    };
-
     return Text;
 
-  })(Control$1);
+  }).call(undefined);
 
   Text.register();
 
   // src/controls/readonly.coffee
-  var ReadOnly,
-    extend$6 = function(child, parent) { for (var key in parent) { if (hasProp$5.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$5 = {}.hasOwnProperty;
+  var ReadOnly;
 
-  var ReadOnly$1 = ReadOnly = (function(superClass) {
-    extend$6(ReadOnly, superClass);
+  var ReadOnly$1 = ReadOnly = (function() {
+    class ReadOnly extends Text$1 {
+      init() {
+        if (!this.text) {
+          return super.init();
+        }
+      }
 
-    function ReadOnly() {
-      return ReadOnly.__super__.constructor.apply(this, arguments);
+      getText() {
+        return valueOrCall(this.text) || this.input.ref.get(input.name);
+      }
+
+      // readonly
+      change() {}
+
+      _change() {}
+
+      getName() {}
+
     }
-
     ReadOnly.prototype.tag = 'readonly';
 
     ReadOnly.prototype.readonly = true;
 
+    // pass this in optionally to overwrite a specific value
     ReadOnly.prototype.text = '';
-
-    ReadOnly.prototype.init = function() {
-      if (!this.text) {
-        return ReadOnly.__super__.init.apply(this, arguments);
-      }
-    };
-
-    ReadOnly.prototype.getText = function() {
-      return valueOrCall(this.text) || this.input.ref.get(input.name);
-    };
-
-    ReadOnly.prototype.change = function() {};
-
-    ReadOnly.prototype._change = function() {};
-
-    ReadOnly.prototype.getName = function() {};
 
     return ReadOnly;
 
-  })(Text$1);
+  }).call(undefined);
 
   ReadOnly.register();
 
@@ -6167,64 +6426,60 @@ var ElControls = (function (exports) {
   var html$2 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" type=\"{ type }\" onclick=\"{ copy }\" riot-value=\"{ getText() }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"true\" placeholder=\"{ placeholder }\">\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: true }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield from=\"copy-text\">\n  <div class=\"copy-text\">{ copied ? 'Copied' : '&#128203;' }</div>\n</yield>\n<yield></yield>";
 
   // src/controls/copy.coffee
-  var Copy,
-    extend$7 = function(child, parent) { for (var key in parent) { if (hasProp$6.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$6 = {}.hasOwnProperty;
+  var Copy;
 
-  var copy = Copy = (function(superClass) {
-    extend$7(Copy, superClass);
+  var copy = Copy = (function() {
+    class Copy extends ReadOnly$1 {
+      init() {
+        return super.init();
+      }
 
-    function Copy() {
-      return Copy.__super__.constructor.apply(this, arguments);
+      copy(e) {
+        var msg, successful, text, textArea;
+        text = this.getText();
+        textArea = document.createElement("textarea");
+        textArea.style.position = 'fixed';
+        textArea.style.top = 0;
+        textArea.style.left = 0;
+        textArea.style.width = '2em';
+        textArea.style.height = '2em';
+        textArea.style.padding = 0;
+        textArea.style.border = 'none';
+        textArea.style.outline = 'none';
+        textArea.style.boxShadow = 'none';
+        textArea.style.background = 'transparent';
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+          successful = document.execCommand('copy');
+          msg = successful != null ? successful : {
+            'successful': 'unsuccessful'
+          };
+          console.log('Copying text command was ' + msg);
+        } catch (error) {
+          console.log('Oops, unable to copy');
+        }
+        document.body.removeChild(textArea);
+        this.copied = true;
+        this.scheduleUpdate();
+        return false;
+      }
+
     }
-
     Copy.prototype.tag = 'copy';
 
     Copy.prototype.html = html$2;
 
+    // pass this in optionally to overwrite a specific value
     Copy.prototype.text = '';
 
+    // this is set automatically
     Copy.prototype.copied = false;
-
-    Copy.prototype.init = function() {
-      return Copy.__super__.init.apply(this, arguments);
-    };
-
-    Copy.prototype.copy = function(e) {
-      var msg, successful, text, textArea;
-      text = this.getText();
-      textArea = document.createElement("textarea");
-      textArea.style.position = 'fixed';
-      textArea.style.top = 0;
-      textArea.style.left = 0;
-      textArea.style.width = '2em';
-      textArea.style.height = '2em';
-      textArea.style.padding = 0;
-      textArea.style.border = 'none';
-      textArea.style.outline = 'none';
-      textArea.style.boxShadow = 'none';
-      textArea.style.background = 'transparent';
-      textArea.value = text;
-      document.body.appendChild(textArea);
-      textArea.select();
-      try {
-        successful = document.execCommand('copy');
-        msg = successful != null ? successful : {
-          'successful': 'unsuccessful'
-        };
-        console.log('Copying text command was ' + msg);
-      } catch (error) {
-        console.log('Oops, unable to copy');
-      }
-      document.body.removeChild(textArea);
-      this.copied = true;
-      this.scheduleUpdate();
-      return false;
-    };
 
     return Copy;
 
-  })(ReadOnly$1);
+  }).call(undefined);
 
   Copy.register();
 
@@ -6232,17 +6487,40 @@ var ElControls = (function (exports) {
   var html$3 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" onchange=\"{ change }\" onblur=\"{ change }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled || !hasOptions() }\" multiple=\"{ multiple }\" size=\"{ size }\">\n    <option if=\"{ placeholder }\" value=\"\">{ placeholder }</option>\n    <option each=\"{ v, k in options() }\" value=\"{ k }\" selected=\"{ k == input.ref.get(input.name) }\">{ v }</option>\n  </select>\n  <div class=\"select-indicator\">▼</div>\n</yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
   // src/controls/selection.coffee
-  var Select,
-    extend$8 = function(child, parent) { for (var key in parent) { if (hasProp$7.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$7 = {}.hasOwnProperty;
+  var Select;
 
-  var Select$1 = Select = (function(superClass) {
-    extend$8(Select, superClass);
+  var Select$1 = Select = (function() {
+    class Select extends Control$1 {
+      hasOptions() {
+        // call for side effects
+        this.options;
+        return this._optionsHash.length > 2;
+      }
 
-    function Select() {
-      return Select.__super__.constructor.apply(this, arguments);
+      options() {
+        var optionsHash, selectOptions;
+        selectOptions = this.selectOptions;
+        if (typeof selectOptions === 'function') {
+          selectOptions = selectOptions();
+        }
+        optionsHash = JSON.stringify(selectOptions);
+        if (this._optionsHash !== optionsHash) {
+          this._optionsHash = optionsHash;
+        }
+        return selectOptions;
+      }
+
+      getValue(e) {
+        var el, ref, ref1, ref2;
+        el = e.target;
+        return ((ref = (ref1 = el.options) != null ? (ref2 = ref1[el.selectedIndex]) != null ? ref2.value : void 0 : void 0) != null ? ref : '').trim();
+      }
+
+      init() {
+        return super.init();
+      }
+
     }
-
     Select.prototype.tag = 'selection';
 
     Select.prototype.html = html$3;
@@ -6257,95 +6535,72 @@ var ElControls = (function (exports) {
 
     Select.prototype.size = null;
 
+    // default to something that will be visible
     Select.prototype._optionsHash = 'default';
 
     Select.prototype.selectOptions = {};
 
-    Select.prototype.hasOptions = function() {
-      this.options;
-      return this._optionsHash.length > 2;
-    };
-
-    Select.prototype.options = function() {
-      var optionsHash, selectOptions;
-      selectOptions = this.selectOptions;
-      if (typeof selectOptions === 'function') {
-        selectOptions = selectOptions();
-      }
-      optionsHash = JSON.stringify(selectOptions);
-      if (this._optionsHash !== optionsHash) {
-        this._optionsHash = optionsHash;
-      }
-      return selectOptions;
-    };
-
-    Select.prototype.getValue = function(e) {
-      var el, ref, ref1, ref2;
-      el = e.target;
-      return ((ref = (ref1 = el.options) != null ? (ref2 = ref1[el.selectedIndex]) != null ? ref2.value : void 0 : void 0) != null ? ref : '').trim();
-    };
-
-    Select.prototype.init = function() {
-      return Select.__super__.init.apply(this, arguments);
-    };
-
     return Select;
 
-  })(Control$1);
+  }).call(undefined);
 
   Select.register();
 
   // src/controls/country-select.coffee
-  var CountrySelect,
-    extend$9 = function(child, parent) { for (var key in parent) { if (hasProp$8.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$8 = {}.hasOwnProperty;
+  var CountrySelect;
 
-  var countrySelect = CountrySelect = (function(superClass) {
-    extend$9(CountrySelect, superClass);
+  var countrySelect = CountrySelect = (function() {
+    class CountrySelect extends Select$1 {
+      // set up the countries in selectedOptions
+      // countries should be in the form of
+      // [{
+      //     code: 'XX',
+      //     name: 'Country Name',
+      //     subdivisions: [{
+      //         code: 'YY',
+      //         name: 'Subdivision Name',
+      //     }]
+      // }]
+      options() {
+        var countries, country, i, len, options, optionsHash, ref, ref1, ref2, ref3, ref4, ref5;
+        countries = (ref = (ref1 = (ref2 = this.countries) != null ? ref2 : (ref3 = this.data) != null ? ref3.get('countries') : void 0) != null ? ref1 : (ref4 = this.parent) != null ? (ref5 = ref4.data) != null ? ref5.get('countries') : void 0 : void 0) != null ? ref : [];
+        optionsHash = JSON.stringify(countries);
+        if (this._optionsHash === optionsHash) {
+          return this.selectOptions;
+        }
+        countries = countries.slice(0);
+        this._optionsHash = optionsHash;
+        this.selectOptions = options = {};
+        this.input.ref.set(this.input.name, '');
+        countries.sort(function(a, b) {
+          var nameA, nameB;
+          nameA = a.name.toUpperCase();
+          nameB = b.name.toUpperCase();
+          if (nameA < nameB) {
+            return -1;
+          }
+          if (nameA > nameB) {
+            return 1;
+          }
+          return 0;
+        });
+        for (i = 0, len = countries.length; i < len; i++) {
+          country = countries[i];
+          options[country.code.toUpperCase()] = country.name;
+        }
+        return options;
+      }
 
-    function CountrySelect() {
-      return CountrySelect.__super__.constructor.apply(this, arguments);
+      init() {
+        return super.init();
+      }
+
     }
-
     CountrySelect.prototype.tag = 'country-select';
-
-    CountrySelect.prototype.options = function() {
-      var countries, country, i, len, options, optionsHash, ref, ref1, ref2, ref3, ref4, ref5;
-      countries = (ref = (ref1 = (ref2 = this.countries) != null ? ref2 : (ref3 = this.data) != null ? ref3.get('countries') : void 0) != null ? ref1 : (ref4 = this.parent) != null ? (ref5 = ref4.data) != null ? ref5.get('countries') : void 0 : void 0) != null ? ref : [];
-      optionsHash = JSON.stringify(countries);
-      if (this._optionsHash === optionsHash) {
-        return this.selectOptions;
-      }
-      countries = countries.slice(0);
-      this._optionsHash = optionsHash;
-      this.selectOptions = options = {};
-      this.input.ref.set(this.input.name, '');
-      countries.sort(function(a, b) {
-        var nameA, nameB;
-        nameA = a.name.toUpperCase();
-        nameB = b.name.toUpperCase();
-        if (nameA < nameB) {
-          return -1;
-        }
-        if (nameA > nameB) {
-          return 1;
-        }
-        return 0;
-      });
-      for (i = 0, len = countries.length; i < len; i++) {
-        country = countries[i];
-        options[country.code.toUpperCase()] = country.name;
-      }
-      return options;
-    };
-
-    CountrySelect.prototype.init = function() {
-      return CountrySelect.__super__.init.apply(this, arguments);
-    };
 
     return CountrySelect;
 
-  })(Select$1);
+  }).call(undefined);
 
   CountrySelect.register();
 
@@ -6481,6 +6736,7 @@ var ElControls = (function (exports) {
 
   currencySigns = currencies.data;
 
+  // Does the currency support decimal notation
   var isZeroDecimal = function(code) {
     if (code) {
       code = code.toLowerCase();
@@ -6491,6 +6747,7 @@ var ElControls = (function (exports) {
     return false;
   };
 
+  // Convert data format to humanized format
   var renderUICurrencyFromJSON = function(code, jsonCurrency) {
     var currentCurrencySign, ref;
     if (code) {
@@ -6500,32 +6757,38 @@ var ElControls = (function (exports) {
       jsonCurrency = 0;
     }
     currentCurrencySign = (ref = currencySigns[code]) != null ? ref : '';
+    // ethereum
     if (code === 'eth' || code === 'btc' || code === 'xbt') {
       jsonCurrency = jsonCurrency / 1e9;
       return currentCurrencySign + jsonCurrency;
     }
     jsonCurrency = '' + jsonCurrency;
+    // jsonCurrency is not cents
     if (isZeroDecimal(code)) {
       return currentCurrencySign + jsonCurrency;
     }
+    // jsonCurrency is cents
     while (jsonCurrency.length < 3) {
       jsonCurrency = '0' + jsonCurrency;
     }
     return currentCurrencySign + jsonCurrency.substr(0, jsonCurrency.length - 2) + '.' + jsonCurrency.substr(-2);
   };
 
+  // Convert humanized format to data format
   var renderJSONCurrencyFromUI = function(code, uiCurrency) {
     var currentCurrencySign, parts;
     if (code) {
       code = code.toLowerCase();
     }
     currentCurrencySign = currencySigns[code];
+    // ethereum
     if (code === 'eth' || code === 'btc' || code === 'xbt') {
       return parseFloat(('' + uiCurrency).replace(digitsOnlyRe, '')) * 1e9;
     }
     if (isZeroDecimal(code)) {
       return parseInt(('' + uiCurrency).replace(digitsOnlyRe, '').replace(currencySeparator, ''), 10);
     }
+    // uiCurrency is a whole unit of currency
     parts = uiCurrency.split(currencySeparator);
     if (parts.length > 1) {
       parts[1] = parts[1].substr(0, 2);
@@ -6539,44 +6802,38 @@ var ElControls = (function (exports) {
   };
 
   // src/controls/currency.coffee
-  var Currency,
-    extend$10 = function(child, parent) { for (var key in parent) { if (hasProp$9.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$9 = {}.hasOwnProperty;
+  var Currency;
 
-  var currency = Currency = (function(superClass) {
-    extend$10(Currency, superClass);
+  var currency = Currency = (function() {
+    class Currency extends Text$1 {
+      init() {
+        return super.init();
+      }
 
-    function Currency() {
-      return Currency.__super__.constructor.apply(this, arguments);
+      getCurrency(e) {
+        return valueOrCall(this.currency);
+      }
+
+      renderValue() {
+        return renderUICurrencyFromJSON(this.getCurrency(), this.input.ref.get(this.input.name));
+      }
+
+      getValue(e) {
+        var el, ref;
+        el = e.target;
+        return renderJSONCurrencyFromUI(this.getCurrency(), ((ref = el.value) != null ? ref : '0').trim());
+      }
+
     }
-
     Currency.prototype.tag = 'currency';
 
     Currency.prototype.html = html$4;
 
     Currency.prototype.currency = '';
 
-    Currency.prototype.init = function() {
-      return Currency.__super__.init.apply(this, arguments);
-    };
-
-    Currency.prototype.getCurrency = function(e) {
-      return valueOrCall(this.currency);
-    };
-
-    Currency.prototype.renderValue = function() {
-      return renderUICurrencyFromJSON(this.getCurrency(), this.input.ref.get(this.input.name));
-    };
-
-    Currency.prototype.getValue = function(e) {
-      var el, ref;
-      el = e.target;
-      return renderJSONCurrencyFromUI(this.getCurrency(), ((ref = el.value) != null ? ref : '0').trim());
-    };
-
     return Currency;
 
-  })(Text$1);
+  }).call(undefined);
 
   Currency.register();
 
@@ -7520,7 +7777,7 @@ var ElControls = (function (exports) {
 
   var zepto = Zepto;
 
-  //  commonjs-proxy:/Users/dtai/work/hanzo/el-controls/node_modules/zepto-modules/zepto.js
+  //  commonjs-proxy:/Users/zk/dev/el/el-controls/node_modules/zepto-modules/zepto.js
 
   (function($){
     var _zid = 1, undefined,
@@ -7916,11 +8173,14 @@ var ElControls = (function (exports) {
   })(zepto);
 
   // src/$.coffee
+  // Use zepto if there's no jquery involved so we can run without it.
+  // Use jquery or something else if you need better compatibility.
   var $$2;
 
   $$2 = zepto;
 
   if (window.$ == null) {
+    // add in outer support from https://gist.github.com/pamelafox/1379704
     ['width', 'height'].forEach(function(dimension) {
       var Dimension;
       Dimension = dimension.replace(/./, function(m) {
@@ -7948,6 +8208,7 @@ var ElControls = (function (exports) {
     });
     window.$ = $$2;
   } else {
+    // Use whichever $
     $$2 = window.$;
   }
 
@@ -8014,7 +8275,7 @@ var ElControls = (function (exports) {
       return 0;
   }
 
-  function extend$11(a, b) {
+  function extend$1(a, b) {
       var i, n, k, object;
       for (i = 1, n = arguments.length; i < n; i++) {
           object = arguments[i];
@@ -8352,7 +8613,7 @@ var ElControls = (function (exports) {
   Sifter.prototype.prepareSearch = function(query, options) {
       if (typeof query === 'object') return query;
 
-      options = extend$11({}, options);
+      options = extend$1({}, options);
 
       var optionFields     = options.fields;
       var optionSort       = options.sort;
@@ -11388,30 +11649,112 @@ var ElControls = (function (exports) {
   var html$5 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" style=\"display: none\" onchange=\"{ change }\" onblur=\"{ change }\" placeholder=\"{ placeholder }\"></select>\n</yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
   // src/controls/dropdown.coffee
-  var Select$2, coolDown, isABrokenBrowser,
-    extend$12 = function(child, parent) { for (var key in parent) { if (hasProp$10.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$10 = {}.hasOwnProperty;
+  var Select$2, coolDown, isABrokenBrowser;
 
   isABrokenBrowser = window.navigator.userAgent.indexOf('MSIE') > 0 || window.navigator.userAgent.indexOf('Trident') > 0;
 
   coolDown = -1;
 
-  var dropdown = Select$2 = (function(superClass) {
-    extend$12(Select, superClass);
+  var dropdown = Select$2 = (function() {
+    class Select extends Text$1 {
+      options() {
+        return this.selectOptions;
+      }
 
-    function Select() {
-      return Select.__super__.constructor.apply(this, arguments);
+      getValue(event) {
+        var ref;
+        return (ref = $$3(event.target).val()) != null ? ref.trim().toLowerCase() : void 0;
+      }
+
+      initSelect($select) {
+        var $input, invertedOptions, name, options, ref, select, value;
+        options = [];
+        invertedOptions = {};
+        ref = this.options();
+        for (value in ref) {
+          name = ref[value];
+          options.push({
+            text: name,
+            value: value
+          });
+          invertedOptions[name] = value;
+        }
+        selectize($select, {
+          dropdownParent: 'body'
+        // valueField: 'value'
+        // labelField: 'text'
+        // searchField: 'text'
+        }).on('change', (event) => {
+          // This isn't working right, sometimes you have one change firing events on unrelated fields
+          if (coolDown !== -1) {
+            return;
+          }
+          coolDown = setTimeout(function() {
+            return coolDown = -1;
+          }, 100);
+          this.change(event);
+          event.preventDefault();
+          event.stopPropagation();
+          return false;
+        });
+        select = $select[0];
+        select.selectize.addOption(options);
+        select.selectize.addItem([this.input.ref.get(this.input.name)] || [], true);
+        select.selectize.refreshOptions(false);
+        //support auto fill
+        $input = $select.parent().find('.selectize-input input:first');
+        $input.on('change', function(event) {
+          var val;
+          val = $$3(event.target).val();
+          if (invertedOptions[val] != null) {
+            return $select[0].selectize.setValue(invertedOptions[val]);
+          }
+        });
+        //support read only
+        if (this.readOnly) {
+          return $input.attr('readonly', true);
+        }
+      }
+
+      init(opts) {
+        super.init();
+        return this.style = this.style || 'width:100%';
+      }
+
+      onUpdated() {
+        var $control, $select, select, v;
+        if (this.input == null) {
+          return;
+        }
+        $select = $$3(this.root).find('select');
+        select = $select[0];
+        if (select != null) {
+          v = this.input.ref.get(this.input.name);
+          if (!this.initialized) {
+            return raf(() => {
+              this.initSelect($select);
+              return this.initialized = true;
+            });
+          } else if ((select.selectize != null) && v !== select.selectize.getValue()) {
+            select.selectize.clear(true);
+            return select.selectize.addItem(v, true);
+          }
+        } else {
+          $control = $$3(this.root).find('.selectize-control');
+          if ($control[0] == null) {
+            return raf(() => {
+              return this.scheduleUpdate();
+            });
+          }
+        }
+      }
+
     }
-
     Select.prototype.tag = 'dropdown';
 
     Select.prototype.html = html$5;
 
     Select.prototype.selectOptions = {};
-
-    Select.prototype.options = function() {
-      return this.selectOptions;
-    };
 
     Select.prototype.readOnly = false;
 
@@ -11426,98 +11769,12 @@ var ElControls = (function (exports) {
       }
     };
 
-    Select.prototype.getValue = function(event) {
-      var ref;
-      return (ref = $$3(event.target).val()) != null ? ref.trim().toLowerCase() : void 0;
-    };
-
-    Select.prototype.initSelect = function($select) {
-      var $input, invertedOptions, name, options, ref, select, value;
-      options = [];
-      invertedOptions = {};
-      ref = this.options();
-      for (value in ref) {
-        name = ref[value];
-        options.push({
-          text: name,
-          value: value
-        });
-        invertedOptions[name] = value;
-      }
-      selectize($select, {
-        dropdownParent: 'body'
-      }).on('change', (function(_this) {
-        return function(event) {
-          if (coolDown !== -1) {
-            return;
-          }
-          coolDown = setTimeout(function() {
-            return coolDown = -1;
-          }, 100);
-          _this.change(event);
-          event.preventDefault();
-          event.stopPropagation();
-          return false;
-        };
-      })(this));
-      select = $select[0];
-      select.selectize.addOption(options);
-      select.selectize.addItem([this.input.ref.get(this.input.name)] || [], true);
-      select.selectize.refreshOptions(false);
-      $input = $select.parent().find('.selectize-input input:first');
-      $input.on('change', function(event) {
-        var val;
-        val = $$3(event.target).val();
-        if (invertedOptions[val] != null) {
-          return $select[0].selectize.setValue(invertedOptions[val]);
-        }
-      });
-      if (this.readOnly) {
-        return $input.attr('readonly', true);
-      }
-    };
-
-    Select.prototype.init = function(opts) {
-      Select.__super__.init.apply(this, arguments);
-      return this.style = this.style || 'width:100%';
-    };
-
-    Select.prototype.onUpdated = function() {
-      var $control, $select, select, v;
-      if (this.input == null) {
-        return;
-      }
-      $select = $$3(this.root).find('select');
-      select = $select[0];
-      if (select != null) {
-        v = this.input.ref.get(this.input.name);
-        if (!this.initialized) {
-          return raf((function(_this) {
-            return function() {
-              _this.initSelect($select);
-              return _this.initialized = true;
-            };
-          })(this));
-        } else if ((select.selectize != null) && v !== select.selectize.getValue()) {
-          select.selectize.clear(true);
-          return select.selectize.addItem(v, true);
-        }
-      } else {
-        $control = $$3(this.root).find('.selectize-control');
-        if ($control[0] == null) {
-          return raf((function(_this) {
-            return function() {
-              return _this.scheduleUpdate();
-            };
-          })(this));
-        }
-      }
-    };
-
     return Select;
 
-  })(Text$1);
+  }).call(undefined);
 
+  // @on 'unmount', ()=>
+  //   $select = $(@root).find('select')
   Select$2.register();
 
   // templates/controls/qrcode.pug
@@ -11537,7 +11794,7 @@ var ElControls = (function (exports) {
 
   var qrcode = createCommonjsModule(function (module, exports) {
   // node_modules/qrcode/build/qrcode.js
-  (function(f){{module.exports=f();}})(function(){return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof commonjsRequire=="function"&&commonjsRequire;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND", f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r);}return n[o].exports}var i=typeof commonjsRequire=="function"&&commonjsRequire;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+  (function(f){{module.exports=f();}})(function(){return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof commonjsRequire=="function"&&commonjsRequire;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r);}return n[o].exports}var i=typeof commonjsRequire=="function"&&commonjsRequire;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
   /**
    * Alignment pattern are fixed reference pattern in defined positions
    * in a matrix symbology, which enables the decode software to re-synchronise
@@ -14902,29 +15159,52 @@ var ElControls = (function (exports) {
   });
 
   // src/controls/qrcode.coffee
-  var QRCode,
-    extend$13 = function(child, parent) { for (var key in parent) { if (hasProp$11.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$11 = {}.hasOwnProperty;
+  var QRCode;
 
-  var qrcode$1 = QRCode = (function(superClass) {
-    extend$13(QRCode, superClass);
+  var qrcode$1 = QRCode = (function() {
+    class QRCode extends ReadOnly$1 {
+      init() {
+        return super.init();
+      }
 
-    function QRCode() {
-      return QRCode.__super__.constructor.apply(this, arguments);
+      onUpdated() {
+        var canvas;
+        canvas = this.root.children[0];
+        return qrcode.toCanvas(canvas, this.getText(), {
+          version: parseInt(this.version, 10),
+          errorCorrectionLevel: this.errorCorrectionLevel,
+          scale: parseInt(this.scale, 10),
+          margin: parseInt(this.margin, 10)
+        }, function(error) {
+          if (error) {
+            return console.error(error);
+          }
+        });
+      }
+
     }
-
     QRCode.prototype.tag = 'qrcode';
 
     QRCode.prototype.html = html$6;
 
+    // pass this in optionally to overwrite a specific value
     QRCode.prototype.text = '';
 
+    // version '1' to '40', undefined for automatic detection (default)
     QRCode.prototype.version = void 0;
 
+    // level of error correction
+    // 'L' = 7%
+    // 'M' = 15% (default)
+    // 'Q' = 25%
+    // 'H' = 35%
+    // 'S' = 50% (unsupported)
     QRCode.prototype.errorCorrectionLevel = 'M';
 
+    // scale of a module
     QRCode.prototype.scale = 4;
 
+    // margin of white area around qr code in pixels
     QRCode.prototype.margin = 4;
 
     QRCode.prototype.events = {
@@ -14936,64 +15216,32 @@ var ElControls = (function (exports) {
       }
     };
 
-    QRCode.prototype.init = function() {
-      return QRCode.__super__.init.apply(this, arguments);
-    };
-
-    QRCode.prototype.onUpdated = function() {
-      var canvas;
-      canvas = this.root.children[0];
-      return qrcode.toCanvas(canvas, this.getText(), {
-        version: parseInt(this.version, 10),
-        errorCorrectionLevel: this.errorCorrectionLevel,
-        scale: parseInt(this.scale, 10),
-        margin: parseInt(this.margin, 10)
-      }, function(error) {
-        if (error) {
-          return console.error(error);
-        }
-      });
-    };
-
     return QRCode;
 
-  })(ReadOnly$1);
+  }).call(undefined);
 
   QRCode.register();
 
   // src/controls/recaptcha.coffee
-  var ReCaptcha,
-    extend$14 = function(child, parent) { for (var key in parent) { if (hasProp$12.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$12 = {}.hasOwnProperty;
+  var ReCaptcha;
 
-  var recaptcha = ReCaptcha = (function(superClass) {
-    extend$14(ReCaptcha, superClass);
-
-    function ReCaptcha() {
-      return ReCaptcha.__super__.constructor.apply(this, arguments);
-    }
-
-    ReCaptcha.prototype.tag = 'recaptcha';
-
-    ReCaptcha.prototype.html = '';
-
-    ReCaptcha.prototype.theme = 'light';
-
-    ReCaptcha.prototype.init = function() {
-      var tryRecaptcha;
-      if (!this.sitekey) {
-        console.error('recaptcha: no sitekey found');
-        return;
-      }
-      tryRecaptcha = (function(_this) {
-        return function() {
-          return requestAnimationFrame(function() {
+  var recaptcha = ReCaptcha = (function() {
+    // requires <script src='//www.google.com/recaptcha/api.js?render=explicit'/>
+    class ReCaptcha extends El$1.View {
+      init() {
+        var tryRecaptcha;
+        if (!this.sitekey) {
+          console.error('recaptcha: no sitekey found');
+          return;
+        }
+        tryRecaptcha = () => {
+          return requestAnimationFrame(() => {
             try {
-              return grecaptcha.render(_this.root, {
-                sitekey: _this.sitekey,
-                theme: _this.theme,
-                callback: function(res) {
-                  return _this.data.set('user.g-recaptcha-response', res);
+              return grecaptcha.render(this.root, {
+                sitekey: this.sitekey,
+                theme: this.theme,
+                callback: (res) => {
+                  return this.data.set('user.g-recaptcha-response', res);
                 }
               });
             } catch (error) {
@@ -15001,89 +15249,93 @@ var ElControls = (function (exports) {
             }
           });
         };
-      })(this);
-      return tryRecaptcha();
-    };
+        return tryRecaptcha();
+      }
+
+    }
+    ReCaptcha.prototype.tag = 'recaptcha';
+
+    ReCaptcha.prototype.html = '';
+
+    // sitekey from recaptcha
+    // sitekey: null
+
+    // theme ('dark'/'light')
+    ReCaptcha.prototype.theme = 'light';
 
     return ReCaptcha;
 
-  })(El$1.View);
+  }).call(undefined);
 
   ReCaptcha.register();
 
   // src/controls/state-select.coffee
-  var StateSelect,
-    extend$15 = function(child, parent) { for (var key in parent) { if (hasProp$13.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$13 = {}.hasOwnProperty;
+  var StateSelect;
 
-  var stateSelect = StateSelect = (function(superClass) {
-    extend$15(StateSelect, superClass);
-
-    function StateSelect() {
-      return StateSelect.__super__.constructor.apply(this, arguments);
-    }
-
-    StateSelect.prototype.tag = 'state-select';
-
-    StateSelect.prototype.options = function() {
-      var code, countries, country, found, i, j, len, len1, options, optionsHash, ref, ref1, ref2, ref3, ref4, ref5, subdivision, subdivisions;
-      countries = (ref = (ref1 = (ref2 = this.countries) != null ? ref2 : (ref3 = this.data) != null ? ref3.get('countries') : void 0) != null ? ref1 : (ref4 = this.parent) != null ? (ref5 = ref4.data) != null ? ref5.get('countries') : void 0 : void 0) != null ? ref : [];
-      code = this.getCountry();
-      if (!code || code.length !== 2) {
-        this._optionsHash = '';
-        return;
-      }
-      code = code.toUpperCase();
-      found = false;
-      for (i = 0, len = countries.length; i < len; i++) {
-        country = countries[i];
-        if (country.code.toUpperCase() === code) {
-          found = true;
-          subdivisions = country.subdivisions;
-          optionsHash = JSON.stringify(subdivisions);
-          if (this._optionsHash === optionsHash) {
-            return this.selectOptions;
-          }
-          subdivisions = subdivisions.slice(0);
-          this._optionsHash = optionsHash;
-          this.selectOptions = options = {};
-          this.input.ref.set(this.input.name, '');
-          subdivisions.sort(function(a, b) {
-            var nameA, nameB;
-            nameA = a.name.toUpperCase();
-            nameB = b.name.toUpperCase();
-            if (nameA < nameB) {
-              return -1;
-            }
-            if (nameA > nameB) {
-              return 1;
-            }
-            return 0;
-          });
-          for (j = 0, len1 = subdivisions.length; j < len1; j++) {
-            subdivision = subdivisions[j];
-            options[subdivision.code.toUpperCase()] = subdivision.name;
-          }
-          break;
+  var stateSelect = StateSelect = (function() {
+    class StateSelect extends Select$1 {
+      options() {
+        var code, countries, country, found, i, j, len, len1, options, optionsHash, ref, ref1, ref2, ref3, ref4, ref5, subdivision, subdivisions;
+        countries = (ref = (ref1 = (ref2 = this.countries) != null ? ref2 : (ref3 = this.data) != null ? ref3.get('countries') : void 0) != null ? ref1 : (ref4 = this.parent) != null ? (ref5 = ref4.data) != null ? ref5.get('countries') : void 0 : void 0) != null ? ref : [];
+        code = this.getCountry();
+        if (!code || code.length !== 2) {
+          this._optionsHash = '';
+          return;
         }
+        code = code.toUpperCase();
+        found = false;
+        for (i = 0, len = countries.length; i < len; i++) {
+          country = countries[i];
+          if (country.code.toUpperCase() === code) {
+            found = true;
+            subdivisions = country.subdivisions;
+            optionsHash = JSON.stringify(subdivisions);
+            if (this._optionsHash === optionsHash) {
+              return this.selectOptions;
+            }
+            subdivisions = subdivisions.slice(0);
+            this._optionsHash = optionsHash;
+            this.selectOptions = options = {};
+            this.input.ref.set(this.input.name, '');
+            subdivisions.sort(function(a, b) {
+              var nameA, nameB;
+              nameA = a.name.toUpperCase();
+              nameB = b.name.toUpperCase();
+              if (nameA < nameB) {
+                return -1;
+              }
+              if (nameA > nameB) {
+                return 1;
+              }
+              return 0;
+            });
+            for (j = 0, len1 = subdivisions.length; j < len1; j++) {
+              subdivision = subdivisions[j];
+              options[subdivision.code.toUpperCase()] = subdivision.name;
+            }
+            break;
+          }
+        }
+        if (!found) {
+          this._optionsHash = '';
+        }
+        return options;
       }
-      if (!found) {
-        this._optionsHash = '';
+
+      getCountry() {
+        return '';
       }
-      return options;
-    };
 
-    StateSelect.prototype.getCountry = function() {
-      return '';
-    };
+      init() {
+        return super.init();
+      }
 
-    StateSelect.prototype.init = function() {
-      return StateSelect.__super__.init.apply(this, arguments);
-    };
+    }
+    StateSelect.prototype.tag = 'state-select';
 
     return StateSelect;
 
-  })(Select$1);
+  }).call(undefined);
 
   StateSelect.register();
 
@@ -15091,17 +15343,10 @@ var ElControls = (function (exports) {
   var html$7 = "\n<yield from=\"input\">\n  <textarea class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" onchange=\"{ change }\" onblur=\"{ change }\" rows=\"{ rows }\" cols=\"{ cols }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" placeholder=\"{ placeholder }\" readonly=\"{ readonly }\" wrap=\"{ wrap }\">{ input.ref.get(input.name) }</textarea>\n</yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
   // src/controls/textbox.coffee
-  var TextBox,
-    extend$16 = function(child, parent) { for (var key in parent) { if (hasProp$14.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$14 = {}.hasOwnProperty;
+  var TextBox;
 
-  TextBox = (function(superClass) {
-    extend$16(TextBox, superClass);
-
-    function TextBox() {
-      return TextBox.__super__.constructor.apply(this, arguments);
-    }
-
+  TextBox = (function() {
+    class TextBox extends Text$1 {}
     TextBox.prototype.tag = 'textbox';
 
     TextBox.prototype.html = html$7;
@@ -15122,7 +15367,7 @@ var ElControls = (function (exports) {
 
     return TextBox;
 
-  })(Text$1);
+  }).call(undefined);
 
   TextBox.register();
 
@@ -15140,8 +15385,8 @@ var ElControls = (function (exports) {
   exports.Currency = currency;
   exports.Dropdown = dropdown;
   exports.QRCode = qrcode$1;
-  exports.ReadOnly = ReadOnly$1;
   exports.ReCaptcha = recaptcha;
+  exports.ReadOnly = ReadOnly$1;
   exports.Select = Select$1;
   exports.StateSelect = stateSelect;
   exports.Text = Text$1;

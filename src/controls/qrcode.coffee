@@ -1,8 +1,8 @@
+import qrcode from 'qrcode'
+
 import ReadOnly from './readonly'
 import html from '../../templates/controls/qrcode'
-
-import { valueOrCall } from '../utils/valueOrCall'
-import qrcode from 'qrcode/build/qrcode.js'
+import valueOrCall from '../utils/valueOrCall'
 
 export default class QRCode extends ReadOnly
   tag: 'qrcode'

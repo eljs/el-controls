@@ -1,5 +1,5 @@
 import Text from './text'
-import { valueOrCall } from '../utils/valueOrCall'
+import valueOrCall from '../utils/valueOrCall'
 
 import html from '../../templates/controls/currency'
 
