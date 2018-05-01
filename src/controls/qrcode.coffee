@@ -35,7 +35,7 @@ export default class QRCode extends ReadOnly
       @onUpdated()
 
   init: ->
-    super
+    super()
 
   onUpdated: ->
     canvas = @root.children[0]

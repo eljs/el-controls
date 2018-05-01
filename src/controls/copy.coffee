@@ -14,7 +14,7 @@ export default class Copy extends ReadOnly
   copied: false
 
   init: ->
-    super
+    super()
 
   copy: (e)->
     text = @getText()
