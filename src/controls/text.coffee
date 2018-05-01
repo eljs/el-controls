@@ -19,7 +19,7 @@ export default class Text extends Control
   instructions: null
 
   init: ->
-    super
+    super()
 
     @on 'mounted', =>
       el = @root.getElementsByTagName(@formElement)[0]

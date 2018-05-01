@@ -54,6 +54,6 @@ export default class StateSelect extends Select
     return ''
 
   init: ->
-    super
+    super()
 
 StateSelect.register()

@@ -8,8 +8,8 @@ export {
   Currency
   Dropdown
   QRCode
-  ReadOnly
   ReCaptcha
+  ReadOnly
   Select
   StateSelect
   Text

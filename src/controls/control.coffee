@@ -14,7 +14,7 @@ export default class Control extends El.Input
   name: null
 
   init: ->
-    super
+    super()
     @_controlId = _controlId++
 
   getId: () ->
@@ -31,7 +31,7 @@ export default class Control extends El.Input
       console.log 'WARNING: Error in riot dom manipulation ignored:', err
       return
 
-    super
+    super()
 
     rect = @root.getBoundingClientRect()
     elTop = rect.top - window.innerHeight / 2
@@ -54,7 +54,7 @@ export default class Control extends El.Input
     @mediator.trigger Events.ChangeFailed, @input.name, @input.ref.get @input.name
 
   change: ->
-    super
+    super()
     @mediator.trigger Events.Change, @input.name, @input.ref.get @input.name
 
   changed: (value) ->
