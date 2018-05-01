@@ -1,6 +1,6 @@
 import Text from './text'
 
-import { valueOrCall } from '../utils/valueOrCall'
+import valueOrCall from '../utils/valueOrCall'
 
 export default class ReadOnly extends Text
   tag: 'readonly'

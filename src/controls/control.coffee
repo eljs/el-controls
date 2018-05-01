@@ -1,8 +1,8 @@
-import El       from 'el.js/src'
-import Events   from  '../events'
+import El     from 'el.js/src'
+import Events from  '../events'
 
+import valueOrCall from '../utils/valueOrCall'
 import { Tween, Easing, autoPlay } from 'es6-tween/src/index'
-import { valueOrCall } from '../utils/valueOrCall'
 
 scrolling = false
 
