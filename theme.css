@@ -166,7 +166,7 @@
   display:block;
 }
 .input select.labeled ~ .select-indicator{
-  top:1.75em;
+  top:2.25em;
 }
 .input select:disabled ~ .select-indicator{
   opacity:0.5;
