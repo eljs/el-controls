@@ -6313,7 +6313,6 @@ var ElControls = (function (exports,buffer,util,Stream,zlib,assert,require$$0) {
         countries = countries.slice(0);
         this._optionsHash = optionsHash;
         this.selectOptions = options = {};
-        this.input.ref.set(this.input.name, '');
         countries.sort(function(a, b) {
           var nameA, nameB;
           nameA = a.name.toUpperCase();
@@ -17498,7 +17497,6 @@ var ElControls = (function (exports,buffer,util,Stream,zlib,assert,require$$0) {
             subdivisions = subdivisions.slice(0);
             this._optionsHash = optionsHash;
             this.selectOptions = options = {};
-            this.input.ref.set(this.input.name, '');
             subdivisions.sort(function(a, b) {
               var nameA, nameB;
               nameA = a.name.toUpperCase();

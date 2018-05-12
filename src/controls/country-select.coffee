@@ -27,7 +27,6 @@ export default class CountrySelect extends Select
     @_optionsHash = optionsHash
 
     @selectOptions = options = {}
-    @input.ref.set(@input.name, '')
 
     countries.sort (a, b)->
       nameA = a.name.toUpperCase()

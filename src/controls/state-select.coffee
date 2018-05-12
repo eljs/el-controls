@@ -32,7 +32,6 @@ export default class StateSelect extends Select
         @_optionsHash = optionsHash
 
         @selectOptions = options = {}
-        @input.ref.set(@input.name, '')
 
         subdivisions.sort (a, b)->
           nameA = a.name.toUpperCase()
