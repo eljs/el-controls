@@ -12,7 +12,11 @@ task 'clean', 'clean project', ->
   exec 'rm -rf lib'
 
 task 'build', 'build js', ['build:static'], ->
-  bundle.write entry: 'src/index.coffee'
+  bundle.write
+    entry: 'src/index.coffee'
+    compilers:
+      coffee:
+        version: 1
 
 task 'build:min', 'build js for production', ['build'], ->
   yield bundle.write
@@ -22,6 +26,9 @@ task 'build:min', 'build js for production', ['build'], ->
     sourceMap: false
     browser:   false
     commonjs:  true
+    compilers:
+      coffee:
+        version: 1
 
   yield exec 'mv -f elcontrols.js el-controls.js'
   yield exec 'uglifyjs el-controls.js -o el-controls.min.js'
