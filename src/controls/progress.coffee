@@ -10,7 +10,7 @@
 #   copied: false
 
 #   init: ->
-#     super
+#     super arguments...
 
 #   getText: ->
 #     if typeof @text == 'function'

@@ -1,4 +1,4 @@
-import El       from 'el.js/src'
+import El from 'el.js/src'
 
 # requires <script src='//www.google.com/recaptcha/api.js?render=explicit'/>
 export default class ReCaptcha extends El.View

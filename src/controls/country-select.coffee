@@ -41,6 +41,6 @@ export default class CountrySelect extends Select
     return options
 
   init: ->
-    super()
+    super arguments...
 
 CountrySelect.register()
