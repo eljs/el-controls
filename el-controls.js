@@ -432,7 +432,6 @@ var ElControls = (function (exports) {
 
   // src/utils/patches.coffee
 
-  // Shims/Polyfills
   if (window.Promise == null) {
     window.Promise = Promise$2;
   }
@@ -3903,87 +3902,10 @@ var ElControls = (function (exports) {
   };
 
   View = (function() {
-    class View {
-      static register() {
-        return new this;
-      }
+    View.register = function() {
+      return new this;
+    };
 
-      constructor() {
-        var newProto;
-        newProto = collapsePrototype({}, this);
-        this.beforeInit();
-        riot$1.tag(this.tag, this.html, this.css, this.attrs, function(opts) {
-          var handler, k, name, parent, proto, ref, ref1, self, v;
-          if (newProto != null) {
-            for (k in newProto) {
-              v = newProto[k];
-              if (isFunction$1(v)) {
-                ((v) => {
-                  var oldFn;
-                  if (this[k] != null) {
-                    oldFn = this[k];
-                    return this[k] = () => {
-                      oldFn.apply(this, arguments);
-                      return v.apply(this, arguments);
-                    };
-                  } else {
-                    return this[k] = () => {
-                      return v.apply(this, arguments);
-                    };
-                  }
-                })(v);
-              } else {
-                this[k] = v;
-              }
-            }
-          }
-          // Loop up the parents setting parent as the prototype so you have access to vars on it
-          // Might be terrible, might be great, who knows?
-          self = this;
-          parent = (ref = self.parent) != null ? ref : opts.parent;
-          proto = Object.getPrototypeOf(self);
-          while (parent && parent !== proto) {
-            setPrototypeOf(self, parent);
-            self = parent;
-            parent = self.parent;
-            proto = Object.getPrototypeOf(self);
-          }
-          if (opts != null) {
-            for (k in opts) {
-              v = opts[k];
-              this[k] = v;
-            }
-          }
-          if (this.events != null) {
-            ref1 = this.events;
-            for (name in ref1) {
-              handler = ref1[name];
-              ((name, handler) => {
-                if (typeof handler === 'string') {
-                  return this.on(name, () => {
-                    return this[handler].apply(this, arguments);
-                  });
-                } else {
-                  return this.on(name, () => {
-                    return handler.apply(this, arguments);
-                  });
-                }
-              })(name, handler);
-            }
-          }
-          return this.init(opts);
-        });
-      }
-
-      beforeInit() {}
-
-      init() {}
-
-      scheduleUpdate() {
-        return scheduleUpdate(this);
-      }
-
-    }
     View.prototype.tag = '';
 
     View.prototype.html = '';
@@ -3994,9 +3916,87 @@ var ElControls = (function (exports) {
 
     View.prototype.events = null;
 
+    function View() {
+      var newProto;
+      newProto = collapsePrototype({}, this);
+      this.beforeInit();
+      riot$1.tag(this.tag, this.html, this.css, this.attrs, function(opts) {
+        var fn, handler, k, name, parent, proto, ref, ref1, self, v;
+        if (newProto != null) {
+          for (k in newProto) {
+            v = newProto[k];
+            if (isFunction$1(v)) {
+              (function(_this) {
+                return (function(v) {
+                  var oldFn;
+                  if (_this[k] != null) {
+                    oldFn = _this[k];
+                    return _this[k] = function() {
+                      oldFn.apply(_this, arguments);
+                      return v.apply(_this, arguments);
+                    };
+                  } else {
+                    return _this[k] = function() {
+                      return v.apply(_this, arguments);
+                    };
+                  }
+                });
+              })(this)(v);
+            } else {
+              this[k] = v;
+            }
+          }
+        }
+        self = this;
+        parent = (ref = self.parent) != null ? ref : opts.parent;
+        proto = Object.getPrototypeOf(self);
+        while (parent && parent !== proto) {
+          setPrototypeOf(self, parent);
+          self = parent;
+          parent = self.parent;
+          proto = Object.getPrototypeOf(self);
+        }
+        if (opts != null) {
+          for (k in opts) {
+            v = opts[k];
+            this[k] = v;
+          }
+        }
+        if (this.events != null) {
+          ref1 = this.events;
+          fn = (function(_this) {
+            return function(name, handler) {
+              if (typeof handler === 'string') {
+                return _this.on(name, function() {
+                  return _this[handler].apply(_this, arguments);
+                });
+              } else {
+                return _this.on(name, function() {
+                  return handler.apply(_this, arguments);
+                });
+              }
+            };
+          })(this);
+          for (name in ref1) {
+            handler = ref1[name];
+            fn(name, handler);
+          }
+        }
+        return this.init(opts);
+      });
+    }
+
+    View.prototype.beforeInit = function() {};
+
+    View.prototype.init = function() {};
+
+    View.prototype.scheduleUpdate = function() {
+      return scheduleUpdate(this);
+    };
+
     return View;
 
-  }).call(undefined);
+  })();
 
   var View$1 = View;
 
@@ -4007,63 +4007,61 @@ var ElControls = (function (exports) {
     return (o != null) && isFunction$1(o.ref);
   };
 
-  // inputify takes a model and a configuration and returns observable values
-  //   data: an generic dictionary object that you want to generate observable properties from
-  //   configs: a mapping of model values to a middleware stack eg.
-  //       field1: middleware
-  //       where middleware is an array of (value, name, model)-> value
-  inputify = function(data, configs = {}) {
-    var config, inputs, name, ref;
+  inputify = function(data, configs) {
+    var config, fn, inputs, name, ref;
+    if (configs == null) {
+      configs = {};
+    }
     ref = data;
     if (!isRef(ref)) {
       ref = refer$1(data);
     }
     inputs = {};
+    fn = function(name, config) {
+      var fn1, i, input, len, middleware, middlewareFn, validate;
+      middleware = [];
+      if (config && config.length > 0) {
+        fn1 = function(name, middlewareFn) {
+          return middleware.push(function(pair) {
+            ref = pair[0], name = pair[1];
+            return Promise$2.resolve(pair).then(function(pair) {
+              return middlewareFn.call(pair[0], pair[0].get(pair[1]), pair[1], pair[0]);
+            }).then(function(v) {
+              ref.set(name, v);
+              return pair;
+            });
+          });
+        };
+        for (i = 0, len = config.length; i < len; i++) {
+          middlewareFn = config[i];
+          fn1(name, middlewareFn);
+        }
+      }
+      middleware.push(function(pair) {
+        ref = pair[0], name = pair[1];
+        return Promise$2.resolve(ref.get(name));
+      });
+      validate = function(ref, name) {
+        var j, len1, p;
+        p = Promise$2.resolve([ref, name]);
+        for (j = 0, len1 = middleware.length; j < len1; j++) {
+          middlewareFn = middleware[j];
+          p = p.then(middlewareFn);
+        }
+        return p;
+      };
+      input = {
+        name: name,
+        ref: ref,
+        config: config,
+        validate: validate
+      };
+      observable(input);
+      return inputs[name] = input;
+    };
     for (name in configs) {
       config = configs[name];
-      (function(name, config) {
-        var i, input, len, middleware, middlewareFn, validate;
-        middleware = [];
-        if (config && config.length > 0) {
-          for (i = 0, len = config.length; i < len; i++) {
-            middlewareFn = config[i];
-            (function(name, middlewareFn) {
-              return middleware.push(function(pair) {
-                [ref, name] = pair;
-                return Promise$2.resolve(pair).then(function(pair) {
-                  return middlewareFn.call(pair[0], pair[0].get(pair[1]), pair[1], pair[0]);
-                }).then(function(v) {
-                  ref.set(name, v);
-                  return pair;
-                });
-              });
-            })(name, middlewareFn);
-          }
-        }
-        middleware.push(function(pair) {
-          [ref, name] = pair;
-          // on success resolve the value in the ref
-          return Promise$2.resolve(ref.get(name));
-        });
-        validate = function(ref, name) {
-          var j, len1, p;
-          p = Promise$2.resolve([ref, name]);
-          for (j = 0, len1 = middleware.length; j < len1; j++) {
-            middlewareFn = middleware[j];
-            p = p.then(middlewareFn);
-          }
-          return p;
-        };
-        input = {
-          name: name,
-          ref: ref,
-          config: config,
-          validate: validate
-        };
-        // make the input an observable so both form and input can observe it
-        observable(input);
-        return inputs[name] = input;
-      })(name, config);
+      fn(name, config);
     }
     return inputs;
   };
@@ -4071,36 +4069,44 @@ var ElControls = (function (exports) {
   var inputify$1 = inputify;
 
   // node_modules/el.js/src/views/form.coffee
-  var Form;
+  var Form,
+    extend$1 = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
 
-  Form = (function() {
-    // Supported Events:
-    //   submit - fired when form is submitted
-    class Form extends View$1 {
-      initInputs() {
-        this.inputs = {};
-        if (this.configs != null) {
-          return this.inputs = inputify$1(this.data, this.configs);
+  Form = (function(superClass) {
+    extend$1(Form, superClass);
+
+    function Form() {
+      return Form.__super__.constructor.apply(this, arguments);
+    }
+
+    Form.prototype.html = '<yield/>';
+
+    Form.prototype.initInputs = function() {
+      this.inputs = {};
+      if (this.configs != null) {
+        return this.inputs = inputify$1(this.data, this.configs);
+      }
+    };
+
+    Form.prototype.init = function() {
+      return this.initInputs();
+    };
+
+    Form.prototype.submit = function(e) {
+      var input, name, p, pRef, ps, ref;
+      ps = [];
+      ref = this.inputs;
+      for (name in ref) {
+        input = ref[name];
+        pRef = {};
+        input.trigger('validate', pRef);
+        if (pRef.p != null) {
+          ps.push(pRef.p);
         }
       }
-
-      init() {
-        return this.initInputs();
-      }
-
-      submit(e) {
-        var input, name, p, pRef, ps, ref;
-        ps = [];
-        ref = this.inputs;
-        for (name in ref) {
-          input = ref[name];
-          pRef = {};
-          input.trigger('validate', pRef);
-          if (pRef.p != null) {
-            ps.push(pRef.p);
-          }
-        }
-        p = Promise$2.settle(ps).then((results) => {
+      p = Promise$2.settle(ps).then((function(_this) {
+        return function(results) {
           var i, len, result;
           for (i = 0, len = results.length; i < len; i++) {
             result = results[i];
@@ -4108,143 +4114,132 @@ var ElControls = (function (exports) {
               return;
             }
           }
-          return this._submit.apply(this, arguments);
-        });
-        if (e != null) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-        return p;
+          return _this._submit.apply(_this, arguments);
+        };
+      })(this));
+      if (e != null) {
+        e.preventDefault();
+        e.stopPropagation();
       }
+      return p;
+    };
 
-      _submit() {}
-
-    }
-    // input for validate
-    // configs: null
-
-    // output from validate that's used for configuring InputViews
-    // inputs: null
-
-    // ref to use for validate
-    // data: null
-
-    // default transclude contents
-    Form.prototype.html = '<yield/>';
+    Form.prototype._submit = function() {};
 
     return Form;
 
-  }).call(undefined);
+  })(View$1);
 
-  // do actual submit stuff
   var Form$1 = Form;
 
   // node_modules/el.js/src/views/input.coffee
-  var Input;
+  var Input,
+    extend$2 = function(child, parent) { for (var key in parent) { if (hasProp$1.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$1 = {}.hasOwnProperty;
 
-  Input = (function() {
-    // Input binds to specific fields in the data tree and automatically
-    // updates the UI from the data tree on update and updates fields in
-    // the data tree on user interaction.
-    class Input extends View$1 {
-      init() {
-        var ref1, ref2;
-        if ((this.input == null) && (this.lookup == null) && (this.bind == null)) {
-          throw new Error('No input or bind provided');
-        }
-        if ((this.input == null) && (this.inputs != null)) {
-          this.input = this.inputs[(ref1 = this.lookup) != null ? ref1 : this.bind];
-        }
-        if (this.input == null) {
-          this.input = {
-            name: (ref2 = this.lookup) != null ? ref2 : this.bind,
-            ref: this.data,
-            validate: function(ref, name) {
-              return Promise.resolve([ref, name]);
-            }
-          };
-          observable(this.input);
-        }
-        this.input.on('validate', (pRef) => {
-          return this.validate(pRef);
-        });
-        // auto refresh on update of field
-        return this.input.ref.on('set', (n, v1, v2) => {
-          if (n === this.input.name && v1 !== v2) {
-            this._change(v1, true);
-            return this.scheduleUpdate();
-          }
-        });
-      }
+  Input = (function(superClass) {
+    extend$2(Input, superClass);
 
-      getValue(event) {
-        return event.target.value;
-      }
-
-      change(event) {
-        var value;
-        value = this.getValue(event);
-        return this._change(value);
-      }
-
-      _change(value, forced) {
-        var name, ref;
-        ({ref, name} = this.input);
-        if (!forced && value === ref.get(name)) {
-          return;
-        }
-        this.input.ref.set(name, value);
-        this.clearError();
-        return this.validate();
-      }
-
-      error(err) {
-        var ref1;
-        return this.errorMessage = (ref1 = err != null ? err.message : void 0) != null ? ref1 : err;
-      }
-
-      changed() {}
-
-      clearError() {
-        return this.errorMessage = '';
-      }
-
-      // support pass by reference since observable.trigger doesn't return things
-      validate(pRef) {
-        var p;
-        p = this.input.validate(this.input.ref, this.input.name).then((value) => {
-          this.changed(value);
-          this.valid = true;
-          return this.scheduleUpdate();
-        }).catch((err) => {
-          this.error(err);
-          this.valid = false;
-          this.scheduleUpdate();
-          throw err;
-        });
-        if (pRef != null) {
-          pRef.p = p;
-        }
-        return p;
-      }
-
+    function Input() {
+      return Input.__super__.constructor.apply(this, arguments);
     }
+
     Input.prototype.input = null;
 
-    // Is the input validated?
-
-    // Input state is calculated like this:
-    // initial: @value = false
-    // valid:   @value = true
-    // invald:  @value = false && @errorMessage != ''
     Input.prototype.valid = false;
 
-    // Records the error from any validation middleware if any
     Input.prototype.errorMessage = '';
+
+    Input.prototype.init = function() {
+      var ref1, ref2;
+      if ((this.input == null) && (this.lookup == null) && (this.bind == null)) {
+        throw new Error('No input or bind provided');
+      }
+      if ((this.input == null) && (this.inputs != null)) {
+        this.input = this.inputs[(ref1 = this.lookup) != null ? ref1 : this.bind];
+      }
+      if (this.input == null) {
+        this.input = {
+          name: (ref2 = this.lookup) != null ? ref2 : this.bind,
+          ref: this.data,
+          validate: function(ref, name) {
+            return Promise.resolve([ref, name]);
+          }
+        };
+        observable(this.input);
+      }
+      this.input.on('validate', (function(_this) {
+        return function(pRef) {
+          return _this.validate(pRef);
+        };
+      })(this));
+      return this.input.ref.on('set', (function(_this) {
+        return function(n, v1, v2) {
+          if (n === _this.input.name && v1 !== v2) {
+            _this._change(v1, true);
+            return _this.scheduleUpdate();
+          }
+        };
+      })(this));
+    };
+
+    Input.prototype.getValue = function(event) {
+      return event.target.value;
+    };
+
+    Input.prototype.change = function(event) {
+      var value;
+      value = this.getValue(event);
+      return this._change(value);
+    };
+
+    Input.prototype._change = function(value, forced) {
+      var name, ref, ref1;
+      ref1 = this.input, ref = ref1.ref, name = ref1.name;
+      if (!forced && value === ref.get(name)) {
+        return;
+      }
+      this.input.ref.set(name, value);
+      this.clearError();
+      return this.validate();
+    };
+
+    Input.prototype.error = function(err) {
+      var ref1;
+      return this.errorMessage = (ref1 = err != null ? err.message : void 0) != null ? ref1 : err;
+    };
+
+    Input.prototype.changed = function() {};
+
+    Input.prototype.clearError = function() {
+      return this.errorMessage = '';
+    };
+
+    Input.prototype.validate = function(pRef) {
+      var p;
+      p = this.input.validate(this.input.ref, this.input.name).then((function(_this) {
+        return function(value) {
+          _this.changed(value);
+          _this.valid = true;
+          return _this.scheduleUpdate();
+        };
+      })(this))["catch"]((function(_this) {
+        return function(err) {
+          _this.error(err);
+          _this.valid = false;
+          _this.scheduleUpdate();
+          throw err;
+        };
+      })(this));
+      if (pRef != null) {
+        pRef.p = p;
+      }
+      return p;
+    };
 
     return Input;
 
-  }).call(undefined);
+  })(View$1);
 
   var Input$1 = Input;
 
@@ -4259,10 +4254,9 @@ var ElControls = (function (exports) {
   };
 
   // node_modules/el.js/src/index.coffee
-  var El, k, v;
+  var El, fn, k, v;
 
   El = {
-    // deprecated
     Views: Views$1,
     View: Views$1.View,
     Form: Views$1.Form,
@@ -4274,15 +4268,16 @@ var ElControls = (function (exports) {
     }
   };
 
+  fn = function(k, v) {
+    if (isFunction$1(v)) {
+      return El[k] = function() {
+        return v.apply(riot$1, arguments);
+      };
+    }
+  };
   for (k in riot$1) {
     v = riot$1[k];
-    (function(k, v) {
-      if (isFunction$1(v)) {
-        return El[k] = function() {
-          return v.apply(riot$1, arguments);
-        };
-      }
-    })(k, v);
+    fn(k, v);
   }
 
   var El$1 = El;
@@ -6178,113 +6173,121 @@ var ElControls = (function (exports) {
   // node_modules/es6-tween/src/index.js
 
   // src/controls/control.coffee
-  var Control, _controlId, scrolling;
+  var Control, _controlId, scrolling,
+    extend$3 = function(child, parent) { for (var key in parent) { if (hasProp$2.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$2 = {}.hasOwnProperty;
 
   scrolling = false;
 
   _controlId = 0;
 
-  var Control$1 = Control = (function() {
-    class Control extends El$1.Input {
-      init() {
-        super.init();
-        return this._controlId = _controlId++;
-      }
+  var Control$1 = Control = (function(superClass) {
+    extend$3(Control, superClass);
 
-      getId() {
-        return this.tag + '-' + this._controlId;
-      }
-
-      getName() {
-        var ref;
-        return (ref = valueOrCall$1(this.name)) != null ? ref : this.input.name.replace(/\\./g, '-');
-      }
-
-      getValue(event) {
-        var ref;
-        return (ref = event.target.value) != null ? ref.trim() : void 0;
-      }
-
-      error(err) {
-        var elTop, rect, t, wTop;
-        if (err instanceof DOMException) {
-          console.log('WARNING: Error in riot dom manipulation ignored:', err);
-          return;
-        }
-        super.error();
-        rect = this.root.getBoundingClientRect();
-        elTop = rect.top - window.innerHeight / 2;
-        wTop = window.pageYOffset;
-        if (!scrolling && elTop <= wTop) {
-          scrolling = true;
-          autoPlay(true);
-          t = new Tween({
-            x: wTop
-          }).to({
-            x: wTop + elTop
-          }, 500, Easing.Cubic).on('update', function({x}) {
-            return window.scrollTo(window.pageXOffset, x);
-          }).on('complete', function() {
-            scrolling = false;
-            return autoPlay(false);
-          }).start();
-        }
-        return this.mediator.trigger(Events$1.ChangeFailed, this.input.name, this.input.ref.get(this.input.name));
-      }
-
-      change() {
-        super.change();
-        return this.mediator.trigger(Events$1.Change, this.input.name, this.input.ref.get(this.input.name));
-      }
-
-      changed(value) {
-        this.mediator.trigger(Events$1.ChangeSuccess, this.input.name, value);
-        return El$1.scheduleUpdate();
-      }
-
-      value() {
-        return this.input.ref(this.input.name);
-      }
-
+    function Control() {
+      return Control.__super__.constructor.apply(this, arguments);
     }
+
     Control.prototype._controlId = 0;
 
     Control.prototype.name = null;
 
+    Control.prototype.init = function() {
+      Control.__super__.init.call(this);
+      return this._controlId = _controlId++;
+    };
+
+    Control.prototype.getId = function() {
+      return this.tag + '-' + this._controlId;
+    };
+
+    Control.prototype.getName = function() {
+      var ref;
+      return (ref = valueOrCall$1(this.name)) != null ? ref : this.input.name.replace(/\\./g, '-');
+    };
+
+    Control.prototype.getValue = function(event) {
+      var ref;
+      return (ref = event.target.value) != null ? ref.trim() : void 0;
+    };
+
+    Control.prototype.error = function(err) {
+      var elTop, rect, t, wTop;
+      if (err instanceof DOMException) {
+        console.log('WARNING: Error in riot dom manipulation ignored:', err);
+        return;
+      }
+      Control.__super__.error.call(this);
+      rect = this.root.getBoundingClientRect();
+      elTop = rect.top - window.innerHeight / 2;
+      wTop = window.pageYOffset;
+      if (!scrolling && elTop <= wTop) {
+        scrolling = true;
+        autoPlay(true);
+        t = new Tween({
+          x: wTop
+        }).to({
+          x: wTop + elTop
+        }, 500, Easing.Cubic).on('update', function(arg) {
+          var x;
+          x = arg.x;
+          return window.scrollTo(window.pageXOffset, x);
+        }).on('complete', function() {
+          scrolling = false;
+          return autoPlay(false);
+        }).start();
+      }
+      return this.mediator.trigger(Events$1.ChangeFailed, this.input.name, this.input.ref.get(this.input.name));
+    };
+
+    Control.prototype.change = function() {
+      Control.__super__.change.call(this);
+      return this.mediator.trigger(Events$1.Change, this.input.name, this.input.ref.get(this.input.name));
+    };
+
+    Control.prototype.changed = function(value) {
+      this.mediator.trigger(Events$1.ChangeSuccess, this.input.name, value);
+      return El$1.scheduleUpdate();
+    };
+
+    Control.prototype.value = function() {
+      return this.input.ref(this.input.name);
+    };
+
     return Control;
 
-  }).call(undefined);
+  })(El$1.Input);
 
   // templates/controls/checkbox.pug
   var html = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" type=\"checkbox\" onchange=\"{ change }\" onblur=\"{ change }\" checked=\"{ input.ref.get(input.name) }\">\n</yield>\n<yield></yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>";
 
   // src/controls/checkbox.coffee
-  var CheckBox;
+  var CheckBox,
+    extend$4 = function(child, parent) { for (var key in parent) { if (hasProp$3.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$3 = {}.hasOwnProperty;
 
-  var checkbox = CheckBox = (function() {
-    class CheckBox extends Control$1 {
-      getValue(event) {
-        return event.target.checked;
-      }
+  var checkbox = CheckBox = (function(superClass) {
+    extend$4(CheckBox, superClass);
 
+    function CheckBox() {
+      return CheckBox.__super__.constructor.apply(this, arguments);
     }
+
     CheckBox.prototype.tag = 'checkbox';
 
     CheckBox.prototype.html = html;
 
+    CheckBox.prototype.getValue = function(event) {
+      return event.target.checked;
+    };
+
     return CheckBox;
 
-  }).call(undefined);
+  })(Control$1);
 
   CheckBox.register();
 
   // src/utils/placeholder.coffee
-  // contains parts of Input Placeholder Polyfill
-  // MIT Licensed
-  // Created by Christopher Rolfe
-
-  // When the input value is the same as the placeholder clear it
-
   var exports$1, hidePlaceholderOnFocus, unfocusOnAnElement;
 
   hidePlaceholderOnFocus = function(event) {
@@ -6294,9 +6297,6 @@ var ElControls = (function (exports) {
       return target.value = '';
     }
   };
-
-
-  // When the input has an empty value put the placeholder back in
 
   unfocusOnAnElement = function(event) {
     var target;
@@ -6311,7 +6311,6 @@ var ElControls = (function (exports) {
   if (document.createElement("input").placeholder == null) {
     exports$1 = function(input) {
       var ref;
-      //jquery case
       input = (ref = input[0]) != null ? ref : input;
       if (input._placeholdered != null) {
         return;
@@ -6323,9 +6322,6 @@ var ElControls = (function (exports) {
       if (!input.value) {
         input.value = input.getAttribute('placeholder');
       }
-      // Attach event listeners for click and blur
-      // Click so that we can clear the placeholder if we need to
-      // Blur to re-add it if needed
       if (input.addEventListener) {
         input.addEventListener('click', hidePlaceholderOnFocus, false);
         return input.addEventListener('blur', unfocusOnAnElement, false);
@@ -6342,22 +6338,17 @@ var ElControls = (function (exports) {
   var html$1 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\" placeholder=\"{ placeholder }\">\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: input.ref.get(input.name) || placeholder }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
   // src/controls/text.coffee
-  var Text;
+  var Text,
+    extend$5 = function(child, parent) { for (var key in parent) { if (hasProp$4.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$4 = {}.hasOwnProperty;
 
-  var Text$1 = Text = (function() {
-    class Text extends Control$1 {
-      init() {
-        super.init();
-        return this.on('mounted', () => {
-          var el;
-          el = this.root.getElementsByTagName(this.formElement)[0];
-          if (this.type !== 'password') {
-            return placeholder(el);
-          }
-        });
-      }
+  var Text$1 = Text = (function(superClass) {
+    extend$5(Text, superClass);
 
+    function Text() {
+      return Text.__super__.constructor.apply(this, arguments);
     }
+
     Text.prototype.tag = 'text';
 
     Text.prototype.html = html$1;
@@ -6382,45 +6373,62 @@ var ElControls = (function (exports) {
 
     Text.prototype.instructions = null;
 
+    Text.prototype.init = function() {
+      Text.__super__.init.call(this);
+      return this.on('mounted', (function(_this) {
+        return function() {
+          var el;
+          el = _this.root.getElementsByTagName(_this.formElement)[0];
+          if (_this.type !== 'password') {
+            return placeholder(el);
+          }
+        };
+      })(this));
+    };
+
     return Text;
 
-  }).call(undefined);
+  })(Control$1);
 
   Text.register();
 
   // src/controls/readonly.coffee
-  var ReadOnly;
+  var ReadOnly,
+    extend$6 = function(child, parent) { for (var key in parent) { if (hasProp$5.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$5 = {}.hasOwnProperty;
 
-  var ReadOnly$1 = ReadOnly = (function() {
-    class ReadOnly extends Text$1 {
-      init() {
-        if (!this.text) {
-          return super.init();
-        }
-      }
+  var ReadOnly$1 = ReadOnly = (function(superClass) {
+    extend$6(ReadOnly, superClass);
 
-      getText() {
-        return valueOrCall$1(this.text) || this.input.ref.get(input.name);
-      }
-
-      // readonly
-      change() {}
-
-      _change() {}
-
-      getName() {}
-
+    function ReadOnly() {
+      return ReadOnly.__super__.constructor.apply(this, arguments);
     }
+
     ReadOnly.prototype.tag = 'readonly';
 
     ReadOnly.prototype.readonly = true;
 
-    // pass this in optionally to overwrite a specific value
     ReadOnly.prototype.text = '';
+
+    ReadOnly.prototype.init = function() {
+      if (!this.text) {
+        return ReadOnly.__super__.init.call(this);
+      }
+    };
+
+    ReadOnly.prototype.getText = function() {
+      return valueOrCall$1(this.text) || this.input.ref.get(input.name);
+    };
+
+    ReadOnly.prototype.change = function() {};
+
+    ReadOnly.prototype._change = function() {};
+
+    ReadOnly.prototype.getName = function() {};
 
     return ReadOnly;
 
-  }).call(undefined);
+  })(Text$1);
 
   ReadOnly.register();
 
@@ -6428,60 +6436,64 @@ var ElControls = (function (exports) {
   var html$2 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" type=\"{ type }\" onclick=\"{ copy }\" riot-value=\"{ getText() }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"true\" placeholder=\"{ placeholder }\">\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: true }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield from=\"copy-text\">\n  <div class=\"copy-text\">{ copied ? 'Copied' : '&#128203;' }</div>\n</yield>\n<yield></yield>";
 
   // src/controls/copy.coffee
-  var Copy;
+  var Copy,
+    extend$7 = function(child, parent) { for (var key in parent) { if (hasProp$6.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$6 = {}.hasOwnProperty;
 
-  var copy = Copy = (function() {
-    class Copy extends ReadOnly$1 {
-      init() {
-        return super.init();
-      }
+  var copy = Copy = (function(superClass) {
+    extend$7(Copy, superClass);
 
-      copy(e) {
-        var msg, successful, text, textArea;
-        text = this.getText();
-        textArea = document.createElement("textarea");
-        textArea.style.position = 'fixed';
-        textArea.style.top = 0;
-        textArea.style.left = 0;
-        textArea.style.width = '2em';
-        textArea.style.height = '2em';
-        textArea.style.padding = 0;
-        textArea.style.border = 'none';
-        textArea.style.outline = 'none';
-        textArea.style.boxShadow = 'none';
-        textArea.style.background = 'transparent';
-        textArea.value = text;
-        document.body.appendChild(textArea);
-        textArea.select();
-        try {
-          successful = document.execCommand('copy');
-          msg = successful != null ? successful : {
-            'successful': 'unsuccessful'
-          };
-          console.log('Copying text command was ' + msg);
-        } catch (error) {
-          console.log('Oops, unable to copy');
-        }
-        document.body.removeChild(textArea);
-        this.copied = true;
-        this.scheduleUpdate();
-        return false;
-      }
-
+    function Copy() {
+      return Copy.__super__.constructor.apply(this, arguments);
     }
+
     Copy.prototype.tag = 'copy';
 
     Copy.prototype.html = html$2;
 
-    // pass this in optionally to overwrite a specific value
     Copy.prototype.text = '';
 
-    // this is set automatically
     Copy.prototype.copied = false;
+
+    Copy.prototype.init = function() {
+      return Copy.__super__.init.call(this);
+    };
+
+    Copy.prototype.copy = function(e) {
+      var msg, successful, text, textArea;
+      text = this.getText();
+      textArea = document.createElement("textarea");
+      textArea.style.position = 'fixed';
+      textArea.style.top = 0;
+      textArea.style.left = 0;
+      textArea.style.width = '2em';
+      textArea.style.height = '2em';
+      textArea.style.padding = 0;
+      textArea.style.border = 'none';
+      textArea.style.outline = 'none';
+      textArea.style.boxShadow = 'none';
+      textArea.style.background = 'transparent';
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        successful = document.execCommand('copy');
+        msg = successful != null ? successful : {
+          'successful': 'unsuccessful'
+        };
+        console.log('Copying text command was ' + msg);
+      } catch (error) {
+        console.log('Oops, unable to copy');
+      }
+      document.body.removeChild(textArea);
+      this.copied = true;
+      this.scheduleUpdate();
+      return false;
+    };
 
     return Copy;
 
-  }).call(undefined);
+  })(ReadOnly$1);
 
   Copy.register();
 
@@ -6489,40 +6501,17 @@ var ElControls = (function (exports) {
   var html$3 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" onchange=\"{ change }\" onblur=\"{ change }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled || !hasOptions() }\" multiple=\"{ multiple }\" size=\"{ size }\">\n    <option if=\"{ placeholder }\" value=\"\">{ placeholder }</option>\n    <option each=\"{ v, k in options() }\" value=\"{ k }\" selected=\"{ k == input.ref.get(input.name) }\">{ v }</option>\n  </select>\n  <div class=\"select-indicator\">▼</div>\n</yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
   // src/controls/selection.coffee
-  var Select;
+  var Select,
+    extend$8 = function(child, parent) { for (var key in parent) { if (hasProp$7.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$7 = {}.hasOwnProperty;
 
-  var Select$1 = Select = (function() {
-    class Select extends Control$1 {
-      hasOptions() {
-        // call for side effects
-        this.options;
-        return this._optionsHash.length > 2;
-      }
+  var Select$1 = Select = (function(superClass) {
+    extend$8(Select, superClass);
 
-      options() {
-        var optionsHash, selectOptions;
-        selectOptions = this.selectOptions;
-        if (typeof selectOptions === 'function') {
-          selectOptions = selectOptions();
-        }
-        optionsHash = JSON.stringify(selectOptions);
-        if (this._optionsHash !== optionsHash) {
-          this._optionsHash = optionsHash;
-        }
-        return selectOptions;
-      }
-
-      getValue(e) {
-        var el, ref, ref1, ref2;
-        el = e.target;
-        return ((ref = (ref1 = el.options) != null ? (ref2 = ref1[el.selectedIndex]) != null ? ref2.value : void 0 : void 0) != null ? ref : '').trim();
-      }
-
-      init() {
-        return super.init();
-      }
-
+    function Select() {
+      return Select.__super__.constructor.apply(this, arguments);
     }
+
     Select.prototype.tag = 'selection';
 
     Select.prototype.html = html$3;
@@ -6537,71 +6526,94 @@ var ElControls = (function (exports) {
 
     Select.prototype.size = null;
 
-    // default to something that will be visible
     Select.prototype._optionsHash = 'default';
 
     Select.prototype.selectOptions = {};
 
+    Select.prototype.hasOptions = function() {
+      this.options;
+      return this._optionsHash.length > 2;
+    };
+
+    Select.prototype.options = function() {
+      var optionsHash, selectOptions;
+      selectOptions = this.selectOptions;
+      if (typeof selectOptions === 'function') {
+        selectOptions = selectOptions();
+      }
+      optionsHash = JSON.stringify(selectOptions);
+      if (this._optionsHash !== optionsHash) {
+        this._optionsHash = optionsHash;
+      }
+      return selectOptions;
+    };
+
+    Select.prototype.getValue = function(e) {
+      var el, ref, ref1, ref2;
+      el = e.target;
+      return ((ref = (ref1 = el.options) != null ? (ref2 = ref1[el.selectedIndex]) != null ? ref2.value : void 0 : void 0) != null ? ref : '').trim();
+    };
+
+    Select.prototype.init = function() {
+      return Select.__super__.init.call(this);
+    };
+
     return Select;
 
-  }).call(undefined);
+  })(Control$1);
 
   Select.register();
 
   // src/controls/country-select.coffee
-  var CountrySelect;
+  var CountrySelect,
+    extend$9 = function(child, parent) { for (var key in parent) { if (hasProp$8.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$8 = {}.hasOwnProperty;
 
-  var countrySelect = CountrySelect = (function() {
-    class CountrySelect extends Select$1 {
-      // set up the countries in selectedOptions
-      // countries should be in the form of
-      // [{
-      //     code: 'XX',
-      //     name: 'Country Name',
-      //     subdivisions: [{
-      //         code: 'YY',
-      //         name: 'Subdivision Name',
-      //     }]
-      // }]
-      options() {
-        var countries, country, i, len, options, optionsHash, ref, ref1, ref2, ref3, ref4, ref5;
-        countries = (ref = (ref1 = (ref2 = this.countries) != null ? ref2 : (ref3 = this.data) != null ? ref3.get('countries') : void 0) != null ? ref1 : (ref4 = this.parent) != null ? (ref5 = ref4.data) != null ? ref5.get('countries') : void 0 : void 0) != null ? ref : [];
-        optionsHash = JSON.stringify(countries);
-        if (this._optionsHash === optionsHash) {
-          return this.selectOptions;
-        }
-        countries = countries.slice(0);
-        this._optionsHash = optionsHash;
-        this.selectOptions = options = {};
-        countries.sort(function(a, b) {
-          var nameA, nameB;
-          nameA = a.name.toUpperCase();
-          nameB = b.name.toUpperCase();
-          if (nameA < nameB) {
-            return -1;
-          }
-          if (nameA > nameB) {
-            return 1;
-          }
-          return 0;
-        });
-        for (i = 0, len = countries.length; i < len; i++) {
-          country = countries[i];
-          options[country.code.toUpperCase()] = country.name;
-        }
-        return options;
-      }
+  var countrySelect = CountrySelect = (function(superClass) {
+    extend$9(CountrySelect, superClass);
 
-      init() {
-        return super.init();
-      }
-
+    function CountrySelect() {
+      return CountrySelect.__super__.constructor.apply(this, arguments);
     }
+
     CountrySelect.prototype.tag = 'country-select';
+
+    CountrySelect.prototype.options = function() {
+      var countries, country, i, len, options, optionsHash, ref, ref1, ref2, ref3, ref4, ref5;
+      countries = (ref = (ref1 = (ref2 = this.countries) != null ? ref2 : (ref3 = this.data) != null ? ref3.get('countries') : void 0) != null ? ref1 : (ref4 = this.parent) != null ? (ref5 = ref4.data) != null ? ref5.get('countries') : void 0 : void 0) != null ? ref : [];
+      optionsHash = JSON.stringify(countries);
+      if (this._optionsHash === optionsHash) {
+        return this.selectOptions;
+      }
+      countries = countries.slice(0);
+      this._optionsHash = optionsHash;
+      this.selectOptions = options = {};
+      countries.sort(function(a, b) {
+        var nameA, nameB;
+        nameA = a.name.toUpperCase();
+        nameB = b.name.toUpperCase();
+        if (nameA < nameB) {
+          return -1;
+        }
+        if (nameA > nameB) {
+          return 1;
+        }
+        return 0;
+      });
+      for (i = 0, len = countries.length; i < len; i++) {
+        country = countries[i];
+        options[country.code.toUpperCase()] = country.name;
+      }
+      return options;
+    };
+
+    CountrySelect.prototype.init = function() {
+      return CountrySelect.__super__.init.call(this);
+    };
 
     return CountrySelect;
 
-  }).call(undefined);
+  })(Select$1);
 
   CountrySelect.register();
 
@@ -6740,7 +6752,6 @@ var ElControls = (function (exports) {
 
   currencySigns = currencies.data;
 
-  // Does the currency support decimal notation
   var isZeroDecimal = function(code) {
     if (code) {
       code = code.toLowerCase();
@@ -6751,7 +6762,6 @@ var ElControls = (function (exports) {
     return false;
   };
 
-  // Convert data format to humanized format
   var renderUICurrencyFromJSON = function(code, jsonCurrency) {
     var currentCurrencySign, ref;
     if (code) {
@@ -6761,38 +6771,32 @@ var ElControls = (function (exports) {
       jsonCurrency = 0;
     }
     currentCurrencySign = (ref = currencySigns[code]) != null ? ref : '';
-    // ethereum
     if (code === 'eth' || code === 'btc' || code === 'xbt') {
       jsonCurrency = jsonCurrency / 1e9;
       return currentCurrencySign + jsonCurrency;
     }
     jsonCurrency = '' + jsonCurrency;
-    // jsonCurrency is not cents
     if (isZeroDecimal(code)) {
       return currentCurrencySign + jsonCurrency;
     }
-    // jsonCurrency is cents
     while (jsonCurrency.length < 3) {
       jsonCurrency = '0' + jsonCurrency;
     }
     return currentCurrencySign + jsonCurrency.substr(0, jsonCurrency.length - 2) + '.' + jsonCurrency.substr(-2);
   };
 
-  // Convert humanized format to data format
   var renderJSONCurrencyFromUI = function(code, uiCurrency) {
     var currentCurrencySign, parts;
     if (code) {
       code = code.toLowerCase();
     }
     currentCurrencySign = currencySigns[code];
-    // ethereum
     if (code === 'eth' || code === 'btc' || code === 'xbt') {
       return parseFloat(('' + uiCurrency).replace(digitsOnlyRe, '')) * 1e9;
     }
     if (isZeroDecimal(code)) {
       return parseInt(('' + uiCurrency).replace(digitsOnlyRe, '').replace(currencySeparator, ''), 10);
     }
-    // uiCurrency is a whole unit of currency
     parts = uiCurrency.split(currencySeparator);
     if (parts.length > 1) {
       parts[1] = parts[1].substr(0, 2);
@@ -6806,38 +6810,44 @@ var ElControls = (function (exports) {
   };
 
   // src/controls/currency.coffee
-  var Currency;
+  var Currency,
+    extend$10 = function(child, parent) { for (var key in parent) { if (hasProp$9.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$9 = {}.hasOwnProperty;
 
-  var currency = Currency = (function() {
-    class Currency extends Text$1 {
-      init() {
-        return super.init();
-      }
+  var currency = Currency = (function(superClass) {
+    extend$10(Currency, superClass);
 
-      getCurrency(e) {
-        return valueOrCall$1(this.currency);
-      }
-
-      renderValue() {
-        return renderUICurrencyFromJSON(this.getCurrency(), this.input.ref.get(this.input.name));
-      }
-
-      getValue(e) {
-        var el, ref;
-        el = e.target;
-        return renderJSONCurrencyFromUI(this.getCurrency(), ((ref = el.value) != null ? ref : '0').trim());
-      }
-
+    function Currency() {
+      return Currency.__super__.constructor.apply(this, arguments);
     }
+
     Currency.prototype.tag = 'currency';
 
     Currency.prototype.html = html$4;
 
     Currency.prototype.currency = '';
 
+    Currency.prototype.init = function() {
+      return Currency.__super__.init.call(this);
+    };
+
+    Currency.prototype.getCurrency = function(e) {
+      return valueOrCall$1(this.currency);
+    };
+
+    Currency.prototype.renderValue = function() {
+      return renderUICurrencyFromJSON(this.getCurrency(), this.input.ref.get(this.input.name));
+    };
+
+    Currency.prototype.getValue = function(e) {
+      var el, ref;
+      el = e.target;
+      return renderJSONCurrencyFromUI(this.getCurrency(), ((ref = el.value) != null ? ref : '0').trim());
+    };
+
     return Currency;
 
-  }).call(undefined);
+  })(Text$1);
 
   Currency.register();
 
@@ -8177,14 +8187,11 @@ var ElControls = (function (exports) {
   })(zepto);
 
   // src/$.coffee
-  // Use zepto if there's no jquery involved so we can run without it.
-  // Use jquery or something else if you need better compatibility.
   var $$2;
 
   $$2 = zepto;
 
   if (window.$ == null) {
-    // add in outer support from https://gist.github.com/pamelafox/1379704
     ['width', 'height'].forEach(function(dimension) {
       var Dimension;
       Dimension = dimension.replace(/./, function(m) {
@@ -8212,7 +8219,6 @@ var ElControls = (function (exports) {
     });
     window.$ = $$2;
   } else {
-    // Use whichever $
     $$2 = window.$;
   }
 
@@ -8279,7 +8285,7 @@ var ElControls = (function (exports) {
       return 0;
   }
 
-  function extend$1(a, b) {
+  function extend$11(a, b) {
       var i, n, k, object;
       for (i = 1, n = arguments.length; i < n; i++) {
           object = arguments[i];
@@ -8617,7 +8623,7 @@ var ElControls = (function (exports) {
   Sifter.prototype.prepareSearch = function(query, options) {
       if (typeof query === 'object') return query;
 
-      options = extend$1({}, options);
+      options = extend$11({}, options);
 
       var optionFields     = options.fields;
       var optionSort       = options.sort;
@@ -11653,112 +11659,30 @@ var ElControls = (function (exports) {
   var html$5 = "\n<yield from=\"input\">\n  <select class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" style=\"display: none\" onchange=\"{ change }\" onblur=\"{ change }\" placeholder=\"{ placeholder }\"></select>\n</yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
   // src/controls/dropdown.coffee
-  var Select$2, coolDown, isABrokenBrowser;
+  var Select$2, coolDown, isABrokenBrowser,
+    extend$12 = function(child, parent) { for (var key in parent) { if (hasProp$10.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$10 = {}.hasOwnProperty;
 
   isABrokenBrowser = window.navigator.userAgent.indexOf('MSIE') > 0 || window.navigator.userAgent.indexOf('Trident') > 0;
 
   coolDown = -1;
 
-  var dropdown = Select$2 = (function() {
-    class Select extends Text$1 {
-      options() {
-        return this.selectOptions;
-      }
+  var dropdown = Select$2 = (function(superClass) {
+    extend$12(Select, superClass);
 
-      getValue(event) {
-        var ref;
-        return (ref = $$3(event.target).val()) != null ? ref.trim().toLowerCase() : void 0;
-      }
-
-      initSelect($select) {
-        var $input, invertedOptions, name, options, ref, select, value;
-        options = [];
-        invertedOptions = {};
-        ref = this.options();
-        for (value in ref) {
-          name = ref[value];
-          options.push({
-            text: name,
-            value: value
-          });
-          invertedOptions[name] = value;
-        }
-        selectize($select, {
-          dropdownParent: 'body'
-        // valueField: 'value'
-        // labelField: 'text'
-        // searchField: 'text'
-        }).on('change', (event) => {
-          // This isn't working right, sometimes you have one change firing events on unrelated fields
-          if (coolDown !== -1) {
-            return;
-          }
-          coolDown = setTimeout(function() {
-            return coolDown = -1;
-          }, 100);
-          this.change(event);
-          event.preventDefault();
-          event.stopPropagation();
-          return false;
-        });
-        select = $select[0];
-        select.selectize.addOption(options);
-        select.selectize.addItem([this.input.ref.get(this.input.name)] || [], true);
-        select.selectize.refreshOptions(false);
-        //support auto fill
-        $input = $select.parent().find('.selectize-input input:first');
-        $input.on('change', function(event) {
-          var val;
-          val = $$3(event.target).val();
-          if (invertedOptions[val] != null) {
-            return $select[0].selectize.setValue(invertedOptions[val]);
-          }
-        });
-        //support read only
-        if (this.readOnly) {
-          return $input.attr('readonly', true);
-        }
-      }
-
-      init(opts) {
-        super.init();
-        return this.style = this.style || 'width:100%';
-      }
-
-      onUpdated() {
-        var $control, $select, select, v;
-        if (this.input == null) {
-          return;
-        }
-        $select = $$3(this.root).find('select');
-        select = $select[0];
-        if (select != null) {
-          v = this.input.ref.get(this.input.name);
-          if (!this.initialized) {
-            return raf(() => {
-              this.initSelect($select);
-              return this.initialized = true;
-            });
-          } else if ((select.selectize != null) && v !== select.selectize.getValue()) {
-            select.selectize.clear(true);
-            return select.selectize.addItem(v, true);
-          }
-        } else {
-          $control = $$3(this.root).find('.selectize-control');
-          if ($control[0] == null) {
-            return raf(() => {
-              return this.scheduleUpdate();
-            });
-          }
-        }
-      }
-
+    function Select() {
+      return Select.__super__.constructor.apply(this, arguments);
     }
+
     Select.prototype.tag = 'dropdown';
 
     Select.prototype.html = html$5;
 
     Select.prototype.selectOptions = {};
+
+    Select.prototype.options = function() {
+      return this.selectOptions;
+    };
 
     Select.prototype.readOnly = false;
 
@@ -11773,15 +11697,101 @@ var ElControls = (function (exports) {
       }
     };
 
+    Select.prototype.getValue = function(event) {
+      var ref;
+      return (ref = $$3(event.target).val()) != null ? ref.trim().toLowerCase() : void 0;
+    };
+
+    Select.prototype.initSelect = function($select) {
+      var $input, invertedOptions, name, options, ref, select, value;
+      options = [];
+      invertedOptions = {};
+      ref = this.options();
+      for (value in ref) {
+        name = ref[value];
+        options.push({
+          text: name,
+          value: value
+        });
+        invertedOptions[name] = value;
+      }
+      selectize($select, {
+        dropdownParent: 'body'
+      }).on('change', (function(_this) {
+        return function(event) {
+          if (coolDown !== -1) {
+            return;
+          }
+          coolDown = setTimeout(function() {
+            return coolDown = -1;
+          }, 100);
+          _this.change(event);
+          event.preventDefault();
+          event.stopPropagation();
+          return false;
+        };
+      })(this));
+      select = $select[0];
+      select.selectize.addOption(options);
+      select.selectize.addItem([this.input.ref.get(this.input.name)] || [], true);
+      select.selectize.refreshOptions(false);
+      $input = $select.parent().find('.selectize-input input:first');
+      $input.on('change', function(event) {
+        var val;
+        val = $$3(event.target).val();
+        if (invertedOptions[val] != null) {
+          return $select[0].selectize.setValue(invertedOptions[val]);
+        }
+      });
+      if (this.readOnly) {
+        return $input.attr('readonly', true);
+      }
+    };
+
+    Select.prototype.init = function(opts) {
+      Select.__super__.init.call(this);
+      return this.style = this.style || 'width:100%';
+    };
+
+    Select.prototype.onUpdated = function() {
+      var $control, $select, select, v;
+      if (this.input == null) {
+        return;
+      }
+      $select = $$3(this.root).find('select');
+      select = $select[0];
+      if (select != null) {
+        v = this.input.ref.get(this.input.name);
+        if (!this.initialized) {
+          return raf((function(_this) {
+            return function() {
+              _this.initSelect($select);
+              return _this.initialized = true;
+            };
+          })(this));
+        } else if ((select.selectize != null) && v !== select.selectize.getValue()) {
+          select.selectize.clear(true);
+          return select.selectize.addItem(v, true);
+        }
+      } else {
+        $control = $$3(this.root).find('.selectize-control');
+        if ($control[0] == null) {
+          return raf((function(_this) {
+            return function() {
+              return _this.scheduleUpdate();
+            };
+          })(this));
+        }
+      }
+    };
+
     return Select;
 
-  }).call(undefined);
+  })(Text$1);
 
-  // @on 'unmount', ()=>
-  //   $select = $(@root).find('select')
   Select$2.register();
 
-  // ../../zeekay/qrcode-lite/lib/qrcode.mjs
+  // node_modules/qrcode-lite/lib/qrcode.mjs
   // src/renderer/utils.js
   function hex2rgba (hex) {
     if (typeof hex !== 'string') {
@@ -15009,50 +15019,29 @@ var ElControls = (function (exports) {
   var html$6 = "\n<canvas></canvas>";
 
   // src/controls/qrcode.coffee
-  var QRCode;
+  var QRCode,
+    extend$13 = function(child, parent) { for (var key in parent) { if (hasProp$11.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$11 = {}.hasOwnProperty;
 
-  var qrcode = QRCode = (function() {
-    class QRCode extends ReadOnly$1 {
-      init() {
-        return super.init();
-      }
+  var qrcode = QRCode = (function(superClass) {
+    extend$13(QRCode, superClass);
 
-      onUpdated() {
-        var canvas;
-        canvas = this.root.children[0];
-        return toCanvas(canvas, this.getText(), {
-          version: parseInt(this.version, 10),
-          errorCorrectionLevel: this.errorCorrectionLevel,
-          scale: parseInt(this.scale, 10),
-          margin: parseInt(this.margin, 10)
-        }).catch(function(err) {
-          return console.error(err);
-        });
-      }
-
+    function QRCode() {
+      return QRCode.__super__.constructor.apply(this, arguments);
     }
+
     QRCode.prototype.tag = 'qrcode';
 
     QRCode.prototype.html = html$6;
 
-    // pass this in optionally to overwrite a specific value
     QRCode.prototype.text = '';
 
-    // version '1' to '40', undefined for automatic detection (default)
     QRCode.prototype.version = void 0;
 
-    // level of error correction
-    // 'L' = 7%
-    // 'M' = 15% (default)
-    // 'Q' = 25%
-    // 'H' = 35%
-    // 'S' = 50% (unsupported)
     QRCode.prototype.errorCorrectionLevel = 'M';
 
-    // scale of a module
     QRCode.prototype.scale = 4;
 
-    // margin of white area around qr code in pixels
     QRCode.prototype.margin = 4;
 
     QRCode.prototype.events = {
@@ -15064,32 +15053,62 @@ var ElControls = (function (exports) {
       }
     };
 
+    QRCode.prototype.init = function() {
+      return QRCode.__super__.init.call(this);
+    };
+
+    QRCode.prototype.onUpdated = function() {
+      var canvas;
+      canvas = this.root.children[0];
+      return toCanvas(canvas, this.getText(), {
+        version: parseInt(this.version, 10),
+        errorCorrectionLevel: this.errorCorrectionLevel,
+        scale: parseInt(this.scale, 10),
+        margin: parseInt(this.margin, 10)
+      })["catch"](function(err) {
+        return console.error(err);
+      });
+    };
+
     return QRCode;
 
-  }).call(undefined);
+  })(ReadOnly$1);
 
   QRCode.register();
 
   // src/controls/recaptcha.coffee
-  var ReCaptcha;
+  var ReCaptcha,
+    extend$14 = function(child, parent) { for (var key in parent) { if (hasProp$12.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$12 = {}.hasOwnProperty;
 
-  var recaptcha = ReCaptcha = (function() {
-    // requires <script src='//www.google.com/recaptcha/api.js?render=explicit'/>
-    class ReCaptcha extends El$1.View {
-      init() {
-        var tryRecaptcha;
-        if (!this.sitekey) {
-          console.error('recaptcha: no sitekey found');
-          return;
-        }
-        tryRecaptcha = () => {
-          return requestAnimationFrame(() => {
+  var recaptcha = ReCaptcha = (function(superClass) {
+    extend$14(ReCaptcha, superClass);
+
+    function ReCaptcha() {
+      return ReCaptcha.__super__.constructor.apply(this, arguments);
+    }
+
+    ReCaptcha.prototype.tag = 'recaptcha';
+
+    ReCaptcha.prototype.html = '';
+
+    ReCaptcha.prototype.theme = 'light';
+
+    ReCaptcha.prototype.init = function() {
+      var tryRecaptcha;
+      if (!this.sitekey) {
+        console.error('recaptcha: no sitekey found');
+        return;
+      }
+      tryRecaptcha = (function(_this) {
+        return function() {
+          return requestAnimationFrame(function() {
             try {
-              return grecaptcha.render(this.root, {
-                sitekey: this.sitekey,
-                theme: this.theme,
-                callback: (res) => {
-                  return this.data.set('user.g-recaptcha-response', res);
+              return grecaptcha.render(_this.root, {
+                sitekey: _this.sitekey,
+                theme: _this.theme,
+                callback: function(res) {
+                  return _this.data.set('user.g-recaptcha-response', res);
                 }
               });
             } catch (error) {
@@ -15097,92 +15116,88 @@ var ElControls = (function (exports) {
             }
           });
         };
-        return tryRecaptcha();
-      }
-
-    }
-    ReCaptcha.prototype.tag = 'recaptcha';
-
-    ReCaptcha.prototype.html = '';
-
-    // sitekey from recaptcha
-    // sitekey: null
-
-    // theme ('dark'/'light')
-    ReCaptcha.prototype.theme = 'light';
+      })(this);
+      return tryRecaptcha();
+    };
 
     return ReCaptcha;
 
-  }).call(undefined);
+  })(El$1.View);
 
   ReCaptcha.register();
 
   // src/controls/state-select.coffee
-  var StateSelect;
+  var StateSelect,
+    extend$15 = function(child, parent) { for (var key in parent) { if (hasProp$13.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$13 = {}.hasOwnProperty;
 
-  var stateSelect = StateSelect = (function() {
-    class StateSelect extends Select$1 {
-      options() {
-        var code, countries, country, found, i, j, len, len1, options, optionsHash, ref, ref1, ref2, ref3, ref4, ref5, subdivision, subdivisions;
-        countries = (ref = (ref1 = (ref2 = this.countries) != null ? ref2 : (ref3 = this.data) != null ? ref3.get('countries') : void 0) != null ? ref1 : (ref4 = this.parent) != null ? (ref5 = ref4.data) != null ? ref5.get('countries') : void 0 : void 0) != null ? ref : [];
-        code = this.getCountry();
-        if (!code || code.length !== 2) {
-          this._optionsHash = '';
-          return;
-        }
-        code = code.toUpperCase();
-        found = false;
-        for (i = 0, len = countries.length; i < len; i++) {
-          country = countries[i];
-          if (country.code.toUpperCase() === code) {
-            found = true;
-            subdivisions = country.subdivisions;
-            optionsHash = JSON.stringify(subdivisions);
-            if (this._optionsHash === optionsHash) {
-              return this.selectOptions;
-            }
-            subdivisions = subdivisions.slice(0);
-            this._optionsHash = optionsHash;
-            this.selectOptions = options = {};
-            subdivisions.sort(function(a, b) {
-              var nameA, nameB;
-              nameA = a.name.toUpperCase();
-              nameB = b.name.toUpperCase();
-              if (nameA < nameB) {
-                return -1;
-              }
-              if (nameA > nameB) {
-                return 1;
-              }
-              return 0;
-            });
-            for (j = 0, len1 = subdivisions.length; j < len1; j++) {
-              subdivision = subdivisions[j];
-              options[subdivision.code.toUpperCase()] = subdivision.name;
-            }
-            break;
-          }
-        }
-        if (!found) {
-          this._optionsHash = '';
-        }
-        return options;
-      }
+  var stateSelect = StateSelect = (function(superClass) {
+    extend$15(StateSelect, superClass);
 
-      getCountry() {
-        return '';
-      }
-
-      init() {
-        return super.init();
-      }
-
+    function StateSelect() {
+      return StateSelect.__super__.constructor.apply(this, arguments);
     }
+
     StateSelect.prototype.tag = 'state-select';
+
+    StateSelect.prototype.options = function() {
+      var code, countries, country, found, i, j, len, len1, options, optionsHash, ref, ref1, ref2, ref3, ref4, ref5, subdivision, subdivisions;
+      countries = (ref = (ref1 = (ref2 = this.countries) != null ? ref2 : (ref3 = this.data) != null ? ref3.get('countries') : void 0) != null ? ref1 : (ref4 = this.parent) != null ? (ref5 = ref4.data) != null ? ref5.get('countries') : void 0 : void 0) != null ? ref : [];
+      code = this.getCountry();
+      if (!code || code.length !== 2) {
+        this._optionsHash = '';
+        return;
+      }
+      code = code.toUpperCase();
+      found = false;
+      for (i = 0, len = countries.length; i < len; i++) {
+        country = countries[i];
+        if (country.code.toUpperCase() === code) {
+          found = true;
+          subdivisions = country.subdivisions;
+          optionsHash = JSON.stringify(subdivisions);
+          if (this._optionsHash === optionsHash) {
+            return this.selectOptions;
+          }
+          subdivisions = subdivisions.slice(0);
+          this._optionsHash = optionsHash;
+          this.selectOptions = options = {};
+          subdivisions.sort(function(a, b) {
+            var nameA, nameB;
+            nameA = a.name.toUpperCase();
+            nameB = b.name.toUpperCase();
+            if (nameA < nameB) {
+              return -1;
+            }
+            if (nameA > nameB) {
+              return 1;
+            }
+            return 0;
+          });
+          for (j = 0, len1 = subdivisions.length; j < len1; j++) {
+            subdivision = subdivisions[j];
+            options[subdivision.code.toUpperCase()] = subdivision.name;
+          }
+          break;
+        }
+      }
+      if (!found) {
+        this._optionsHash = '';
+      }
+      return options;
+    };
+
+    StateSelect.prototype.getCountry = function() {
+      return '';
+    };
+
+    StateSelect.prototype.init = function() {
+      return StateSelect.__super__.init.call(this);
+    };
 
     return StateSelect;
 
-  }).call(undefined);
+  })(Select$1);
 
   StateSelect.register();
 
@@ -15190,10 +15205,17 @@ var ElControls = (function (exports) {
   var html$7 = "\n<yield from=\"input\">\n  <textarea class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" onchange=\"{ change }\" onblur=\"{ change }\" rows=\"{ rows }\" cols=\"{ cols }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" placeholder=\"{ placeholder }\" readonly=\"{ readonly }\" wrap=\"{ wrap }\">{ input.ref.get(input.name) }</textarea>\n</yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
   // src/controls/textbox.coffee
-  var TextBox;
+  var TextBox,
+    extend$16 = function(child, parent) { for (var key in parent) { if (hasProp$14.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$14 = {}.hasOwnProperty;
 
-  TextBox = (function() {
-    class TextBox extends Text$1 {}
+  TextBox = (function(superClass) {
+    extend$16(TextBox, superClass);
+
+    function TextBox() {
+      return TextBox.__super__.constructor.apply(this, arguments);
+    }
+
     TextBox.prototype.tag = 'textbox';
 
     TextBox.prototype.html = html$7;
@@ -15214,7 +15236,7 @@ var ElControls = (function (exports) {
 
     return TextBox;
 
-  }).call(undefined);
+  })(Text$1);
 
   TextBox.register();
 
