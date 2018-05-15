@@ -76,7 +76,7 @@ export default class Select extends Text
       $input.attr('readonly', true)
 
   init:(opts)->
-    super()
+    super arguments...
 
     @style = @style || 'width:100%'
 

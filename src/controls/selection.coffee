@@ -38,7 +38,7 @@ export default class Select extends Control
     return (el.options?[el.selectedIndex]?.value ? '').trim()
 
   init: ->
-    super()
+    super arguments...
 
 Select.register()
 

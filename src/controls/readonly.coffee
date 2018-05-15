@@ -11,7 +11,7 @@ export default class ReadOnly extends Text
 
   init: ->
     if !@text
-      super()
+      super arguments...
 
   getText: ->
     return valueOrCall(@text) || @input.ref.get(input.name)

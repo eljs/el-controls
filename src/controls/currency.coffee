@@ -14,7 +14,7 @@ export default class Currency extends Text
   currency:     ''
 
   init: ->
-    super()
+    super arguments...
 
   getCurrency: (e)->
     return valueOrCall @currency
