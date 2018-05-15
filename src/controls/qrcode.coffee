@@ -1,4 +1,4 @@
-import qrcode from 'qrcode'
+import {toCanvas} from 'qrcode-lite'
 
 import ReadOnly from './readonly'
 import html from '../../templates/controls/qrcode'
@@ -39,13 +39,12 @@ export default class QRCode extends ReadOnly
 
   onUpdated: ->
     canvas = @root.children[0]
-    qrcode.toCanvas canvas, @getText(),
+    toCanvas canvas, @getText(),
       version: parseInt @version, 10
       errorCorrectionLevel: @errorCorrectionLevel
       scale: parseInt @scale, 10
       margin: parseInt @margin, 10
-    , (error)->
-      if error
-        console.error error
+    .catch (err)  ->
+        console.error err
 
 QRCode.register()
