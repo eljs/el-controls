@@ -48,7 +48,7 @@
     "es-selectize": "0.12.10",
     "es-tween": "0.1.0",
     "es6-tween": "5.2.2",
-    "qrcode": "1.2.0",
+    "qrcode-lite": "^1.2.0",
     "shop.js-util": "0.0.7",
     "uglify-es": "github:mishoo/UglifyJS2#harmony",
     "zepto-modules": "1.0.1"
