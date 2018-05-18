@@ -1,0 +1,9 @@
+#{ 'yield' }(from='map')
+  .map
+#{ 'yield' }(from='unused-message')
+  .unused-message(if='{ !getAddress() }')
+    p No Map
+#{ 'yield' }(from='error')
+  .error(if='{ errorMessage }')
+    p { errorMessage }
+#{ 'yield' }
