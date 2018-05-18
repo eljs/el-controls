@@ -6335,7 +6335,7 @@ var ElControls = (function (exports) {
   var placeholder = exports$1;
 
   // templates/controls/text.pug
-  var html$1 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ input.ref.get(input.name) }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\" placeholder=\"{ placeholder }\">\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: input.ref.get(input.name) || placeholder }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
+  var html$1 = "\n<yield from=\"input\">\n  <input class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" type=\"{ type }\" onchange=\"{ change }\" onblur=\"{ change }\" riot-value=\"{ getText() }\" autocomplete=\"{ autocomplete }\" autofocus=\"{ autofocus }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" readonly=\"{ readonly }\" placeholder=\"{ placeholder }\">\n</yield>\n<yield from=\"label\">\n  <div class=\"label { active: getText() || placeholder }\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
   // src/controls/text.coffee
   var Text,
@@ -6386,6 +6386,13 @@ var ElControls = (function (exports) {
       })(this));
     };
 
+    Text.prototype.getText = function() {
+      if (this.input == null) {
+        return '';
+      }
+      return this.input.ref.get(this.input.name);
+    };
+
     return Text;
 
   })(Control$1);
@@ -6417,7 +6424,8 @@ var ElControls = (function (exports) {
     };
 
     ReadOnly.prototype.getText = function() {
-      return valueOrCall$1(this.text) || this.input.ref.get(input.name);
+      var ref;
+      return valueOrCall$1(this.text) || ((ref = this.input) != null ? ref.ref.get(this.input.name) : void 0) || '';
     };
 
     ReadOnly.prototype.change = function() {};
@@ -15202,7 +15210,7 @@ var ElControls = (function (exports) {
   StateSelect.register();
 
   // templates/controls/textarea.pug
-  var html$7 = "\n<yield from=\"input\">\n  <textarea class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" onchange=\"{ change }\" onblur=\"{ change }\" rows=\"{ rows }\" cols=\"{ cols }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" placeholder=\"{ placeholder }\" readonly=\"{ readonly }\" wrap=\"{ wrap }\">{ input.ref.get(input.name) }</textarea>\n</yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
+  var html$7 = "\n<yield from=\"input\">\n  <textarea class=\"{invalid: errorMessage, valid: valid, labeled: label}\" id=\"{ getId() }\" name=\"{ getName() }\" onchange=\"{ change }\" onblur=\"{ change }\" rows=\"{ rows }\" cols=\"{ cols }\" disabled=\"{ disabled }\" maxlength=\"{ maxlength }\" placeholder=\"{ placeholder }\" readonly=\"{ readonly }\" wrap=\"{ wrap }\">{ getText() }</textarea>\n</yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>\n<yield></yield>";
 
   // src/controls/textbox.coffee
   var TextBox,
@@ -17635,7 +17643,7 @@ var ElControls = (function (exports) {
   });
 
   // templates/controls/gmap.pug
-  var html$8 = "\n<yield from=\"map\">\n  <div class=\"map\"></div>\n</yield>\n<yield from=\"unused-message\">\n  <div class=\"unused-message\"></div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield></yield>";
+  var html$8 = "\n<yield from=\"map\">\n  <div class=\"map\"></div>\n</yield>\n<yield from=\"unused-message\">\n  <div class=\"unused-message\" if=\"{ !getAddress() }\">\n    <p>No Map</p>\n  </div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">\n    <p>{ errorMessage }</p>\n  </div>\n</yield>\n<yield></yield>";
 
   // src/controls/gmap.coffee
   var GMap, geocode,
@@ -17676,7 +17684,7 @@ var ElControls = (function (exports) {
 
     GMap.prototype.errorMessage = '';
 
-    GMap.prototype.mapTypeId = 'coordinate';
+    GMap.prototype.mapTypeId = 'roadmap';
 
     GMap.prototype.init = function() {
       var resize;
@@ -17737,7 +17745,7 @@ var ElControls = (function (exports) {
     };
 
     GMap.prototype.getAddress = function() {
-      return valueOrCall$1(this.address) || this.input.ref.get(input.name);
+      return (valueOrCall$1(this.address) || this.input.ref.get(input.name)).trim();
     };
 
     GMap.prototype.resize = function() {
