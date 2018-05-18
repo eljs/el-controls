@@ -297,6 +297,11 @@
 .checkbox .error{
   color:#f22469;
 }
+gmap{
+  display:block;
+  width:100%;
+  height:100%;
+}
 
 .selectize-control.plugin-drag_drop.multi > .selectize-input > div.ui-sortable-placeholder{
   visibility:visible !important;

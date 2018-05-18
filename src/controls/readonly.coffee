@@ -14,7 +14,7 @@ export default class ReadOnly extends Text
       super arguments...
 
   getText: ->
-    return valueOrCall(@text) || @input.ref.get(input.name)
+    return valueOrCall(@text) || @input?.ref.get(@input.name) || ''
 
   # readonly
   change:  ->

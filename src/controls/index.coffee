@@ -11,6 +11,7 @@ import Select        from './selection'
 import StateSelect   from './state-select'
 import Text          from './text'
 import TextBox       from './textbox'
+import GMap          from './gmap'
 
 export {
   CheckBox
@@ -19,6 +20,7 @@ export {
   CountrySelect
   Currency
   Dropdown
+  GMap
   QRCode
   ReadOnly
   ReCaptcha

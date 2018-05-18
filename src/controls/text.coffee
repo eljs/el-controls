@@ -27,4 +27,8 @@ export default class Text extends Control
       if @type != 'password'
         placeholder el
 
+  getText: ->
+    return '' if !@input?
+    return @input.ref.get @input.name
+
 Text.register()
