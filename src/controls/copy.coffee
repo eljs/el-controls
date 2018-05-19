@@ -1,7 +1,7 @@
 import ReadOnly from './readonly'
 import html from '../../templates/controls/copy'
 
-import { valueOrCall } from '../utils/valueOrCall'
+import valueOrCall from '../utils/valueOrCall'
 
 export default class Copy extends ReadOnly
   tag: 'copy'

@@ -13,7 +13,7 @@
     readonly='{ readonly }'
     wrap='{ wrap }'
   )
-    | { input.ref.get(input.name) }
+    | { getText() }
 #{ 'yield' }(from='label')
   .label.active(if='{ label }')
     | { label }

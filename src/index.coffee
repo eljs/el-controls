@@ -7,6 +7,7 @@ export {
   CountrySelect
   Currency
   Dropdown
+  GMap
   QRCode
   ReCaptcha
   ReadOnly

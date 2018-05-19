@@ -1,6 +1,6 @@
 {
   "name": "el-controls",
-  "version": "1.2.33",
+  "version": "1.2.34",
   "description": "Some basic controls for el.js.",
   "homepage": "http://github.com/hanzo-io/el-controls",
   "repository": "github:hanzo-io/el-controls",
@@ -48,6 +48,7 @@
     "es-selectize": "^0.12.10",
     "es-tween": "^0.1.0",
     "es6-tween": "^5.2.2",
+    "gmaps": "0.4.24",
     "qrcode-lite": "^1.2.2",
     "shop.js-util": "^0.0.7",
     "uglify-es": "github:mishoo/UglifyJS2#harmony",
