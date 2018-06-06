@@ -78,11 +78,15 @@ input[type=password]
   border-radius: 0
   transition: border-color $themeTransitionTime ease-in-out, color $themeTransitionTime ease-in-out
 
-textarea
-  outline: none
-  height: $themeElementHeight * 3
-  border: $themeInputBorderWidth solid $borderColor1
-  border-radius: $themeBorderRadius
+&.input.input.input
+  textarea
+    outline: none
+    height: $themeElementHeight * 3
+    border: $themeInputBorderWidth solid $themeBorderColor
+    border-radius: $themeBorderRadius
+    margin-top: 1.25rem
+    margin-bottom: -.5rem
+    padding: .25rem
 
 input[type=text]
 input[type=password]
