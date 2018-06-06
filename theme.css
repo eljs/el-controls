@@ -123,10 +123,15 @@
   border-radius:0;
   transition:border-color 500ms ease-in-out, color 500ms ease-in-out;
 }
+.input.input.input.input textarea{
+  margin-top:1rem;
+  margin-bottom:-0.5rem;
+  padding:0.25rem;
+}
 .input textarea{
   outline:none;
   height:6em;
-  border:1px solid $borderColor1;
+  border:1px solid #000;
   border-radius:2px;
 }
 .input input[type=text],
