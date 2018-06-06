@@ -6819,11 +6819,11 @@ var ElControls = (function (exports) {
 
   // src/controls/currency.coffee
   var Currency,
-    extend$10 = function(child, parent) { for (var key in parent) { if (hasProp$9.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    extend$a = function(child, parent) { for (var key in parent) { if (hasProp$9.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp$9 = {}.hasOwnProperty;
 
   var currency = Currency = (function(superClass) {
-    extend$10(Currency, superClass);
+    extend$a(Currency, superClass);
 
     function Currency() {
       return Currency.__super__.constructor.apply(this, arguments);
@@ -8293,7 +8293,7 @@ var ElControls = (function (exports) {
       return 0;
   }
 
-  function extend$11(a, b) {
+  function extend$b(a, b) {
       var i, n, k, object;
       for (i = 1, n = arguments.length; i < n; i++) {
           object = arguments[i];
@@ -8631,7 +8631,7 @@ var ElControls = (function (exports) {
   Sifter.prototype.prepareSearch = function(query, options) {
       if (typeof query === 'object') return query;
 
-      options = extend$11({}, options);
+      options = extend$b({}, options);
 
       var optionFields     = options.fields;
       var optionSort       = options.sort;
@@ -11668,15 +11668,15 @@ var ElControls = (function (exports) {
 
   // src/controls/dropdown.coffee
   var Select$2, coolDown, isABrokenBrowser,
-    extend$12 = function(child, parent) { for (var key in parent) { if (hasProp$10.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$10 = {}.hasOwnProperty;
+    extend$c = function(child, parent) { for (var key in parent) { if (hasProp$a.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$a = {}.hasOwnProperty;
 
   isABrokenBrowser = window.navigator.userAgent.indexOf('MSIE') > 0 || window.navigator.userAgent.indexOf('Trident') > 0;
 
   coolDown = -1;
 
   var dropdown = Select$2 = (function(superClass) {
-    extend$12(Select, superClass);
+    extend$c(Select, superClass);
 
     function Select() {
       return Select.__super__.constructor.apply(this, arguments);
@@ -15028,11 +15028,11 @@ var ElControls = (function (exports) {
 
   // src/controls/qrcode.coffee
   var QRCode,
-    extend$13 = function(child, parent) { for (var key in parent) { if (hasProp$11.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$11 = {}.hasOwnProperty;
+    extend$d = function(child, parent) { for (var key in parent) { if (hasProp$b.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$b = {}.hasOwnProperty;
 
   var qrcode = QRCode = (function(superClass) {
-    extend$13(QRCode, superClass);
+    extend$d(QRCode, superClass);
 
     function QRCode() {
       return QRCode.__super__.constructor.apply(this, arguments);
@@ -15086,11 +15086,11 @@ var ElControls = (function (exports) {
 
   // src/controls/recaptcha.coffee
   var ReCaptcha,
-    extend$14 = function(child, parent) { for (var key in parent) { if (hasProp$12.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$12 = {}.hasOwnProperty;
+    extend$e = function(child, parent) { for (var key in parent) { if (hasProp$c.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$c = {}.hasOwnProperty;
 
   var recaptcha = ReCaptcha = (function(superClass) {
-    extend$14(ReCaptcha, superClass);
+    extend$e(ReCaptcha, superClass);
 
     function ReCaptcha() {
       return ReCaptcha.__super__.constructor.apply(this, arguments);
@@ -15136,11 +15136,11 @@ var ElControls = (function (exports) {
 
   // src/controls/state-select.coffee
   var StateSelect,
-    extend$15 = function(child, parent) { for (var key in parent) { if (hasProp$13.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$13 = {}.hasOwnProperty;
+    extend$f = function(child, parent) { for (var key in parent) { if (hasProp$d.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$d = {}.hasOwnProperty;
 
   var stateSelect = StateSelect = (function(superClass) {
-    extend$15(StateSelect, superClass);
+    extend$f(StateSelect, superClass);
 
     function StateSelect() {
       return StateSelect.__super__.constructor.apply(this, arguments);
@@ -15214,11 +15214,11 @@ var ElControls = (function (exports) {
 
   // src/controls/textbox.coffee
   var TextBox,
-    extend$16 = function(child, parent) { for (var key in parent) { if (hasProp$14.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$14 = {}.hasOwnProperty;
+    extend$g = function(child, parent) { for (var key in parent) { if (hasProp$e.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$e = {}.hasOwnProperty;
 
   TextBox = (function(superClass) {
-    extend$16(TextBox, superClass);
+    extend$g(TextBox, superClass);
 
     function TextBox() {
       return TextBox.__super__.constructor.apply(this, arguments);
@@ -17647,8 +17647,8 @@ var ElControls = (function (exports) {
 
   // src/controls/gmap.coffee
   var GMap, geocode,
-    extend$17 = function(child, parent) { for (var key in parent) { if (hasProp$15.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp$15 = {}.hasOwnProperty;
+    extend$h = function(child, parent) { for (var key in parent) { if (hasProp$f.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp$f = {}.hasOwnProperty;
 
   geocode = function(address) {
     return new Promise(function(resolve, reject) {
@@ -17668,7 +17668,7 @@ var ElControls = (function (exports) {
   };
 
   var gmap = GMap = (function(superClass) {
-    extend$17(GMap, superClass);
+    extend$h(GMap, superClass);
 
     function GMap() {
       return GMap.__super__.constructor.apply(this, arguments);
