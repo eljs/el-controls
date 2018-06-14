@@ -6221,7 +6221,7 @@ var ElControls = (function (exports) {
       rect = this.root.getBoundingClientRect();
       elTop = rect.top - window.innerHeight / 2;
       wTop = window.pageYOffset;
-      if (!scrolling && elTop <= wTop) {
+      if (this.scrollToError && !scrolling && elTop <= wTop) {
         scrolling = true;
         autoPlay(true);
         t = new Tween({

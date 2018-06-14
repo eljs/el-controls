@@ -11,6 +11,8 @@ _controlId = 0
 export default class Control extends El.Input
   _controlId: 0
 
+  # scrollToError: false
+
   name: null
 
   init: ->
@@ -37,7 +39,7 @@ export default class Control extends El.Input
     elTop = rect.top - window.innerHeight / 2
     wTop = window.pageYOffset
 
-    if !scrolling && elTop <= wTop
+    if @scrollToError && !scrolling && elTop <= wTop
       scrolling = true
 
       autoPlay true
