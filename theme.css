@@ -102,16 +102,16 @@
   padding:0;
   background:transparent;
 }
-.input input:-moz-placeholder{
-  color:#000;
-}
-.input input::-moz-placeholder{
-  color:#000;
-}
 .input input:-ms-input-placeholder{
   color:#000;
 }
 .input input::-webkit-input-placeholder{
+  color:#000;
+}
+.input input::-ms-input-placeholder{
+  color:#000;
+}
+.input input::placeholder{
   color:#000;
 }
 .input input[type=text],
