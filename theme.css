@@ -95,6 +95,7 @@
 .input *:disabled,
 .input .disabled{
   opacity:0.5;
+  pointer-events:none;
 }
 .input input{
   outline:none;
