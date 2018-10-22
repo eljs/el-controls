@@ -112,9 +112,14 @@ select
   border-width: $themeInputBorderWidth
   border-radius: 0
   line-height: $themeElementHeight
+  height: $themeElementHeight
   font-size: 1em
   appearance: none
   outline: none
+
+  &:-moz-focusring
+    color: transparent;
+    text-shadow: 0 0 0 #000
 
   &::-ms-expand
     display: none /* hide the default arrow in ie10 and ie11 */
@@ -129,7 +134,7 @@ select
     display: block
 
   &.labeled ~ .select-indicator
-    top: $themeElementHeight * 1.125
+    top: $themeElementHeight * 0.875
 
   &:disabled ~ .select-indicator
     opacity: .5
