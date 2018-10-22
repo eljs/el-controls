@@ -153,11 +153,16 @@
   border-width:1px;
   border-radius:0;
   line-height:2em;
+  height:2em;
   font-size:1em;
   -webkit-appearance:none;
      -moz-appearance:none;
           appearance:none;
   outline:none;
+}
+.input select:-moz-focusring{
+  color:transparent;
+  text-shadow:0 0 0 #000;
 }
 .input select::-ms-expand{
   display:none;
@@ -172,7 +177,7 @@
   display:block;
 }
 .input select.labeled ~ .select-indicator{
-  top:2.25em;
+  top:1.75em;
 }
 .input select:disabled ~ .select-indicator{
   opacity:0.5;
