@@ -1,19 +1,21 @@
 #{ 'yield' }(from='input')
-  textarea(
-    id='{ getId() }'
-    name='{ getName() }'
-    onchange='{ change }'
-    onblur='{ change }'
+  .input-container(
     class='{invalid: errorMessage, valid: valid, labeled: label}'
-    rows='{ rows }'
-    cols='{ cols }'
-    disabled='{ disabled }'
-    maxlength='{ maxlength }'
-    placeholder='{ placeholder }'
-    readonly='{ readonly }'
-    wrap='{ wrap }'
   )
-    | { getText() }
+    textarea(
+      id='{ getId() }'
+      name='{ getName() }'
+      onchange='{ change }'
+      onblur='{ change }'
+      rows='{ rows }'
+      cols='{ cols }'
+      disabled='{ disabled }'
+      maxlength='{ maxlength }'
+      placeholder='{ placeholder }'
+      readonly='{ readonly }'
+      wrap='{ wrap }'
+    )
+      | { getText() }
 #{ 'yield' }(from='label')
   .label.active(if='{ label }')
     | { label }

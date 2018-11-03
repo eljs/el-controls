@@ -1,13 +1,15 @@
 #{ 'yield' }(from='input')
-  input(
-    id='{ getId() }'
-    name='{ getName() }'
-    type='checkbox'
-    onchange='{ change }'
-    onblur='{ change }'
-    checked='{ input.ref.get(input.name) }'
+  .input-container(
     class='{invalid: errorMessage, valid: valid, labeled: label}'
   )
+    input(
+      id='{ getId() }'
+      name='{ getName() }'
+      type='checkbox'
+      onchange='{ change }'
+      onblur='{ change }'
+      checked='{ input.ref.get(input.name) }'
+    )
 #{ 'yield' }
 #{ 'yield' }(from='label')
   .label.active(if='{ label }')

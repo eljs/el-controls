@@ -133,8 +133,9 @@ select
     pointer-events: none
     display: block
 
-  &.labeled ~ .select-indicator
-    top: $themeElementHeight * 0.875
+  &.labeled
+    .select-indicator
+      top: $themeElementHeight * 0.875
 
   &:disabled ~ .select-indicator
     opacity: .5
@@ -160,8 +161,9 @@ select
   top: $themeElementHeight * .5
   transform: translateY(-50%)
 
-.labeled ~ .copy-text
-  top: $themeElementHeight * .875
+.labeled
+  .copy-text
+    top: $themeElementHeight * .875
 
 // currency
 .currency-container
