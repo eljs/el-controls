@@ -176,7 +176,7 @@
   pointer-events:none;
   display:block;
 }
-.input select.labeled ~ .select-indicator{
+.input select.labeled .select-indicator{
   top:1.75em;
 }
 .input select:disabled ~ .select-indicator{
@@ -200,7 +200,7 @@
   top:1em;
   transform:translateY(-50%);
 }
-.input .labeled ~ .copy-text{
+.input .labeled .copy-text{
   top:1.75em;
 }
 .input .currency-container{
