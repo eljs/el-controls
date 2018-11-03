@@ -1,13 +1,15 @@
 #{ 'yield' }(from='input')
-  select(
-    id='{ getId() }'
-    name='{ getName() }'
-    style='display: none'
-    onchange='{ change }'
-    onblur='{ change }'
-    placeholder='{ placeholder }'
+  .input-wrapper(
     class='{invalid: errorMessage, valid: valid, labeled: label}'
   )
+    select(
+      id='{ getId() }'
+      name='{ getName() }'
+      style='display: none'
+      onchange='{ change }'
+      onblur='{ change }'
+      placeholder='{ placeholder }'
+    )
 #{ 'yield' }(from='label')
   .label.active(if='{ label }')
     | { label }

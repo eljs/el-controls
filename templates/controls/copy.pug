@@ -1,18 +1,20 @@
 #{ 'yield' }(from='input')
-  input(
-    id='{ getId() }'
-    name='{ getName() }'
-    type='{ type }'
-    onclick='{ copy }'
-    riot-value='{ getText() }'
+  .input-container(
     class='{invalid: errorMessage, valid: valid, labeled: label}'
-    autocomplete='{ autocomplete }'
-    autofocus='{ autofocus }'
-    disabled='{ disabled }'
-    maxlength='{ maxlength }'
-    readonly='true'
-    placeholder='{ placeholder }'
   )
+    input(
+      id='{ getId() }'
+      name='{ getName() }'
+      type='{ type }'
+      onclick='{ copy }'
+      riot-value='{ getText() }'
+      autocomplete='{ autocomplete }'
+      autofocus='{ autofocus }'
+      disabled='{ disabled }'
+      maxlength='{ maxlength }'
+      readonly='true'
+      placeholder='{ placeholder }'
+    )
 #{ 'yield' }(from='label')
   .label(
     class='{ active: true }'
