@@ -1,6 +1,6 @@
 #{ 'yield' }(from='input')
   .input-container(
-    class='{invalid: errorMessage, valid: valid, labeled: label}'
+    class='{invalid: errorMessage, valid: valid, labeled: label, checked: input.ref.get(input.name)}'
   )
     input(
       id='{ getId() }'

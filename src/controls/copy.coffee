@@ -20,7 +20,8 @@ export default class Copy extends ReadOnly
     text = @getText()
 
     textArea = document.createElement "textarea"
-
+    textArea.contentEditable = true
+    textArea.readOnly = false
     textArea.style.position = 'fixed'
     textArea.style.top = 0
     textArea.style.left = 0
@@ -36,6 +37,12 @@ export default class Copy extends ReadOnly
     textArea.select()
 
     try
+      range = document.createRange()
+      s = window.getSelection()
+      s.removeAllRanges()
+      s.addRange(range)
+      textArea.setSelectionRange(0, 999999)
+
       successful = document.execCommand 'copy'
       msg = successful ? 'successful' : 'unsuccessful'
       console.log 'Copying text command was ' + msg
