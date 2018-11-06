@@ -3863,7 +3863,8 @@ var ElControls = (function (exports) {
   };
 
   // node_modules/el.js/src/views/view.coffee
-  var View, collapsePrototype, setPrototypeOf;
+  var View, collapsePrototype, setPrototypeOf,
+    slice$1 = [].slice;
 
   setPrototypeOf = (function() {
     var mixinProperties, setProtoOf;
@@ -3892,12 +3893,18 @@ var ElControls = (function (exports) {
   })();
 
   collapsePrototype = function(collapse, proto) {
-    var parentProto;
+    var i, len, member, members, parentProto;
     if (proto === View.prototype) {
       return;
     }
     parentProto = Object.getPrototypeOf(proto);
     collapsePrototype(collapse, parentProto);
+    if (members = Object.getOwnPropertyNames(parentProto)) {
+      for (i = 0, len = members.length; i < len; i++) {
+        member = members[i];
+        collapse[member] = parentProto[member];
+      }
+    }
     return index(collapse, parentProto);
   };
 
@@ -3932,12 +3939,16 @@ var ElControls = (function (exports) {
                   if (_this[k] != null) {
                     oldFn = _this[k];
                     return _this[k] = function() {
-                      oldFn.apply(_this, arguments);
-                      return v.apply(_this, arguments);
+                      var args;
+                      args = 1 <= arguments.length ? slice$1.call(arguments, 0) : [];
+                      oldFn.apply(_this, args);
+                      return v.apply(_this, args);
                     };
                   } else {
                     return _this[k] = function() {
-                      return v.apply(_this, arguments);
+                      var args;
+                      args = 1 <= arguments.length ? slice$1.call(arguments, 0) : [];
+                      return v.apply(_this, args);
                     };
                   }
                 });
@@ -3968,11 +3979,15 @@ var ElControls = (function (exports) {
             return function(name, handler) {
               if (typeof handler === 'string') {
                 return _this.on(name, function() {
-                  return _this[handler].apply(_this, arguments);
+                  var args;
+                  args = 1 <= arguments.length ? slice$1.call(arguments, 0) : [];
+                  return _this[handler].apply(_this, args);
                 });
               } else {
                 return _this.on(name, function() {
-                  return handler.apply(_this, arguments);
+                  var args;
+                  args = 1 <= arguments.length ? slice$1.call(arguments, 0) : [];
+                  return handler.apply(_this, args);
                 });
               }
             };
@@ -4364,11 +4379,16 @@ var ElControls = (function (exports) {
   const _tweens = [];
   let isStarted = false;
   let _autoPlay = false;
-  let _tick;
+  let _onRequestTick = [];
   const _ticker = requestAnimationFrame$2;
-  const _stopTicker = cancelAnimationFrame$1;
   let emptyFrame = 0;
   let powerModeThrottle = 120;
+
+  const _requestTick = () => {
+    for (let i = 0; i < _onRequestTick.length; i++) {
+      _onRequestTick[i]();
+    }
+  };
 
   /**
    * Adds tween to list
@@ -4391,8 +4411,10 @@ var ElControls = (function (exports) {
     emptyFrame = 0;
 
     if (_autoPlay && !isStarted) {
-      _tick = _ticker(update$2);
+      _ticker(update$2);
       isStarted = true;
+    } else {
+      _requestTick();
     }
   };
 
@@ -4429,24 +4451,33 @@ var ElControls = (function (exports) {
    */
 
   const update$2 = (time = now(), preserve) => {
+    if (emptyFrame >= powerModeThrottle) {
+      isStarted = false;
+      emptyFrame = 0;
+      return false
+    }
+
     if (_autoPlay && isStarted) {
-      _tick = _ticker(update$2);
+      _ticker(update$2);
+    } else {
+      _requestTick();
     }
 
     if (!_tweens.length) {
       emptyFrame++;
     }
 
-    if (emptyFrame > powerModeThrottle) {
-      _stopTicker(_tick);
-      isStarted = false;
-      emptyFrame = 0;
-      return false
-    }
-
     let i = 0;
-    while (i < _tweens.length) {
+    let length = _tweens.length;
+    while (i < length) {
       _tweens[i++].update(time, preserve);
+
+      if (length > _tweens.length) {
+        // The tween has been removed, keep same index
+        i--;
+      }
+
+      length = _tweens.length;
     }
 
     return true
@@ -6077,8 +6108,7 @@ var ElControls = (function (exports) {
             : Interpolation.Linear;
 
         if (typeof end === 'number') {
-          object[property] =
-            (((start + (end - start) * value) * DECIMAL) | 0) / DECIMAL;
+          object[property] = start + (end - start) * value;
         } else if (Array.isArray(end) && !Array.isArray(start)) {
           object[property] = _interpolationFunctionCall(
             end,
@@ -6259,7 +6289,7 @@ var ElControls = (function (exports) {
   })(El$1.Input);
 
   // templates/controls/checkbox.pug
-  var html = "\n<yield from=\"input\">\n  <div class=\"input-container {invalid: errorMessage, valid: valid, labeled: label}\">\n    <input id=\"{ getId() }\" name=\"{ getName() }\" type=\"checkbox\" onchange=\"{ change }\" onblur=\"{ change }\" checked=\"{ input.ref.get(input.name) }\">\n  </div>\n</yield>\n<yield></yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>";
+  var html = "\n<yield from=\"input\">\n  <div class=\"input-container {invalid: errorMessage, valid: valid, labeled: label, checked: input.ref.get(input.name)}\">\n    <input id=\"{ getId() }\" name=\"{ getName() }\" type=\"checkbox\" onchange=\"{ change }\" onblur=\"{ change }\" checked=\"{ input.ref.get(input.name) }\">\n  </div>\n</yield>\n<yield></yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>";
 
   // src/controls/checkbox.coffee
   var CheckBox,
@@ -6468,9 +6498,11 @@ var ElControls = (function (exports) {
     };
 
     Copy.prototype.copy = function(e) {
-      var msg, successful, text, textArea;
+      var msg, range, s, successful, text, textArea;
       text = this.getText();
       textArea = document.createElement("textarea");
+      textArea.contentEditable = true;
+      textArea.readOnly = false;
       textArea.style.position = 'fixed';
       textArea.style.top = 0;
       textArea.style.left = 0;
@@ -6485,6 +6517,11 @@ var ElControls = (function (exports) {
       document.body.appendChild(textArea);
       textArea.select();
       try {
+        range = document.createRange();
+        s = window.getSelection();
+        s.removeAllRanges();
+        s.addRange(range);
+        textArea.setSelectionRange(0, 999999);
         successful = document.execCommand('copy');
         msg = successful != null ? successful : {
           'successful': 'unsuccessful'
