@@ -18,7 +18,7 @@ export default class Select extends Control
 
   hasOptions: ->
     # call for side effects
-    @options
+    @options()
     return @_optionsHash.length > 2
 
   options: ->
