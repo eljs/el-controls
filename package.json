@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "broken": "^0.1.13",
-    "el.js": "^2.1.36",
+    "el.js": "^2.1.37",
     "es-raf": "^3.3.1",
     "es-selectize": "^0.12.10",
     "es-tween": "^0.1.0",
