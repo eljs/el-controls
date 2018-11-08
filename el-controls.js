@@ -3817,6 +3817,14 @@ var ElControls = (function (exports) {
 
   id$1 = 0;
 
+  if (window.Promise == null) {
+    window.Promise = Promise$2;
+  }
+
+  if (window.requestAnimationFrame == null) {
+    window.requestAnimationFrame = raf;
+  }
+
   scheduleUpdate = function(tag) {
     var currentTag, parentTag;
     if (!p) {
@@ -3855,7 +3863,7 @@ var ElControls = (function (exports) {
       todos[tag._schedulingId] = tag;
     }
     if (rafId === -1) {
-      rafId = raf(function() {
+      rafId = requestAnimationFrame(function() {
         return p.resolve();
       });
     }
@@ -6576,7 +6584,7 @@ var ElControls = (function (exports) {
     Select.prototype.selectOptions = {};
 
     Select.prototype.hasOptions = function() {
-      this.options;
+      this.options();
       return this._optionsHash.length > 2;
     };
 
