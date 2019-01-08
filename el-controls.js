@@ -6297,7 +6297,7 @@ var ElControls = (function (exports) {
   })(El$1.Input);
 
   // templates/controls/checkbox.pug
-  var html = "\n<yield from=\"input\">\n  <div class=\"input-container {invalid: errorMessage, valid: valid, labeled: label, checked: input.ref.get(input.name)}\">\n    <input id=\"{ getId() }\" name=\"{ getName() }\" type=\"checkbox\" onchange=\"{ change }\" onblur=\"{ change }\" checked=\"{ input.ref.get(input.name) }\">\n  </div>\n  <label for=\"getId()\"></label>\n</yield>\n<yield></yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>";
+  var html = "\n<yield from=\"input\">\n  <div class=\"input-container {invalid: errorMessage, valid: valid, labeled: label, checked: input.ref.get(input.name)}\">\n    <input id=\"{ getId() }\" name=\"{ getName() }\" type=\"checkbox\" onchange=\"{ change }\" onblur=\"{ change }\" checked=\"{ input.ref.get(input.name) }\">\n  </div>\n  <label for=\"{ getId() }\"></label>\n</yield>\n<yield></yield>\n<yield from=\"label\">\n  <div class=\"label active\" if=\"{ label }\">{ label }</div>\n</yield>\n<yield from=\"error\">\n  <div class=\"error\" if=\"{ errorMessage }\">{ errorMessage }</div>\n</yield>\n<yield from=\"instructions\">\n  <div class=\"helper\" if=\"{ instructions &amp;&amp; !errorMessage }\">{ instructions }</div>\n</yield>";
 
   // src/controls/checkbox.coffee
   var CheckBox,
